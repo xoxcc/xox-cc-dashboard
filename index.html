@@ -807,63 +807,83 @@ function getThemeColors(){
 var GC = 'rgba(255,255,255,0.06)';
 var TC = '#64748b';
 
-// Global chart label plugin — works across all chart instances
+// Global chart label plugin — registered once, works everywhere
 var globalLabelPlugin = {
   id: 'globalLabels',
   afterDatasetsDraw: function(chart){
-    if(!chart.config._labelPlugin) return; // only run on charts that opt in
-    var ctx = chart.ctx;
+    var canvasId = chart.canvas ? chart.canvas.id : '';
+    var isTrend  = canvasId === 'trendChart';
+    var isHourly = canvasId === 'hourlyChart';
+    if(!isTrend && !isHourly) return;
+
+    var ctx  = chart.ctx;
     var type = chart.config.type;
+    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+
     chart.data.datasets.forEach(function(ds, di){
       var meta = chart.getDatasetMeta(di);
       if(meta.hidden) return;
+
       meta.data.forEach(function(el, i){
         var val = ds.data[i];
         if(!val || val === 0) return;
+
         ctx.save();
-        if(type === 'bar'){
-          // Bar chart: white text inside top of bar
+
+        if(isHourly && type === 'bar'){
           var barH = el.base - el.y;
-          if(barH < 16){ ctx.restore(); return; }
+          if(barH < 14){ ctx.restore(); return; }
           ctx.font = 'bold 11px Segoe UI,sans-serif';
           ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
           ctx.fillText(val.toLocaleString(), el.x, el.y + 4);
-        } else if(type === 'line'){
-          // Line chart: labels above/below points
-          var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-          var selSet = chart.config._selSet || {};
-          var dates = chart.config._dates || [];
-          var isSelected = selSet[dates[i]];
+
+        } else if(isTrend && type === 'line'){
+          var selSet = chart._selSet || {};
+          var dates  = chart._dates  || [];
+          var isSel  = selSet[dates[i]];
+
           if(di === 0){
-            ctx.font = (isSelected?'bold ':'')+'11px Segoe UI,sans-serif';
-            ctx.fillStyle = isSelected ? (isDark?'#e2e8f0':'#0a1628') : (isDark?'rgba(148,163,184,0.7)':'rgba(30,58,95,0.5)');
+            // Total — above point
+            ctx.font = (isSel ? 'bold ' : '') + '11px Segoe UI,sans-serif';
+            ctx.fillStyle = isSel
+              ? (isDark ? '#e2e8f0' : '#0a1628')
+              : (isDark ? 'rgba(148,163,184,0.7)' : 'rgba(30,58,95,0.5)');
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
             ctx.fillText(val.toLocaleString(), el.x, el.y - 8);
+
           } else if(di === 1){
+            // Answered — below point
             ctx.font = '9px Segoe UI,sans-serif';
-            ctx.fillStyle = isDark ? (isSelected?'#34d399':'rgba(52,211,153,0.4)') : (isSelected?'#047857':'rgba(4,120,87,0.4)');
+            ctx.fillStyle = isDark
+              ? (isSel ? '#34d399' : 'rgba(52,211,153,0.35)')
+              : (isSel ? '#047857' : 'rgba(4,120,87,0.35)');
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.fillText(val.toLocaleString(), el.x, el.y + 6);
-          } else if(di === 2 && val > 0){
+
+          } else if(di === 2){
+            // Abandoned — above point, only when > 0
             ctx.font = 'bold 9px Segoe UI,sans-serif';
-            ctx.fillStyle = isDark ? (isSelected?'#f87171':'rgba(248,113,113,0.4)') : (isSelected?'#b91c1c':'rgba(185,28,28,0.4)');
+            ctx.fillStyle = isDark
+              ? (isSel ? '#f87171' : 'rgba(248,113,113,0.35)')
+              : (isSel ? '#b91c1c' : 'rgba(185,28,28,0.35)');
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
             ctx.fillText(val.toLocaleString(), el.x, el.y - 6);
           }
         }
+
         ctx.restore();
       });
     });
   }
 };
 
-// Register globally so it works on all charts
-Chart.register(globalLabelPlugin);
+// Register globally — runs on every chart instance
+if(typeof Chart !== 'undefined') Chart.register(globalLabelPlugin);
 function updateChartColors(){
   var c = getThemeColors(); GC=c.gc; TC=c.tc;
 }
@@ -1344,7 +1364,6 @@ function renderHourly(a, numDays){
   if(charts.hourly) charts.hourly.destroy();
   charts.hourly=new Chart(document.getElementById('hourlyChart'),{
     type:'bar',
-    _labelPlugin: true,
     data:{
       labels:hours.map(function(h){return fmtHour(h);}),
       datasets:[
@@ -1453,9 +1472,6 @@ function renderTrend(trendDates, selectedDates, trendMonth){
 
   charts.trend=new Chart(document.getElementById('trendChart'),{
     type:'line',
-    _labelPlugin: true,
-    _selSet: selSet,
-    _dates: trendDates,
     data:{
       labels:trendDates.map(function(d){var p=d.split('-');return p[2]+' '+_MN[parseInt(p[1])-1];}),
       datasets:[
@@ -1487,6 +1503,9 @@ function renderTrend(trendDates, selectedDates, trendMonth){
       }
     }
   });
+  // Store selSet and dates on chart instance for global label plugin
+  charts.trend._selSet = selSet;
+  charts.trend._dates  = trendDates;
 }
 
 function getFilteredDates(fromId, toId){
