@@ -807,82 +807,64 @@ function getThemeColors(){
 var GC = 'rgba(255,255,255,0.06)';
 var TC = '#64748b';
 
-// Global chart label plugin — registered once, works everywhere
-var globalLabelPlugin = {
-  id: 'globalLabels',
-  afterDatasetsDraw: function(chart){
-    var canvasId = chart.canvas ? chart.canvas.id : '';
-    var isTrend  = canvasId === 'trendChart';
-    var isHourly = canvasId === 'hourlyChart';
-    if(!isTrend && !isHourly) return;
-
-    var ctx  = chart.ctx;
-    var type = chart.config.type;
-    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-
-    chart.data.datasets.forEach(function(ds, di){
-      var meta = chart.getDatasetMeta(di);
-      if(meta.hidden) return;
-
-      meta.data.forEach(function(el, i){
-        var val = ds.data[i];
-        if(!val || val === 0) return;
-
-        ctx.save();
-
-        if(isHourly && type === 'bar'){
-          var barH = el.base - el.y;
-          if(barH < 14){ ctx.restore(); return; }
-          ctx.font = 'bold 11px Segoe UI,sans-serif';
-          ctx.fillStyle = '#ffffff';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'top';
-          ctx.fillText(val.toLocaleString(), el.x, el.y + 4);
-
-        } else if(isTrend && type === 'line'){
-          var selSet = chart._selSet || {};
-          var dates  = chart._dates  || [];
-          var isSel  = selSet[dates[i]];
-
-          if(di === 0){
-            // Total — above point
-            ctx.font = (isSel ? 'bold ' : '') + '11px Segoe UI,sans-serif';
-            ctx.fillStyle = isSel
-              ? (isDark ? '#e2e8f0' : '#0a1628')
-              : (isDark ? 'rgba(148,163,184,0.7)' : 'rgba(30,58,95,0.5)');
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText(val.toLocaleString(), el.x, el.y - 8);
-
-          } else if(di === 1){
-            // Answered — below point
-            ctx.font = '9px Segoe UI,sans-serif';
-            ctx.fillStyle = isDark
-              ? (isSel ? '#34d399' : 'rgba(52,211,153,0.35)')
-              : (isSel ? '#047857' : 'rgba(4,120,87,0.35)');
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            ctx.fillText(val.toLocaleString(), el.x, el.y + 6);
-
-          } else if(di === 2){
-            // Abandoned — above point, only when > 0
-            ctx.font = 'bold 9px Segoe UI,sans-serif';
-            ctx.fillStyle = isDark
-              ? (isSel ? '#f87171' : 'rgba(248,113,113,0.35)')
-              : (isSel ? '#b91c1c' : 'rgba(185,28,28,0.35)');
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText(val.toLocaleString(), el.x, el.y - 6);
-          }
-        }
-
-        ctx.restore();
-      });
+// Draw labels directly on canvas after chart renders — no plugin system needed
+function drawHourlyLabels(){
+  if(!charts.hourly) return;
+  var chart = charts.hourly;
+  var ctx = chart.ctx;
+  chart.data.datasets.forEach(function(ds, di){
+    var meta = chart.getDatasetMeta(di);
+    meta.data.forEach(function(el, i){
+      var val = ds.data[i];
+      if(!val || val === 0) return;
+      var barH = el.base - el.y;
+      if(barH < 14) return;
+      ctx.save();
+      ctx.font = 'bold 11px Segoe UI,sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(val.toLocaleString(), el.x, el.y + 4);
+      ctx.restore();
     });
-  }
-};
+  });
+}
 
-// Register globally — runs on every chart instance
+function drawTrendLabels(selSet, trendDates){
+  if(!charts.trend) return;
+  var chart = charts.trend;
+  var ctx = chart.ctx;
+  var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  chart.data.datasets.forEach(function(ds, di){
+    var meta = chart.getDatasetMeta(di);
+    meta.data.forEach(function(el, i){
+      var val = ds.data[i];
+      if(!val || val === 0) return;
+      var isSel = selSet[trendDates[i]];
+      ctx.save();
+      if(di === 0){
+        ctx.font = (isSel?'bold ':'')+'11px Segoe UI,sans-serif';
+        ctx.fillStyle = isSel?(isDark?'#e2e8f0':'#0a1628'):(isDark?'rgba(148,163,184,0.7)':'rgba(30,58,95,0.5)');
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(val.toLocaleString(), el.x, el.y - 8);
+      } else if(di === 1){
+        ctx.font = '9px Segoe UI,sans-serif';
+        ctx.fillStyle = isDark?(isSel?'#34d399':'rgba(52,211,153,0.35)'):(isSel?'#047857':'rgba(4,120,87,0.35)');
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(val.toLocaleString(), el.x, el.y + 6);
+      } else if(di === 2){
+        ctx.font = 'bold 9px Segoe UI,sans-serif';
+        ctx.fillStyle = isDark?(isSel?'#f87171':'rgba(248,113,113,0.35)'):(isSel?'#b91c1c':'rgba(185,28,28,0.35)');
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(val.toLocaleString(), el.x, el.y - 6);
+      }
+      ctx.restore();
+    });
+  });
+}
+
+// Remove the global plugin registration
+var globalLabelPlugin = { id:'globalLabels', afterDatasetsDraw:function(){} };
 if(typeof Chart !== 'undefined') Chart.register(globalLabelPlugin);
 function updateChartColors(){
   var c = getThemeColors(); GC=c.gc; TC=c.tc;
@@ -1373,6 +1355,7 @@ function renderHourly(a, numDays){
     },
     options:{
       responsive:true,maintainAspectRatio:false,
+      animation:{onComplete:function(){drawHourlyLabels();}},
       plugins:{
         legend:{display:true,position:'top',align:'end',labels:{color:TC,font:{size:11},boxWidth:12,padding:14,usePointStyle:true,pointStyle:'rect'}},
         tooltip:{mode:'index',intersect:false,callbacks:{
@@ -1489,6 +1472,7 @@ function renderTrend(trendDates, selectedDates, trendMonth){
     options:{
       responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:24,bottom:8}},
+      animation:{onComplete:function(){ drawTrendLabels(selSet, trendDates); }},
       plugins:{
         legend:{display:true,position:'bottom',align:'start',labels:{color:TC,font:{size:11},boxWidth:10,padding:16,usePointStyle:true,pointStyle:'circle'}},
         tooltip:{mode:'index',intersect:false,callbacks:{
