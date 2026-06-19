@@ -231,8 +231,42 @@
 [data-theme="light"] #rmPanel{ background:#ffffff !important; border-color:#f59e0b !important; }
 [data-theme="light"] #rmPanel *[style*="color:#e8ecf0"]{ color:#0a1628 !important; }
 
+/* ── Global light mode text darkening ── */
+[data-theme="light"] [style*="color:#94a3b8"]{ color:#1e3a5f !important; }
+[data-theme="light"] [style*="color:#64748b"]{ color:#374151 !important; }
+[data-theme="light"] [style*="color:#374151"]{ color:#4b5563 !important; }
+[data-theme="light"] [style*="color:#e8ecf0"]{ color:#0a1628 !important; }
+[data-theme="light"] [style*="color:#2d3748"]{ color:#374151 !important; }
+[data-theme="light"] [style*="color:#6b7280"]{ color:#374151 !important; }
+[data-theme="light"] [style*="color:#60a5fa"]{ color:#1d4ed8 !important; }
+[data-theme="light"] [style*="color:#34d399"]{ color:#047857 !important; }
+[data-theme="light"] [style*="color:#f87171"]{ color:#b91c1c !important; }
+[data-theme="light"] [style*="color:#fbbf24"]{ color:#92400e !important; }
+[data-theme="light"] [style*="color:#a78bfa"]{ color:#5b21b6 !important; }
+[data-theme="light"] [style*="color:#6366f1"]{ color:#3730a3 !important; }
+[data-theme="light"] [style*="color:#2dd4bf"]{ color:#0f766e !important; }
+[data-theme="light"] [style*="color:var(--text2)"]{ color:#1e3a5f !important; }
+[data-theme="light"] [style*="color:var(--text3)"]{ color:#374151 !important; }
+[data-theme="light"] [style*="color:var(--text4)"]{ color:#4b5563 !important; }
+
 /* Remark badge in table */
 [data-theme="light"] [style*="background:#1e3a5f"]{ background:#dbeafe !important; }
+
+/* Hourly table light mode */
+[data-theme="light"] #hourlyTable [style*="color:#e8ecf0"]{ color:#0a1628 !important; }
+[data-theme="light"] #hourlyTable [style*="color:#94a3b8"]{ color:#334155 !important; }
+[data-theme="light"] #hourlyTable [style*="color:#64748b"]{ color:#4a6280 !important; }
+[data-theme="light"] #hourlyTable [style*="color:#374151"]{ color:#6b7a8d !important; }
+[data-theme="light"] #hourlyTable [style*="color:#6366f1"]{ color:#4338ca !important; }
+[data-theme="light"] #hourlyTable [style*="color:#60a5fa"]{ color:#1d4ed8 !important; }
+[data-theme="light"] #hourlyTable [style*="color:#f87171"]{ color:#dc2626 !important; }
+[data-theme="light"] #hourlyTable [style*="color:#fbbf24"]{ color:#b45309 !important; }
+[data-theme="light"] #hourlyTable [style*="color:#34d399"]{ color:#047857 !important; }
+[data-theme="light"] #hourlyTable [style*="color:#a78bfa"]{ color:#6d28d9 !important; }
+[data-theme="light"] .htable th{ color:#1e3a5f !important; border-bottom-color:#b8c4d4 !important; }
+[data-theme="light"] .htable td{ border-bottom-color:#e8edf3 !important; }
+[data-theme="light"] .htable tr.total-row{ background:#f0f4f8 !important; }
+[data-theme="light"] .htable tr.total-row td *,[data-theme="light"] .htable tr.total-row td{ color:#0a1628 !important; }
 [data-theme="light"] [style*="background:#1e3a2f"]{ background:#dcfce7 !important; }
 [data-theme="light"] [style*="background:#3a1e1e"]{ background:#fee2e2 !important; }
 [data-theme="light"] [style*="background:#2d1f4a"]{ background:#ede9fe !important; }
@@ -1296,11 +1330,7 @@ function renderHourly(a, numDays){
         datalabels:{display:false}
       },
       scales:{
-        x:{
-          stacked:false,
-          ticks:{color:TC,font:{size:10}},
-          grid:{display:false}
-        },
+        x:{stacked:false,ticks:{color:TC,font:{size:10}},grid:{display:false}},
         y:{
           stacked:false,
           ticks:{color:TC,font:{size:10}},
@@ -1311,8 +1341,9 @@ function renderHourly(a, numDays){
         }
       },
       layout:{padding:{top:28}}
-    }
-  },[hourlyLabelPlugin]);
+    },
+    plugins:[hourlyLabelPlugin]
+  });
 }
 
 function renderTrend(trendDates, selectedDates, trendMonth){
@@ -1343,61 +1374,43 @@ function renderTrend(trendDates, selectedDates, trendMonth){
     id:'trendlabels',
     afterDatasetsDraw:function(chart){
       var ctx = chart.ctx;
-      var nPoints = trendDates.length;
-      if(nPoints > 31) return;
+      if(trendDates.length > 31) return;
 
       chart.data.datasets.forEach(function(ds, di){
         var meta = chart.getDatasetMeta(di);
         meta.data.forEach(function(pt, i){
           var val = ds.data[i];
           if(!val || val === 0) return;
-
           var isSelected = selSet[trendDates[i]];
-          var color, yOff, baseline, fontSize, showAlways;
+          var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
           if(di === 0){
-            // Total — always show, bold, above point
-            color = isSelected ? (getThemeColors().tc==='#64748b'?'#e8ecf0':'#0a1628') : 'rgba(100,116,139,0.7)';
-            yOff = -10; baseline = 'bottom';
-            fontSize = isSelected ? 'bold 11px' : '10px';
-            showAlways = true;
-          } else if(di === 1){
-            // Answered — only show on selected dates
-            if(!isSelected) return;
-            color = '#34d399';
-            yOff = 10; baseline = 'top';
-            fontSize = '9px';
-          } else {
-            // Abandoned — only show when >0 and selected
-            if(!isSelected) return;
-            color = '#f87171';
-            yOff = -10; baseline = 'bottom';
-            fontSize = 'bold 9px';
-          }
-
-          // Draw background pill for Total label
-          if(di === 0){
-            var text = val.toLocaleString();
+            // Total — above point, always show
             ctx.save();
-            ctx.font = fontSize+' Segoe UI,sans-serif';
-            var tw = ctx.measureText(text).width;
-            var ph = 13, pw = tw+8, px = pt.x-pw/2, py = pt.y+yOff-(baseline==='bottom'?ph:0);
-            ctx.fillStyle = isSelected ? 'rgba(59,130,246,0.15)' : 'rgba(100,116,139,0.08)';
-            ctx.beginPath();
-            ctx.roundRect(px, py, pw, ph, 4);
-            ctx.fill();
-            ctx.fillStyle = color;
+            ctx.font = (isSelected?'bold ':'')+'11px Segoe UI,sans-serif';
+            ctx.fillStyle = isSelected ? (isDark?'#e2e8f0':'#0a1628') : (isDark?'rgba(148,163,184,0.8)':'rgba(74,98,128,0.6)');
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, pt.x, py + ph/2);
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(val.toLocaleString(), pt.x, pt.y - 8);
+            ctx.restore();
+          } else if(di === 1){
+            // Answered — below point
+            ctx.save();
+            ctx.font = '9px Segoe UI,sans-serif';
+            ctx.fillStyle = isSelected ? '#34d399' : 'rgba(52,211,153,0.4)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(val.toLocaleString(), pt.x, pt.y + 6);
             ctx.restore();
           } else {
+            // Abandoned — only when > 0
+            if(val === 0) return;
             ctx.save();
-            ctx.font = fontSize+' Segoe UI,sans-serif';
-            ctx.fillStyle = color;
+            ctx.font = 'bold 9px Segoe UI,sans-serif';
+            ctx.fillStyle = isSelected ? '#f87171' : 'rgba(248,113,113,0.4)';
             ctx.textAlign = 'center';
-            ctx.textBaseline = baseline;
-            ctx.fillText(val.toLocaleString(), pt.x, pt.y + yOff);
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(val.toLocaleString(), pt.x, pt.y - 6);
             ctx.restore();
           }
         });
@@ -1423,8 +1436,9 @@ function renderTrend(trendDates, selectedDates, trendMonth){
     },
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:24, bottom:8}},
       plugins:{
-        legend:{display:true,position:'bottom',align:'start',labels:{color:'#94a3b8',font:{size:11},boxWidth:10,padding:16,usePointStyle:true,pointStyle:'circle'}},
+        legend:{display:true,position:'bottom',align:'start',labels:{color:TC,font:{size:11},boxWidth:10,padding:16,usePointStyle:true,pointStyle:'circle'}},
         tooltip:{mode:'index',intersect:false,callbacks:{
           title:function(items){
             var d=trendDates[items[0].dataIndex];
@@ -1435,10 +1449,12 @@ function renderTrend(trendDates, selectedDates, trendMonth){
       },
       scales:{
         x:{ticks:{color:TC,font:{size:10},autoSkip:true,maxTicksLimit:31},grid:{color:GC}},
-        y:{ticks:{color:TC},grid:{color:GC},beginAtZero:true}
+        y:{ticks:{color:TC},grid:{color:GC},beginAtZero:true,
+           suggestedMax: Math.max.apply(null, trendDates.map(function(d){return allData[d]?allData[d].total:0;})) * 1.18}
       }
-    }
-  },[trendLabelPlugin]);
+    },
+    plugins:[trendLabelPlugin]
+  });
 }
 
 function getFilteredDates(fromId, toId){
