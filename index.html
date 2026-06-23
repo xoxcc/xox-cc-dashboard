@@ -277,6 +277,18 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 24px;transition:background .25s,color .25s;}
 
+/* ── Sidebar ── */
+.sb-btn:hover{background:var(--bg4) !important;color:var(--text) !important;}
+.sb-btn.active{background:rgba(59,130,246,.15) !important;color:#60a5fa !important;}
+[data-theme="light"] .sb-btn.active{background:#dbeafe !important;color:#1d4ed8 !important;}
+[data-theme="light"] .sb-btn:hover{background:var(--bg4) !important;color:var(--text) !important;}
+#sidebar.collapsed{width:56px;}
+#sidebar.collapsed .sb-label{display:none;}
+#sidebar.collapsed #sidebarBrand{display:none;}
+#sidebar.collapsed #sidebarUserBar{display:none;}
+#sidebar.collapsed .sb-btn{justify-content:center;padding:9px;}
+#sidebar.collapsed #sidebarToggleIcon{}
+
 /* ── Topbar ── */
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
 .topbar h1{font-size:18px;font-weight:700;color:var(--text);}
@@ -551,6 +563,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('dashboard')" id="tab-dashboard"><i class="ti ti-layout-dashboard" style="margin-right:5px;"></i>Dashboard</button>
   <button class="tab-btn" onclick="switchTab('incidents')" id="tab-incidents"><i class="ti ti-alert-triangle" style="margin-right:5px;"></i>Incident Reports</button>
+  <button class="tab-btn" onclick="switchTab('casesla')" id="tab-casesla"><i class="ti ti-clipboard-check" style="margin-right:5px;"></i>Issue SLA</button>
 </div>
 
 <div class="tab-content active" id="content-dashboard">
@@ -592,7 +605,6 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <p id="subtitle">Loading...</p>
     <p id="syncStatus" style="font-size:11px;margin-top:2px;color:#64748b;"></p>
     <p id="userBar" style="font-size:11px;margin-top:2px;color:#94a3b8;display:none;"></p>
-    <p id="syncStatus" style="font-size:11px;margin-top:2px;color:#64748b;"></p>
   </div>
   <div class="topbar-right">
     <span class="pill" id="dataPill">— dates</span>
@@ -600,9 +612,8 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <button class="btn btn-danger" onclick="openRemoveData()" title="Remove imported dates"><i class="ti ti-database-minus"></i> Remove Data</button>
     <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
     <button class="btn" id="userMgmtBtn" onclick="openUserMgmt()" style="display:none;background:#7c3aed;color:#fff;"><i class="ti ti-users-cog"></i> Users</button>
-    <button class="btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark/light mode"><i class="ti ti-sun" id="themeIcon"></i></button>
+    <button class="btn" onclick="toggleTheme()" title="Toggle dark/light mode"><i class="ti ti-sun" id="themeIcon"></i></button>
     <button class="btn" id="signOutBtn" onclick="doSignOut()" style="display:none;"><i class="ti ti-logout"></i> Sign Out</button>
-    <button class="btn" onclick="resetFilters()"><i class="ti ti-refresh"></i> Reset</button>
   </div>
 </div>
 
@@ -698,6 +709,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
       </div>
       <div class="agents-grid" id="agentsGrid"></div>
       <div id="agentTableWrap"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-table" style="margin-right:5px;"></i>Agent Detail <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:8px;">(click column to sort)</span></div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="agentDetailTable"><thead><tr style="border-bottom:2px solid #1e2d40;"><th onclick="sortAgentTable(0)" id="ath0" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;cursor:pointer;">Staff Name</th><th onclick="sortAgentTable(1)" id="ath1" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound</th><th onclick="sortAgentTable(2)" id="ath2" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound</th><th onclick="sortAgentTable(3)" id="ath3" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Sum of Talking</th><th onclick="sortAgentTable(4)" id="ath4" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Avg Talk</th></tr></thead><tbody id="agentDetailBody"></tbody><tfoot><tr style="border-top:2px solid #2d3748;background:#1a2133;"><td style="padding:7px 10px;font-weight:700;color:#60a5fa;">Grand Total</td><td id="agentFootIn" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOut" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td></td></tr></tfoot></table></div></div>
+      <div id="agentShowMoreWrap" style="text-align:center;padding:6px 0 10px;position:relative;z-index:2;"></div>
     </div>
     <div class="dp-resize-grip" title="Drag to resize"><i class="ti ti-grip-horizontal" style="font-size:10px;"></i></div>
   </div>
@@ -731,11 +743,14 @@ ON CONFLICT (id) DO NOTHING;</code></div>
           <td></td>
         </tr></tfoot>
       </table></div>
+      <div id="dropShowMoreWrap" style="text-align:center;padding:6px 0 10px;position:relative;z-index:2;"></div>
     </div>
     <div class="dp-resize-grip" title="Drag to resize"><i class="ti ti-grip-horizontal" style="font-size:10px;"></i></div>
   </div>
 
 </div><!-- end #dashPanels -->
+
+<div style="margin-bottom:24px;"></div>
 
 
 
@@ -1514,7 +1529,7 @@ function renderTrend(trendDates, selectedDates, trendMonth){
     type:'line',
     plugins:[trendInlinePlugin],
     data:{
-      labels:trendDates.map(function(d){var p=d.split('-');return p[2]+' '+_MN[parseInt(p[1])-1];}),
+      labels:trendDates.map(function(d){var p=d.split('-');var dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d).getDay()];return dn+' '+p[2]+' '+_MN[parseInt(p[1])-1];}),
       datasets:[
         {label:'Total',data:trendDates.map(function(d){return allData[d]?allData[d].total:0;}),
           borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.06)',fill:true,tension:.3,
@@ -1602,6 +1617,7 @@ function resetDropFilter(){
 }
 
 function renderAgents(a){
+  window._lastAgentData=a;
   const sorted=Object.entries(a.agents).sort((x,y)=>y[1].inbound-x[1].inbound);
   const grid=document.getElementById('agentsGrid');
   grid.innerHTML='';
@@ -2008,7 +2024,7 @@ function renderAgentTable(entries){
     tbody.appendChild(tr);
   });
 
-  // Footer
+  // Footer totals
   var totIn=entries.reduce(function(s,r){return s+r.inbound;},0);
   var totOut=entries.reduce(function(s,r){return s+r.outbound;},0);
   var totTalk=entries.reduce(function(s,r){return s+r.totalTalk;},0);
@@ -2086,6 +2102,8 @@ function showDashboard(token,user){
     document.getElementById('loginScreen').style.display='none';
     var bar=document.getElementById('userBar');
     if(bar){bar.style.display='inline';bar.textContent='Signed in as '+name+' ('+role+')';}
+    var sbar=document.getElementById('sidebarUserBar');
+    if(sbar){sbar.textContent=name+' · '+role;}
     document.getElementById('signOutBtn').style.display='inline-flex';
     if(isAdmin) document.getElementById('userMgmtBtn').style.display='inline-flex';
     allData = Object.assign({}, DATA);
@@ -2103,6 +2121,8 @@ function showDashboard(token,user){
         }
         var bar2=document.getElementById('userBar');
         if(bar2) bar2.textContent='Signed in as '+(rows[0].name||name)+' ('+currentUser.role+')';
+        var sbar2=document.getElementById('sidebarUserBar');
+        if(sbar2) sbar2.textContent=(rows[0].name||name)+' · '+currentUser.role;
         applyPermissions();
       } else {
         var defaultPerms={kpi:true,trend:true,hourly:true,sla:true,agent_cards:true,agent_table:true,incidents:true};
@@ -2115,7 +2135,17 @@ function showDashboard(token,user){
       }
     }).catch(function(){});
 
-    setTimeout(function(){init();},100);
+  // Restore sidebar collapsed state
+  try{
+    if(localStorage.getItem('xox_sidebar_collapsed')==='1'){
+      var sb=document.getElementById('sidebar');
+      var icon=document.getElementById('sidebarToggleIcon');
+      if(sb) sb.classList.add('collapsed');
+      if(icon) icon.className='ti ti-layout-sidebar-left-expand';
+    }
+  }catch(e){}
+
+  setTimeout(function(){init();},100);
   }catch(e){
     // If showDashboard crashes, make sure login screen stays visible
     console.error('showDashboard error:',e);
@@ -2791,8 +2821,11 @@ function renderDropTable(entries){
   var tbody=document.getElementById('dropTableBody');
   if(!tbody)return;
   tbody.innerHTML='';
+  var DLIMIT=15;
+  var dropShowAll=window._dropShowAll||false;
+  var displayedDrop=dropShowAll?sorted:sorted.slice(0,DLIMIT);
   var total=entries.reduce(function(s,r){return s+r.dropped;},0);
-  sorted.forEach(function(row){
+  displayedDrop.forEach(function(row){
     var tr=document.createElement('tr');
     tr.style.borderBottom='1px solid #111827';
     var nm=document.createElement('td');nm.textContent=row.name.replace(/^CC /,'');nm.title=row.name;
@@ -2818,10 +2851,24 @@ function renderDropTable(entries){
     [nm,tdD,td30,tdP].forEach(function(td){tr.appendChild(td);});
     tbody.appendChild(tr);
   });
+
   var foot=document.getElementById('dropFootTotal');if(foot)foot.textContent=total.toLocaleString();
   var total30=entries.reduce(function(s,r){return s+r.drop30;},0);
   var f30=document.getElementById('dropFoot30');if(f30)f30.textContent=total30>0?total30.toLocaleString():'-';
   var badge=document.getElementById('dropTotalBadge');if(badge)badge.textContent=total+' total drops';
+
+  // Show More / Show Less — outside table to avoid overflow clipping
+  var dwrap=document.getElementById('dropShowMoreWrap');
+  if(dwrap){
+    dwrap.innerHTML='';
+    if(sorted.length>DLIMIT){
+      var dbtn=document.createElement('button');
+      dbtn.textContent=dropShowAll?'Show less ↑':'Show all '+sorted.length+' agents ↓';
+      dbtn.style.cssText='margin:8px auto;display:block;padding:6px 20px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;cursor:pointer;';
+      dbtn.onclick=function(){window._dropShowAll=!window._dropShowAll;renderDropTable(window._dtData);};
+      dwrap.appendChild(dbtn);
+    }
+  }
 }
 
 function buildDropData(agg){
@@ -2933,7 +2980,6 @@ function applyPermissions(){
 }
 
 function switchTab(tab){
-  // Permission check for incidents tab
   if(tab==='incidents'){
     var isAdmin2 = currentUser && (currentUser.role==='admin'||currentUser.role==='manager');
     if(!isAdmin2 && currentPerms && currentPerms.incidents===false){
@@ -2956,6 +3002,20 @@ function switchTab(tab){
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
     }, 100);
   }
+  if(tab==='casesla'){
+    setTimeout(function(){
+      var el = document.getElementById('content-casesla');
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+}
+
+function toggleSidebar(){
+  var sb = document.getElementById('sidebar');
+  var icon = document.getElementById('sidebarToggleIcon');
+  sb.classList.toggle('collapsed');
+  icon.className = sb.classList.contains('collapsed') ? 'ti ti-layout-sidebar-left-expand' : 'ti ti-layout-sidebar-left-collapse';
+  try{ localStorage.setItem('xox_sidebar_collapsed', sb.classList.contains('collapsed')?'1':'0'); }catch(e){}
 }
 
 /* ══ INCIDENTS ══ */
@@ -3691,8 +3751,314 @@ function togglePanel(id){
   });
 })();
 
-restoreLayout();
+/* ══ CASE SLA ════════════════════════════════════════════════════════════ */
+var slaData = [];
+var _slaSortCol = 1, _slaSortDir = -1;
 
+function handleSLAImport(input){
+  var file = input.files[0];
+  if(!file) return;
+  var statusEl = document.getElementById('slaImportStatus');
+  if(statusEl) statusEl.textContent = 'Reading file...';
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var wb = XLSX.read(e.target.result, {type:'binary', cellDates:false, raw:true});
+      var sheetName = wb.SheetNames.indexOf('Issue Report Listing') >= 0 ? 'Issue Report Listing' : wb.SheetNames[0];
+      var ws = wb.Sheets[sheetName];
+      if(statusEl) statusEl.textContent = 'Parsing rows...';
+      var raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true});
+      var hdrIdx = -1;
+      for(var i=0;i<Math.min(raw.length,10);i++){ if(raw[i].indexOf('Issue Created By')>=0){hdrIdx=i;break;} }
+      if(hdrIdx<0){alert('Cannot find "Issue Created By" column.');return;}
+      var headers=raw[hdrIdx];
+      var iIssue=headers.indexOf('Issue'),iDate=headers.indexOf('Date');
+      var iMonth=headers.indexOf('Month'),iBy=headers.indexOf('Issue Created By');
+      var iCat=headers.indexOf('Issue Category'),iSLA=headers.indexOf('SLA');
+      var iStatus=headers.indexOf('Issue Status');
+
+      // Convert Excel serial number to {y,m,d} - correct formula
+      function excelSerialToYMD(serial){
+        // Excel wrongly counts Feb 29 1900, so subtract 1 for serials > 60
+        var n = serial > 60 ? serial - 1 : serial;
+        var d = new Date(Date.UTC(1900, 0, 1) + (n - 1) * 86400000);
+        return {y: d.getUTCFullYear(), m: d.getUTCMonth()+1, d: d.getUTCDate()};
+      }
+
+      function toYearMonth(val){
+        if(!val && val !== 0) return '';
+        if(typeof val === 'number'){
+          var ymd = excelSerialToYMD(val);
+          return ymd.y+'-'+String(ymd.m).padStart(2,'0');
+        }
+        var s = String(val).trim();
+        if(s.match(/^\d{4}-\d{2}/)) return s.slice(0,7);
+        // Try parsing date string
+        var m = s.match(/(\d{4})[\/\-](\d{1,2})/);
+        if(m) return m[1]+'-'+String(parseInt(m[2])).padStart(2,'0');
+        return s.slice(0,7);
+      }
+
+      function toDateStr(val){
+        if(!val && val !== 0) return '';
+        if(typeof val === 'number'){
+          var ymd = excelSerialToYMD(val);
+          return ymd.y+'-'+String(ymd.m).padStart(2,'0')+'-'+String(ymd.d).padStart(2,'0');
+        }
+        return String(val).trim().slice(0,10);
+      }
+      slaData=[];
+      raw.slice(hdrIdx+1).forEach(function(r){
+        var by=String(r[iBy]||'').trim();
+        if(!by) return; // skip empty rows only
+        // Remove CC- or CC. prefix if present, otherwise use name as-is
+        var agent = by.replace(/^CC[-.\s]+/i,'').trim();
+        if(!agent) return;
+        var slaStr=String(r[iSLA]||'').trim();
+        var days=parseInt(slaStr)||0;
+        slaData.push({
+          issue:String(r[iIssue]||'').trim(),
+          date:toDateStr(r[iDate]),
+          month:toYearMonth(r[iMonth]||r[iDate]),
+          agent:agent,
+          category:String(r[iCat]||'').trim(),
+          status:String(r[iStatus]||'').trim(),
+          days:days
+        });
+      });
+      var months=[...new Set(slaData.map(function(r){return r.month;}))].filter(Boolean).sort();
+      var years=[...new Set(months.map(function(m){return m.slice(0,4);}))].sort();
+
+      // Populate year filter
+      var ySel=document.getElementById('slaYearFilter');
+      ySel.innerHTML='<option value="">All Years</option>';
+      years.forEach(function(y){var o=document.createElement('option');o.value=y;o.textContent=y;ySel.appendChild(o);});
+
+      // Populate month filter (all months initially)
+      var mSel=document.getElementById('slaMonthFilter');
+      var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      mSel.innerHTML='<option value="">All Months</option>';
+      months.forEach(function(m){var p=m.split('-');var o=document.createElement('option');o.value=m;o.textContent=MN[parseInt(p[1])-1]+' '+p[0];mSel.appendChild(o);});
+      if(months.length){
+        var latestMonth=months[months.length-1];
+        var latestYear=latestMonth.slice(0,4);
+        ySel.value=latestYear;
+        // Filter month dropdown to latest year
+        populateSLAMonths(latestYear);
+        mSel.value=latestMonth;
+        // Set date pickers
+        var lp=latestMonth.split('-');
+        var lyr=parseInt(lp[0]),lmo=parseInt(lp[1]);
+        var lLast=new Date(lyr,lmo,0).getDate();
+        document.getElementById('slaDateFrom').value=latestMonth+'-01';
+        document.getElementById('slaDateTo').value=latestMonth+'-'+String(lLast).padStart(2,'0');
+      }
+      var statuses=[...new Set(slaData.map(function(r){return r.status;}))].filter(Boolean).sort();
+      var sSel=document.getElementById('slaStatusFilter');
+      sSel.innerHTML='<option value="">All Statuses</option>';
+      statuses.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;sSel.appendChild(o);});
+      var pEl=document.getElementById('slaCasePeriod');
+      if(pEl) pEl.textContent=sheetName+' · '+slaData.length.toLocaleString()+' CC cases · '+months[0]+' to '+months[months.length-1];
+      if(statusEl) statusEl.textContent='✓ '+slaData.length.toLocaleString()+' CC cases loaded';
+
+      // Debug: log month counts to console
+      var dbg={};
+      slaData.forEach(function(r){ dbg[r.month]=(dbg[r.month]||0)+1; });
+      console.log('=== Issue SLA month counts ===');
+      Object.keys(dbg).sort().forEach(function(m){ console.log(m+': '+dbg[m]); });
+      console.log('=== END ===');
+
+      renderCaseSLA();
+    }catch(err){if(statusEl)statusEl.textContent='Error: '+err.message;alert('Import error: '+err.message);}
+  };
+  reader.readAsBinaryString(file);
+  input.value='';
+}
+
+function populateSLAMonths(year){
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var months=[...new Set(slaData.map(function(r){return r.month;}))].filter(Boolean).sort();
+  var filtered = year ? months.filter(function(m){return m.startsWith(year);}) : months;
+  var mSel=document.getElementById('slaMonthFilter');
+  mSel.innerHTML='<option value="">All Months</option>';
+  filtered.forEach(function(m){
+    var p=m.split('-');var o=document.createElement('option');
+    o.value=m;o.textContent=MN[parseInt(p[1])-1];
+    mSel.appendChild(o);
+  });
+}
+
+function onSLAYearChange(){
+  var year=document.getElementById('slaYearFilter').value;
+  populateSLAMonths(year);
+  document.getElementById('slaMonthFilter').value='';
+  document.getElementById('slaDateFrom').value='';
+  document.getElementById('slaDateTo').value='';
+  renderCaseSLA();
+}
+
+function onSLAMonthChange(){
+  // When month selected, set From/To to full month range
+  var m = document.getElementById('slaMonthFilter').value;
+  if(m){
+    var p=m.split('-'), yr=parseInt(p[0]), mo=parseInt(p[1]);
+    var last = new Date(yr, mo, 0).getDate();
+    document.getElementById('slaDateFrom').value = m+'-01';
+    document.getElementById('slaDateTo').value   = m+'-'+String(last).padStart(2,'0');
+  } else {
+    document.getElementById('slaDateFrom').value = '';
+    document.getElementById('slaDateTo').value   = '';
+  }
+  renderCaseSLA();
+}
+
+function onSLADateChange(){
+  // When dates changed manually, clear month selection
+  document.getElementById('slaMonthFilter').value = '';
+  renderCaseSLA();
+}
+
+function resetSLAFilters(){
+  document.getElementById('slaYearFilter').value  = '';
+  document.getElementById('slaMonthFilter').value = '';
+  document.getElementById('slaDateFrom').value    = '';
+  document.getElementById('slaDateTo').value      = '';
+  document.getElementById('slaStatusFilter').value= '';
+  document.getElementById('slaSearch').value      = '';
+  populateSLAMonths('');
+  renderCaseSLA();
+}
+
+function renderCaseSLA(){
+  var yf=(document.getElementById('slaYearFilter')||{}).value||'';
+  var mf=(document.getElementById('slaMonthFilter')||{}).value||'';
+  var sf=(document.getElementById('slaStatusFilter')||{}).value||'';
+  var q=((document.getElementById('slaSearch')||{}).value||'').toLowerCase();
+  var dfr=(document.getElementById('slaDateFrom')||{}).value||'';
+  var dto=(document.getElementById('slaDateTo')||{}).value||'';
+
+  var f=slaData.filter(function(r){
+    if(yf && !r.month.startsWith(yf)) return false;
+    if(mf && r.month!==mf) return false;
+    if(dfr && r.date<dfr) return false;
+    if(dto && r.date>dto) return false;
+    if(sf && r.status!==sf) return false;
+    if(q && !r.agent.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  var total=f.length;
+  var closedRows=f.filter(function(r){var s=r.status.trim();return s==='Closed'||s==='Closed > Closed';});
+  var closed=closedRows.length;
+  var open=total-closed;
+  var w3=closedRows.filter(function(r){return r.days<=3;}).length;
+  var w5=closedRows.filter(function(r){return r.days<=5;}).length;
+  var w10=closedRows.filter(function(r){return r.days<=10;}).length;
+  var remain=closed-w10;
+  var agents=new Set(f.map(function(r){return r.agent;})).size;
+  function pct(n,d){return d>0?(n/d*100).toFixed(2)+'%':'—';}
+  function st(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  st('slaKpiTotal',total.toLocaleString()); st('slaKpiAgents',agents+' agents');
+  st('slaKpiClosed',closed.toLocaleString()); st('slaKpiClosedPct',pct(closed,total)+' of total');
+  st('slaKpiOpen',open.toLocaleString()); st('slaKpiOpenPct',pct(open,total)+' of total');
+  st('slaKpi3d',w3.toLocaleString()+' ('+pct(w3,total)+')'); st('slaKpi3dPct',pct(w3,closed)+' of closed');
+  st('slaKpi5d',w5.toLocaleString()+' ('+pct(w5,total)+')'); st('slaKpi5dPct',pct(w5,closed)+' of closed');
+  st('slaKpi10d',w10.toLocaleString()+' ('+pct(w10,total)+')'); st('slaKpi10dPct',pct(w10,closed)+' of closed');
+  st('slaKpiRemain',remain.toLocaleString()+' ('+pct(remain,total)+')'); st('slaKpiRemainPct',pct(remain,closed)+' of closed');
+
+  // Top 10 categories — count days only for closed rows
+  var catMap={};
+  f.forEach(function(r){
+    var parts = r.category.split('>');
+    var cat1 = parts[0].trim();
+    var cat2 = parts.length>1 ? parts[1].trim() : '';
+    var key = r.category;
+    if(!catMap[key]) catMap[key]={cat1:cat1,cat2:cat2,total:0,w3:0,w5:0,w10:0};
+    catMap[key].total++;
+    var isClosed=r.status.trim()==='Closed'||r.status.trim()==='Closed > Closed';
+    if(isClosed&&r.days<=3)  catMap[key].w3++;
+    if(isClosed&&r.days<=5)  catMap[key].w5++;
+    if(isClosed&&r.days<=10) catMap[key].w10++;
+  });
+  var top10=Object.values(catMap).sort(function(a,b){return b.total-a.total;}).slice(0,10);
+  var t5b=document.getElementById('slaTop5Body');
+  if(t5b){
+    t5b.innerHTML='';
+    var medals=['🥇','🥈','🥉','4','5','6','7','8','9','10'];
+    top10.forEach(function(c,i){
+      var tr=document.createElement('tr');
+      tr.style.borderBottom='1px solid var(--border)';
+      tr.onmouseover=function(){this.style.background='var(--row-hover)';};
+      tr.onmouseout=function(){this.style.background='';};
+      [[medals[i],'var(--text2)','center'],[c.cat1,'var(--text)','left'],[c.cat2,'var(--text3)','left'],
+       [c.total.toLocaleString(),'var(--text)','right'],[c.w3.toLocaleString(),'#34d399','right'],
+       [c.w5.toLocaleString(),'#60a5fa','right'],[c.w10.toLocaleString(),'#fbbf24','right'],
+       [pct(c.w3,c.total),'#34d399','right']
+      ].forEach(function(d){
+        var td=document.createElement('td');td.textContent=d[0];
+        td.style.cssText='padding:7px 10px;color:'+d[1]+';text-align:'+d[2]+';font-size:12px;';
+        tr.appendChild(td);
+      });
+      t5b.appendChild(tr);
+    });
+  }
+
+  // Agent table — count days only for closed rows
+  var agMap={};
+  f.forEach(function(r){
+    if(!agMap[r.agent]) agMap[r.agent]={agent:r.agent,total:0,open:0,w3:0,w5:0,w10:0};
+    agMap[r.agent].total++;
+    var isClosed=r.status.trim()==='Closed'||r.status.trim()==='Closed > Closed';
+    if(!isClosed) agMap[r.agent].open++;
+    if(isClosed&&r.days<=3)  agMap[r.agent].w3++;
+    if(isClosed&&r.days<=5)  agMap[r.agent].w5++;
+    if(isClosed&&r.days<=10) agMap[r.agent].w10++;
+  });
+  var agRows=Object.values(agMap);
+  agRows.sort(function(a,b){
+    var keys=['agent','total','w3','w5','w10','remain','pct3','open'];
+    var k=keys[_slaSortCol];
+    var av=k==='agent'?a.agent:k==='remain'?(a.total-a.w10):k==='pct3'?(a.w3/a.total):a[k];
+    var bv=k==='agent'?b.agent:k==='remain'?(b.total-b.w10):k==='pct3'?(b.w3/b.total):b[k];
+    if(k==='agent') return _slaSortDir*(av<bv?-1:av>bv?1:0);
+    return _slaSortDir*(av-bv);
+  });
+  var tb=document.getElementById('slaAgentBody');
+  if(tb){
+    tb.innerHTML='';
+    agRows.forEach(function(ag){
+      var rem=ag.total-ag.w10;
+      var p3=pct(ag.w3,ag.total);
+      var pNum=parseFloat(p3);
+      var pCol=pNum>=95?'#34d399':pNum>=80?'#fbbf24':'#f87171';
+      var tr=document.createElement('tr');
+      tr.style.borderBottom='1px solid var(--border)';
+      tr.onmouseover=function(){this.style.background='var(--row-hover)';};
+      tr.onmouseout=function(){this.style.background='';};
+      [[ag.agent,'var(--text)','left'],[ag.total.toLocaleString(),'var(--text)','right'],
+       [ag.open>0?ag.open.toLocaleString():'-',ag.open>0?'#fb923c':'var(--text3)','right'],
+       [ag.w3.toLocaleString(),'#34d399','right'],[ag.w5.toLocaleString(),'#60a5fa','right'],
+       [ag.w10.toLocaleString(),'#fbbf24','right'],[rem.toLocaleString(),rem>0?'#f87171':'var(--text3)','right'],
+       [p3,pCol,'right']
+      ].forEach(function(d,di){
+        var td=document.createElement('td');td.textContent=d[0];
+        td.style.cssText='padding:7px 10px;color:'+d[1]+';text-align:'+d[2]+';font-size:12px;';
+        if(di===7) td.style.fontWeight='700';
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+  }
+  st('slaFootTotal',total.toLocaleString()); st('slaFootOpen',open.toLocaleString());
+  st('slaFoot3d',w3.toLocaleString()); st('slaFoot5d',w5.toLocaleString());
+  st('slaFoot10d',w10.toLocaleString()); st('slaFootRemain',remain.toLocaleString()); st('slaFootPct',pct(w3,total));
+}
+
+function sortSLATable(col){
+  if(_slaSortCol===col)_slaSortDir*=-1; else{_slaSortCol=col;_slaSortDir=-1;}
+  renderCaseSLA();
+}
+
+restoreLayout();
 loadIncidents();
 loadRemarks();
 checkSession();
@@ -3812,18 +4178,158 @@ checkSession();
     <button onclick="saveRM()" style="padding:7px 14px;background:#fbbf24;color:#000;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;">Save</button>
   </div>
 </div>
-<!-- Back to Top / Back to Dashboard Button -->
-<button id="backToTopBtn" onclick="switchTab('dashboard');window.scrollTo({top:0,behavior:'smooth'})" title="Back to Dashboard"
-  style="display:none;position:fixed;bottom:24px;right:24px;z-index:999;padding:10px 16px;border-radius:24px;background:#3b82f6;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(59,130,246,.4);transition:opacity .2s,transform .2s;align-items:center;justify-content:center;gap:6px;">
-  <i class="ti ti-arrow-left"></i> Dashboard
-</button>
+
+<!-- ── CASE SLA TAB ─────────────────────────────────────────────────────── -->
+<div class="tab-content" id="content-casesla">
+
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);"><i class="ti ti-clipboard-check" style="color:#3b82f6;margin-right:8px;"></i>Issue SLA Report</div>
+      <div id="slaCasePeriod" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select id="slaYearFilter" onchange="onSLAYearChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+        <option value="">All Years</option>
+      </select>
+      <select id="slaMonthFilter" onchange="onSLAMonthChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+        <option value="">All Months</option>
+      </select>
+      <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">From</label>
+      <input type="date" id="slaDateFrom" onchange="onSLADateChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;"/>
+      <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">To</label>
+      <input type="date" id="slaDateTo" onchange="onSLADateChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;"/>
+      <button onclick="resetSLAFilters()" style="padding:5px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;"><i class="ti ti-refresh"></i> Reset</button>
+      <select id="slaStatusFilter" onchange="renderCaseSLA()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+        <option value="">All Statuses</option>
+      </select>
+      <button onclick="document.getElementById('slaFileInput').click()" style="padding:8px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-import"></i> Import XLSX</button>
+      <input type="file" id="slaFileInput" accept=".xls,.xlsx" style="display:none;" onchange="handleSLAImport(this)">
+      <div id="slaImportStatus" style="font-size:11px;color:var(--text3);"></div>
+    </div>
+  </div>
+
+  <!-- KPI Row 1: Main SLA metrics -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Total Cases</div>
+      <div style="font-size:28px;font-weight:700;color:#3b82f6;" id="slaKpiTotal">—</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px;" id="slaKpiAgents">— agents</div>
+    </div>
+    <div style="background:#0d2218;border:1px solid #166534;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#86efac;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-circle-check"></i> Total Closed</div>
+      <div style="font-size:28px;font-weight:700;color:#4ade80;" id="slaKpiClosed">—</div>
+      <div style="font-size:10px;color:#86efac;margin-top:2px;" id="slaKpiClosedPct">—</div>
+    </div>
+    <div style="background:#2e1a0d;border:1px solid #92400e;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#fde68a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-clock"></i> Still Open</div>
+      <div style="font-size:28px;font-weight:700;color:#fb923c;" id="slaKpiOpen">—</div>
+      <div style="font-size:10px;color:#fde68a;margin-top:2px;" id="slaKpiOpenPct">—</div>
+    </div>
+    <div style="background:#0d2e1a;border:1px solid #14532d;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#86efac;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-circle-check"></i> Closed ≤3 Days</div>
+      <div style="font-size:28px;font-weight:700;color:#34d399;" id="slaKpi3d">—</div>
+      <div style="font-size:10px;color:#86efac;margin-top:2px;" id="slaKpi3dPct">—</div>
+    </div>
+    <div style="background:#0d1e2e;border:1px solid #1e3a5f;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#93c5fd;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-circle-check"></i> Within 5 Days</div>
+      <div style="font-size:28px;font-weight:700;color:#60a5fa;" id="slaKpi5d">—</div>
+      <div style="font-size:10px;color:#93c5fd;margin-top:2px;" id="slaKpi5dPct">—</div>
+    </div>
+    <div style="background:#1e1a0d;border:1px solid #854d0e;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#fde68a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-circle-check"></i> Within 10 Days</div>
+      <div style="font-size:28px;font-weight:700;color:#fbbf24;" id="slaKpi10d">—</div>
+      <div style="font-size:10px;color:#fde68a;margin-top:2px;" id="slaKpi10dPct">—</div>
+    </div>
+  </div>
+
+  <!-- Top 10 Categories -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-trophy" style="color:#fbbf24;margin-right:6px;"></i>Top 10 Issue Categories</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border2);">
+            <th style="padding:7px 10px;text-align:center;font-size:10px;text-transform:uppercase;color:var(--text3);width:40px;">#</th>
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">1st Category</th>
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">2nd Category</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Total</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#34d399;">≤3 Days</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;">≤5 Days</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fbbf24;">≤10 Days</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#34d399;">3-Day %</th>
+          </tr>
+        </thead>
+        <tbody id="slaTop5Body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Agent SLA table -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-users" style="margin-right:5px;"></i>Agent SLA Breakdown</div>
+      <input type="text" id="slaSearch" onkeyup="renderCaseSLA()" placeholder="Search agent..." style="padding:5px 10px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;width:180px;">
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border2);">
+            <th onclick="sortSLATable(0)" style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);cursor:pointer;user-select:none;">Agent ↕</th>
+            <th onclick="sortSLATable(1)" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);cursor:pointer;user-select:none;">Total ↕</th>
+            <th onclick="sortSLATable(7)" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;cursor:pointer;user-select:none;">Open ↕</th>
+            <th onclick="sortSLATable(2)" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#34d399;cursor:pointer;user-select:none;">≤3 Days ↕</th>
+            <th onclick="sortSLATable(3)" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;cursor:pointer;user-select:none;">≤5 Days ↕</th>
+            <th onclick="sortSLATable(4)" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fbbf24;cursor:pointer;user-select:none;">≤10 Days ↕</th>
+            <th onclick="sortSLATable(5)" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#f87171;cursor:pointer;user-select:none;">Remaining ↕</th>
+            <th onclick="sortSLATable(6)" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#34d399;cursor:pointer;user-select:none;">3-Day % ↕</th>
+          </tr>
+        </thead>
+        <tbody id="slaAgentBody"></tbody>
+        <tfoot>
+          <tr style="border-top:2px solid var(--border2);background:var(--bg3);">
+            <td style="padding:7px 10px;font-weight:700;color:#3b82f6;">Grand Total</td>
+            <td id="slaFootTotal" style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text);"></td>
+            <td id="slaFootOpen" style="padding:7px 10px;text-align:right;font-weight:700;color:#fb923c;"></td>
+            <td id="slaFoot3d" style="padding:7px 10px;text-align:right;font-weight:700;color:#34d399;"></td>
+            <td id="slaFoot5d" style="padding:7px 10px;text-align:right;font-weight:700;color:#60a5fa;"></td>
+            <td id="slaFoot10d" style="padding:7px 10px;text-align:right;font-weight:700;color:#fbbf24;"></td>
+            <td id="slaFootRemain" style="padding:7px 10px;text-align:right;font-weight:700;color:#f87171;"></td>
+            <td id="slaFootPct" style="padding:7px 10px;text-align:right;font-weight:700;color:#34d399;"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end #content-casesla -->
+
+
+
+<!-- Sidebar handles navigation - no floating buttons needed -->
+
+<!-- Floating nav buttons -->
+<div id="floatNav" style="display:none;position:fixed;bottom:24px;right:24px;z-index:999;flex-direction:column;gap:8px;align-items:flex-end;">
+  <button onclick="switchTab('dashboard');window.scrollTo({top:0,behavior:'smooth'})"
+    style="padding:9px 16px;border-radius:24px;background:#3b82f6;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(59,130,246,.4);display:flex;align-items:center;gap:6px;">
+    <i class="ti ti-layout-dashboard"></i> Dashboard
+  </button>
+  <button onclick="switchTab('incidents')"
+    style="padding:9px 16px;border-radius:24px;background:#f59e0b;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(245,158,11,.4);display:flex;align-items:center;gap:6px;">
+    <i class="ti ti-alert-triangle"></i> Incident Reports
+  </button>
+  <button onclick="switchTab('casesla')"
+    style="padding:9px 16px;border-radius:24px;background:#8b5cf6;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(139,92,246,.4);display:flex;align-items:center;gap:6px;">
+    <i class="ti ti-clipboard-check"></i> Issue SLA
+  </button>
+</div>
 
 <script>
 (function(){
-  var btn = document.getElementById('backToTopBtn');
-  window.addEventListener('scroll', function(){
-    var onIncidents = document.getElementById('content-incidents').style.display === 'block';
-    btn.style.display = (window.scrollY > 200 && onIncidents) ? 'flex' : 'none';
+  window.addEventListener('scroll',function(){
+    var nav=document.getElementById('floatNav');
+    if(!nav) return;
+    nav.style.display=window.scrollY>200?'flex':'none';
   });
 })();
 </script>
