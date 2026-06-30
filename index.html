@@ -661,6 +661,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
         <div class="kpi"><div class="kpi-icon c-amber"><i class="ti ti-clock-check"></i></div><div class="kpi-label">Ans &lt;=30s</div><div class="kpi-val c-amber" id="kA30">-</div><div class="kpi-sub" id="kA30Sub"></div></div>
         <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-chart-line"></i></div><div class="kpi-label">SLA 30s</div><div class="kpi-val c-green" id="kSla">-</div><div class="kpi-sub">of total incoming</div></div>
         <div class="kpi"><div class="kpi-icon c-teal"><i class="ti ti-clock"></i></div><div class="kpi-label">Avg Talktime</div><div class="kpi-val c-teal" id="kAht">-</div><div class="kpi-sub">per call</div></div>
+        <div class="kpi"><div class="kpi-icon c-purple"><i class="ti ti-hourglass"></i></div><div class="kpi-label">Avg Wait Time</div><div class="kpi-val c-purple" id="kAwt">-</div><div class="kpi-sub">per answered call</div></div>
         <div class="kpi"><div class="kpi-icon c-purple"><i class="ti ti-users"></i></div><div class="kpi-label">Active Agents</div><div class="kpi-val c-purple" id="kAgents">-</div><div class="kpi-sub">with inbound calls</div></div>
         <div class="kpi"><div class="kpi-icon c-amber"><i class="ti ti-calendar-stats"></i></div><div class="kpi-label">Days in Range</div><div class="kpi-val c-amber" id="kDays">-</div><div class="kpi-sub" id="kDaysSub"></div></div>
       </div>
@@ -911,7 +912,26 @@ async function loadFromSupabase(){
     const rows = await res.json();
     if(rows && rows.length>0){
       const sb={};
-      rows.forEach(function(r){ if(r.date&&r.data) sb[r.date]=r.data; });
+      rows.forEach(function(r){
+        if(!r.date||!r.data) return;
+        var d = r.data;
+        // Backfill hourly wait if missing — distribute total_wait_s proportionally by answered calls
+        if(d.hourly && (d.total_wait_s||d.avg_wait_s)){
+          var totalWaitS = d.total_wait_s || (d.avg_wait_s * d.answered) || 0;
+          var totalAnswered = d.answered || 0;
+          var anyHourlyWait = Object.values(d.hourly).some(function(h){return (h.wait||0)>0;});
+          if(!anyHourlyWait && totalWaitS>0 && totalAnswered>0){
+            // Distribute proportionally based on answered calls per hour
+            Object.keys(d.hourly).forEach(function(h){
+              var hv = d.hourly[h];
+              if(hv.answered>0){
+                hv.wait = Math.round(totalWaitS * hv.answered / totalAnswered);
+              }
+            });
+          }
+        }
+        sb[r.date] = d;
+      });
       showStatus('Loaded '+Object.keys(sb).length+' dates from Supabase','#34d399');
       setTimeout(function(){showStatus('','');},3000);
       return sb;
@@ -1118,15 +1138,16 @@ function resetFilters(){
 }
 
 function agg(dates){
-  const r={total:0,answered:0,abandoned:0,ans30:0,talk:0,calls:0,hourly:{},agents:{}};
+  const r={total:0,answered:0,abandoned:0,ans30:0,talk:0,calls:0,wait:0,hourly:{},agents:{}};
   dates.forEach(d=>{
     const v=allData[d]; if(!v) return;
     r.total+=v.total; r.answered+=v.answered; r.abandoned+=v.abandoned; r.ans30+=v.ans30;
     const ac=v.agents.reduce((s,a)=>s+a.inbound,0);
     r.talk+=v.avg_talk_s*ac; r.calls+=ac;
+    r.wait+=(v.total_wait_s||v.avg_wait_s*v.answered||0);
     Object.entries(v.hourly).forEach(([h,hv])=>{
-      if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0};
-      r.hourly[h].total+=hv.total; r.hourly[h].answered+=hv.answered; r.hourly[h].ans30+=hv.ans30;
+      if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
+      r.hourly[h].total+=hv.total; r.hourly[h].answered+=hv.answered; r.hourly[h].ans30+=hv.ans30; r.hourly[h].wait+=(hv.wait||0);
     });
     v.agents.forEach(a=>{
       if(!r.agents[a.name]) r.agents[a.name]={inbound:0,outbound:0,talk:0};
@@ -1135,6 +1156,7 @@ function agg(dates){
     });
   });
   r.avgTalk = r.calls>0?Math.round(r.talk/r.calls):0;
+  r.avgWait = r.answered>0?Math.round(r.wait/r.answered):0;
   return r;
 }
 
@@ -1210,6 +1232,7 @@ function render(dates){
   setText('kA30Sub', fmtP(a.ans30,a.total)+' of total incoming');
   setText('kSla', fmtP(a.ans30,a.total));
   setText('kAht', fmtT(a.avgTalk));
+  setText('kAwt', fmtT(a.avgWait));
   setText('kAgents', Object.keys(a.agents).length);
   setText('kDays', dates.length);
   setText('kDaysSub', dates.length>1?dates[0]+' to '+dates[dates.length-1]:'Single day');
@@ -1266,9 +1289,10 @@ function renderHourly(a, numDays){
     ['Abandoned',     '#f87171'],
     ['Answered',      '#60a5fa'],
     ['Total Incoming','#94a3b8'],
-    ['Avg/Day',       '#6366f1'],  // only meaningful for multi-day; still shown for single (=Total)
+    ['Avg/Day',       '#6366f1'],
     ['Ans ≤30s',      '#fbbf24'],
     ['SLA 30s',       '#34d399'],
+    ['Avg Wait',      '#e879f9'],
     ['Ans %',         '#a78bfa'],
   ];
   cols.forEach(function([t,c]){
@@ -1277,7 +1301,7 @@ function renderHourly(a, numDays){
   thead.appendChild(hr); tbl.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  var totAb=0,totAn=0,totTo=0,totA30=0;
+  var totAb=0,totAn=0,totTo=0,totA30=0,totWait=0;
   hours.forEach(function(h){
     var v=a.hourly[h];
     var ab=v.total-v.answered;
@@ -1285,7 +1309,8 @@ function renderHourly(a, numDays){
     var ap =v.total>0?(v.answered/v.total*100).toFixed(2)+'%':'-';
     var sc =parseFloat(sla)>=95?'#34d399':parseFloat(sla)>=85?'#fbbf24':'#f87171';
     var avgDay = isMulti ? (v.total/divisor).toFixed(1) : v.total;
-    totAb+=ab; totAn+=v.answered; totTo+=v.total; totA30+=v.ans30;
+    var avgWait = v.answered>0 ? fmtT(Math.round((v.wait||0)/v.answered)) : '-';
+    totAb+=ab; totAn+=v.answered; totTo+=v.total; totA30+=v.ans30; totWait+=(v.wait||0);
     var row=document.createElement('tr');
     [
       [fmtHour(h),         '#e8ecf0', false],
@@ -1295,6 +1320,7 @@ function renderHourly(a, numDays){
       [avgDay,             '#6366f1', false],
       [v.ans30,            '#fbbf24', false],
       [sla,                sc,        true],
+      [avgWait,            '#e879f9', false],
       [ap,                 '#a78bfa', false],
     ].forEach(function([val,col,bold]){
       var td=document.createElement('td');
@@ -1310,6 +1336,8 @@ function renderHourly(a, numDays){
   var totAp =totTo>0?(totAn/totTo*100).toFixed(2)+'%':'-';
   var totSc =parseFloat(totSla)>=95?'#34d399':parseFloat(totSla)>=85?'#fbbf24':'#f87171';
   var totAvgDay = isMulti ? (totTo/divisor).toFixed(1) : totTo;
+  // Use KPI avgWait (from agg) for consistency — same source of truth
+  var totAvgWait = a.avgWait>0 ? fmtT(a.avgWait) : '-';
   var totRow=document.createElement('tr'); totRow.className='total-row';
   [
     ['Total',   '#60a5fa', true],
@@ -1319,6 +1347,7 @@ function renderHourly(a, numDays){
     [totAvgDay, '#6366f1', true],
     [totA30,    '#fbbf24', true],
     [totSla,    totSc,     true],
+    [totAvgWait,'#e879f9', true],
     [totAp,     '#a78bfa', true],
   ].forEach(function([val,col,bold]){
     var td=document.createElement('td');
@@ -1795,14 +1824,33 @@ function parseDateStr(raw){
   return null;
 }
 function parseTimeS(v){
-  if(!v) return 0;
+  if(v===null||v===undefined||v==='') return 0;
+  // Number: could be Excel fractional day (e.g. 0.000347 = 30 seconds)
+  if(typeof v === 'number'){
+    if(isNaN(v)) return 0;
+    if(v>=0 && v<1) return Math.round(v*86400); // fractional day
+    if(v>=1) return Math.round(v); // already seconds
+    return 0;
+  }
   const s=String(v).trim();
+  if(!s||s==='-'||s==='N/A'||s==='0') return 0;
+  // HH:MM:SS
   const hms=s.match(/^(\d+):(\d+):(\d+)/);
-  if(hms) return parseInt(hms[1])*3600+parseInt(hms[2])*60+parseInt(hms[3]);
+  if(hms){
+    var r=parseInt(hms[1])*3600+parseInt(hms[2])*60+parseInt(hms[3]);
+    return isNaN(r)?0:r;
+  }
+  // MM:SS
   const ms=s.match(/^(\d+):(\d+)$/);
-  if(ms) return parseInt(ms[1])*60+parseInt(ms[2]);
+  if(ms){
+    var r2=parseInt(ms[1])*60+parseInt(ms[2]);
+    return isNaN(r2)?0:r2;
+  }
   const f=parseFloat(s);
-  if(!isNaN(f)) return f<2?Math.round(f*86400):f;
+  if(!isNaN(f)){
+    if(f>=0&&f<1) return Math.round(f*86400);
+    return Math.round(f);
+  }
   return 0;
 }
 function parseHour(v){
@@ -1875,7 +1923,7 @@ function parseWorkbook(wb){
       } else if(st==='Waiting'){
         // Answered: Inbound Queue + Waiting (all hours)
         if(!v.answeredIQ) v.answeredIQ=[];
-        v.answeredIQ.push({hour:hour, talk:talkS});
+        v.answeredIQ.push({hour:hour, talk:talkS, wait:talkS});
       }
     }
 
@@ -1899,7 +1947,7 @@ function parseWorkbook(wb){
   const out={};
   Object.entries(daily).sort().forEach(([d,v])=>{
     const hourly={};
-    let total=0,answered=0,abandoned=0,ans30=0,ttalk=0,tcalls=0;
+    let total=0,answered=0,abandoned=0,ans30=0,ttalk=0,tcalls=0,twait=0;
 
     // Convert iqMap to array for processing
     var abandonedList = v.abandoned || [];
@@ -1914,10 +1962,13 @@ function parseWorkbook(wb){
 
     answeredList.forEach(function(info){
       const h=String(info.hour);
-      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0};
+      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0};
       answered++; total++;
       hourly[h].total++;
       hourly[h].answered++;
+      var w = isNaN(info.wait)||!info.wait ? 0 : Math.round(Number(info.wait));
+      hourly[h].wait += w;
+      twait += w;
       // Ans ≤30s: Inbound Queue + Waiting + talk time 0:00:00–0:00:30
       if((info.talk||0)<=30){ ans30++; hourly[h].ans30++; }
     });
@@ -1925,6 +1976,8 @@ function parseWorkbook(wb){
     out[d]={
       total,answered,abandoned,ans30,
       avg_talk_s:tcalls>0?Math.round(ttalk/tcalls):0,
+      avg_wait_s:answered>0?Math.round(twait/answered):0,
+      total_wait_s:twait,
       hourly,
       agents:Object.entries(v.agents).sort((a,b)=>b[1].inbound-a[1].inbound).map(([name,av])=>({
         name:cleanName(name),inbound:av.inbound,outbound:av.outbound,aht_s:av.inbound>0?Math.round(av.talk/av.inbound):0
@@ -1934,6 +1987,17 @@ function parseWorkbook(wb){
     };
   });
   if(!Object.keys(out).length) throw new Error('No valid call data found.');
+  // Debug: log hourly wait for first date
+  var firstDate = Object.keys(out)[0];
+  if(firstDate){
+    console.log('=== HOURLY WAIT DEBUG for', firstDate, '===');
+    Object.entries(out[firstDate].hourly).sort().forEach(function(e){
+      var h=e[0], hv=e[1];
+      console.log('Hour '+h+': answered='+hv.answered+' wait_sum='+hv.wait+'s avg='+(hv.answered>0?Math.round(hv.wait/hv.answered):0)+'s');
+    });
+    console.log('Total wait:', out[firstDate].total_wait_s+'s avg_wait_s:'+out[firstDate].avg_wait_s+'s');
+    console.log('=== END ===');
+  }
   // Log debug stats so we can see what Direction+Status values actually exist
   console.log('=== CSV PARSE DEBUG: Direction + Status combinations found ===');
   Object.entries(_debugStats).sort((a,b)=>b[1]-a[1]).forEach(([k,n])=>console.log(n.toString().padStart(6)+' rows: '+k));
