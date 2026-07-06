@@ -1281,7 +1281,7 @@ function render(dates){
   var anchorDate = dates[dates.length-1];
   var trendMonth = anchorDate.slice(0,7);
   var trendDates;
-  var isMonthPreset = (_activePreset==='thismonth'||_activePreset==='lastmonth');
+  var isMonthPreset = (_activePreset==='thismonth'||_activePreset==='lastmonth'||_activePreset==='yesterday');
   if(isMonthPreset){
     // Full calendar month
     trendDates = allDates.filter(function(d){ return d.startsWith(trendMonth); });
