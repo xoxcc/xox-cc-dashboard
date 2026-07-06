@@ -570,6 +570,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
   <button class="tab-btn active" onclick="switchTab('dashboard')" id="tab-dashboard"><i class="ti ti-layout-dashboard" style="margin-right:5px;"></i>Dashboard</button>
   <button class="tab-btn" onclick="switchTab('incidents')" id="tab-incidents"><i class="ti ti-alert-triangle" style="margin-right:5px;"></i>Incident Reports</button>
   <button class="tab-btn" onclick="switchTab('casesla')" id="tab-casesla"><i class="ti ti-clipboard-check" style="margin-right:5px;"></i>Issue SLA</button>
+  <button class="tab-btn" onclick="switchTab('casedetail')" id="tab-casedetail"><i class="ti ti-phone-call" style="margin-right:5px;"></i>Case Detail</button>
 </div>
 </div>
 
@@ -807,6 +808,28 @@ ON CONFLICT (id) DO NOTHING;</code></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
     <button onclick="closeRemoveData()" style="padding:8px 16px;background:var(--bg4);color:var(--text2);border:none;border-radius:8px;font-size:13px;cursor:pointer;">Cancel</button>
     <button onclick="confirmRemoveData()" style="padding:8px 16px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="ti ti-trash"></i> Remove Selected</button>
+  </div>
+</div>
+
+<!-- Case Detail Remove Data Modal -->
+<div id="cdRemoveBackdrop" onclick="closeCDRemoveData()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;"></div>
+<div id="cdRemoveBox" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:1px solid #7f1d1d;border-radius:14px;padding:26px;width:96%;max-width:560px;max-height:85vh;overflow-y:auto;z-index:401;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div style="font-size:15px;font-weight:700;color:var(--text);"><i class="ti ti-database-minus" style="color:#f87171;margin-right:8px;"></i>Remove Imported Data</div>
+    <button onclick="closeCDRemoveData()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:22px;">&#x2715;</button>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Select specific dates to remove from the Case Detail Report. This removes them from Supabase and local memory. This cannot be undone.</p>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button onclick="selectCDRemoveMonth()" style="font-size:11px;padding:4px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:6px;cursor:pointer;">Select current month</button>
+    <button onclick="selectAllCDRemove()" style="font-size:11px;padding:4px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:6px;cursor:pointer;">Select all</button>
+    <button onclick="clearCDRemoveSelection()" style="font-size:11px;padding:4px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:6px;cursor:pointer;">Clear</button>
+    <div style="margin-left:auto;font-size:11px;color:var(--text3);align-self:center;"><span id="cdRemoveSelCount">0</span> dates selected</div>
+  </div>
+  <div id="cdRemoveDataList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg);"></div>
+  <div id="cdRemoveDataStatus" style="margin-top:10px;font-size:12px;display:none;padding:8px;background:var(--bg4);border-radius:6px;"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+    <button onclick="closeCDRemoveData()" style="padding:8px 16px;background:var(--bg4);color:var(--text2);border:none;border-radius:8px;font-size:13px;cursor:pointer;">Cancel</button>
+    <button id="cdRemoveConfirmBtn" onclick="confirmCDRemoveData()" style="padding:8px 16px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="ti ti-trash"></i> Remove Selected</button>
   </div>
 </div>
 
@@ -1254,10 +1277,18 @@ function render(dates){
   renderSLA(a);
   renderHourly(a, dates.length);
 
-  // Trend: always show the full month of the last date in the selected range
-  var anchorDate = dates[dates.length-1]; // e.g. "2026-06-12"
-  var trendMonth = anchorDate.slice(0,7);  // e.g. "2026-06"
-  var trendDates = allDates.filter(function(d){ return d.startsWith(trendMonth); });
+  // Trend: show exact filter dates if custom/week, show full month for month presets
+  var anchorDate = dates[dates.length-1];
+  var trendMonth = anchorDate.slice(0,7);
+  var trendDates;
+  var isMonthPreset = (_activePreset==='thismonth'||_activePreset==='lastmonth');
+  if(isMonthPreset){
+    // Full calendar month
+    trendDates = allDates.filter(function(d){ return d.startsWith(trendMonth); });
+  } else {
+    // Show exactly the filtered dates
+    trendDates = dates.slice();
+  }
   if(trendDates.length) renderTrend(trendDates, dates, trendMonth);
 
   renderAgents(a);
@@ -1472,15 +1503,24 @@ function renderTrend(trendDates, selectedDates, trendMonth){
   var selSet = {};
   (selectedDates||[]).forEach(function(d){ selSet[d]=true; });
 
-  // Month label for title e.g. "June 2026"
+  // Chart title
   var monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var monthLabel = '';
-  if(trendMonth){
-    var parts = trendMonth.split('-');
-    monthLabel = monthNames[parseInt(parts[1])-1]+' '+parts[0];
-  }
   var titleEl = document.getElementById('trendCardTitle');
-  if(titleEl) titleEl.textContent = 'Daily Call Volume — '+monthLabel;
+  if(titleEl){
+    var isMonthView = trendDates.length > (selectedDates||[]).length;
+    if(isMonthView && trendMonth){
+      var parts = trendMonth.split('-');
+      titleEl.textContent = 'Daily Call Volume — '+monthNames[parseInt(parts[1])-1]+' '+parts[0];
+    } else if(trendDates.length){
+      var fr=trendDates[0], to=trendDates[trendDates.length-1];
+      var fp=fr.split('-'), tp=to.split('-');
+      if(fp[1]===tp[1]&&fp[0]===tp[0]){
+        titleEl.textContent = 'Daily Call Volume — '+monthNames[parseInt(fp[1])-1]+' '+fp[0];
+      } else {
+        titleEl.textContent = 'Daily Call Volume — '+parseInt(fp[2])+' '+monthNames[parseInt(fp[1])-1]+' to '+parseInt(tp[2])+' '+monthNames[parseInt(tp[1])-1]+' '+tp[0];
+      }
+    }
+  }
 
   // Point colors: selected=yellow for total, bright green for answered
   var totalColors    = trendDates.map(function(d){ return selSet[d]?'#facc15':'rgba(255,255,255,0.5)'; });
@@ -3092,9 +3132,20 @@ function switchTab(tab){
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
     }, 100);
   }
+  if(tab==='dashboard'){
+    setTimeout(function(){
+      window.scrollTo({top:0, behavior:'smooth'});
+    }, 100);
+  }
   if(tab==='casesla'){
     setTimeout(function(){
       var el = document.getElementById('content-casesla');
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+  if(tab==='casedetail'){
+    setTimeout(function(){
+      var el = document.getElementById('content-casedetail');
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
     }, 100);
   }
@@ -3983,6 +4034,9 @@ function handleSLAImport(input){
       if(pEl) pEl.textContent=sheetName+' · '+slaData.length.toLocaleString()+' CC cases · '+months[0]+' to '+months[months.length-1];
       if(statusEl) statusEl.textContent='✓ '+slaData.length.toLocaleString()+' CC cases loaded';
 
+      // Save to Supabase for persistence
+      saveSLAToSupabase();
+
       // Debug: log month counts to console
       var dbg={};
       slaData.forEach(function(r){ dbg[r.month]=(dbg[r.month]||0)+1; });
@@ -4220,7 +4274,7 @@ function slaSelectAll(val){
   document.querySelectorAll('#slaRemoveList input').forEach(function(cb){cb.checked=val;});
   updateSLARemoveCount();
 }
-function confirmSLARemove(){
+async function confirmSLARemove(){
   var checked=[...document.querySelectorAll('#slaRemoveList input:checked')].map(function(cb){return cb.value;});
   if(!checked.length){alert('No months selected.');return;}
   var toRemove=new Set(checked);
@@ -4238,10 +4292,81 @@ function confirmSLARemove(){
   mSel.innerHTML='<option value="">All Months</option>';
   months.forEach(function(m){var p=m.split('-');var o=document.createElement('option');o.value=m;o.textContent=MN[parseInt(p[1])-1]+' '+p[0];mSel.appendChild(o);});
   var pEl=document.getElementById('slaCasePeriod');
-  if(pEl) pEl.textContent=slaData.length.toLocaleString()+' CC cases · '+months[0]+' to '+months[months.length-1];
+  if(pEl) pEl.textContent=slaData.length.toLocaleString()+' CC cases · '+(months.length?months[0]+' to '+months[months.length-1]:'');
   var statusEl=document.getElementById('slaImportStatus');
-  if(statusEl) statusEl.textContent='Removed '+(before-slaData.length).toLocaleString()+' cases';
+  if(statusEl) statusEl.textContent='Removing '+(before-slaData.length).toLocaleString()+' cases from Supabase...';
   renderCaseSLA();
+
+  // Actually delete the removed months from Supabase — the row for a
+  // removed month is never re-saved (it's gone from slaData), so it must
+  // be explicitly deleted or it will silently reappear on next reload.
+  var failed=[];
+  var toRemoveArr=[...toRemove];
+  for(var i=0;i<toRemoveArr.length;i++){
+    try{
+      var r=await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data?month=eq.'+toRemoveArr[i],{
+        method:'DELETE',
+        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      });
+      if(!r.ok) failed.push(toRemoveArr[i]);
+    }catch(e){ failed.push(toRemoveArr[i]); }
+  }
+  // Re-save any months that still have remaining data (in case a month was
+  // only partially affected in the future) — safe no-op if slaData is empty.
+  await saveSLAToSupabase();
+
+  if(statusEl){
+    statusEl.textContent = failed.length
+      ? '⚠ Removed locally, but '+failed.length+' month(s) failed to delete from Supabase — try again.'
+      : 'Removed '+(before-slaData.length).toLocaleString()+' cases ✓';
+  }
+}
+
+async function saveSLAToSupabase(){
+  if(!slaData.length) return;
+  // Group by month and save each month as one row
+  var byMonth={};
+  slaData.forEach(function(r){ if(!byMonth[r.month]) byMonth[r.month]=[]; byMonth[r.month].push(r); });
+  var rows=Object.entries(byMonth).map(function(e){ return {month:e[0], data:e[1]}; });
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data',{
+      method:'POST',
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(rows)
+    });
+  }catch(e){ console.warn('SLA save failed:',e.message); }
+}
+
+async function loadSLAFromSupabase(){
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data?select=month,data&order=month.asc',{
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+    });
+    if(!r.ok) return;
+    var rows=await r.json();
+    if(!Array.isArray(rows)||!rows.length) return;
+    slaData=[];
+    rows.forEach(function(row){ if(Array.isArray(row.data)) slaData=slaData.concat(row.data); });
+    if(!slaData.length) return;
+    // Rebuild filters
+    var months=[...new Set(slaData.map(function(r){return r.month;}))].filter(Boolean).sort();
+    var years=[...new Set(months.map(function(m){return m.slice(0,4);}))].sort();
+    var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var ySel=document.getElementById('slaYearFilter');
+    var mSel=document.getElementById('slaMonthFilter');
+    if(ySel){ ySel.innerHTML='<option value="">All Years</option>'; years.forEach(function(y){var o=document.createElement('option');o.value=y;o.textContent=y;ySel.appendChild(o);}); }
+    if(mSel){ mSel.innerHTML='<option value="">All Months</option>'; months.forEach(function(m){var p=m.split('-');var o=document.createElement('option');o.value=m;o.textContent=MN[parseInt(p[1])-1]+' '+p[0];mSel.appendChild(o);}); }
+    var statuses=[...new Set(slaData.map(function(r){return r.status;}))].filter(Boolean).sort();
+    var sSel=document.getElementById('slaStatusFilter');
+    if(sSel){ sSel.innerHTML='<option value="">All Statuses</option>'; statuses.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;sSel.appendChild(o);}); }
+    // Default to latest month
+    if(ySel&&months.length){ ySel.value=months[months.length-1].slice(0,4); populateSLAMonths(ySel.value); if(mSel) mSel.value=months[months.length-1]; }
+    var pEl=document.getElementById('slaCasePeriod');
+    if(pEl) pEl.textContent='Loaded from Supabase · '+slaData.length.toLocaleString()+' CC cases · '+months[0]+' to '+months[months.length-1];
+    var statusEl=document.getElementById('slaImportStatus');
+    if(statusEl) statusEl.textContent='✓ '+slaData.length.toLocaleString()+' cases loaded';
+    renderCaseSLA();
+  }catch(e){ console.warn('SLA load failed:',e.message); }
 }
 
 function sortSLATable(col){
@@ -4249,9 +4374,526 @@ function sortSLATable(col){
   renderCaseSLA();
 }
 
+/* ══ CASE DETAIL ═════════════════════════════════════════════════════════ */
+var cdData = [];
+
+function isCDClosed(status){
+  var s=(status||'').trim().toLowerCase();
+  return s==='closed & confirmed'||s==='closed and confirmed';
+}
+
+function cdParseDate(val){
+  if(!val&&val!==0) return '';
+  if(typeof val==='number'){
+    var n=val>60?val-1:val;
+    var d=new Date(Date.UTC(1900,0,1)+(n-1)*86400000);
+    return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+  }
+  var s=String(val).trim().slice(0,10);
+  return s.match(/^\d{4}-\d{2}-\d{2}/)?s:'';
+}
+
+function handleCDImport(input){
+  var file=input.files[0]; if(!file) return;
+  var statusEl=document.getElementById('cdImportStatus');
+  if(statusEl) statusEl.textContent='Reading...';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary',cellDates:false,raw:true});
+      var allRows=[];
+      var newMonths=new Set();
+
+      wb.SheetNames.forEach(function(shName){
+        var ws=wb.Sheets[shName];
+        var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+        if(!raw.length) return;
+        // Auto-detect the real header row: scan the first several rows for
+        // one that actually looks like column headers (title rows like
+        // "Case Detail Report (Call Centre)" would otherwise be mistaken
+        // for the header, leaving every column but the first empty)
+        var hdrRowIdx=0;
+        for(var hi=0; hi<Math.min(raw.length,10); hi++){
+          var rowVals=(raw[hi]||[]).map(function(v){return String(v||'').trim().toLowerCase();}).filter(Boolean);
+          var hasCase=rowVals.some(function(v){return v.indexOf('case')>=0;});
+          var hasStatus=rowVals.some(function(v){return v.indexOf('status')>=0;});
+          if(rowVals.length>3 && hasCase && hasStatus){ hdrRowIdx=hi; break; }
+        }
+        var hdr=raw[hdrRowIdx];
+        // Find columns by partial match (checks both directions to handle
+        // headers like "Status" when we search "Case Status" or vice versa)
+        var findCol=function(names){
+          if(!Array.isArray(names)) names=[names];
+          // Pass 1: exact match (case-insensitive)
+          for(var n=0;n<names.length;n++){
+            for(var j=0;j<hdr.length;j++){
+              var h=String(hdr[j]||'').trim().toLowerCase();
+              if(h===names[n].toLowerCase()) return j;
+            }
+          }
+          // Pass 2: substring match, either direction
+          for(var n2=0;n2<names.length;n2++){
+            var target=names[n2].toLowerCase();
+            for(var j2=0;j2<hdr.length;j2++){
+              var h2=String(hdr[j2]||'').trim().toLowerCase();
+              if(h2 && (h2.indexOf(target)>=0 || target.indexOf(h2)>=0)) return j2;
+            }
+          }
+          return -1;
+        };
+        var iCase=findCol(['Case ID','Case No','Case Number','Case']);
+        var iDate=findCol(['Date Created','Created Date','Date']);
+        var iCat=findCol(['Case Category','Category']);
+        var iStatus=findCol(['Case Status','Status']);
+        var iAssigned=findCol(['Assigned To','Assigned','Agent']);
+        // If a column truly can't be found, leave it as -1 (unmapped) rather
+        // than guessing a fixed index — a wrong guess silently corrupts data.
+        if(iCase<0) iCase=0;
+        if(iDate<0) iDate=1;
+        // iCase and iCat should not point to the same column
+        if(iCat>=0 && iCat===iCase) iCat=-1;
+        var startRow=hdrRowIdx+1;
+        raw.slice(startRow).forEach(function(r){
+          var caseId=String(r[iCase]||'').trim(); if(!caseId||caseId==='Case') return;
+          var d=cdParseDate(r[iDate]); if(!d) return;
+          newMonths.add(d.slice(0,7));
+          var cat=String(r[iCat]||'').trim();
+          allRows.push({
+            id:caseId, date:d, month:d.slice(0,7),
+            cat1:cat.split('>')[0].trim(), cat2:cat.split('>')[1]?cat.split('>')[1].trim():'',
+            cat:cat, status:String(r[iStatus]||'').trim(),
+            agent:String(r[iAssigned]||'').trim().replace(/^CC[-.\s]+/i,'')
+          });
+        });
+      });
+
+      // Merge: remove existing months, add new
+      cdData=cdData.filter(function(r){return !newMonths.has(r.month);});
+      cdData=cdData.concat(allRows);
+      // Debug: show status distribution
+      var statusCount={};
+      allRows.forEach(function(r){statusCount[r.status]=(statusCount[r.status]||0)+1;});
+      console.log('=== CD Import Status Values ===', JSON.stringify(statusCount));
+      buildCDFilters();
+      if(statusEl){
+        statusEl.textContent='✓ '+cdData.length.toLocaleString()+' cases loaded ('+newMonths.size+' months)';
+      }
+      saveCDToSupabase();
+      renderCaseDetail();
+    }catch(err){if(statusEl)statusEl.textContent='Error: '+err.message;alert('Import error: '+err.message);}
+  };
+  reader.readAsBinaryString(file);
+  input.value='';
+}
+
+function buildCDFilters(){
+  var months=[...new Set(cdData.map(function(r){return r.month;}))].filter(Boolean).sort();
+  var years=[...new Set(months.map(function(m){return m.slice(0,4);}))].sort();
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var ySel=document.getElementById('cdYearFilter');
+  var mSel=document.getElementById('cdMonthFilter');
+  ySel.innerHTML='<option value="">All Years</option>';
+  years.forEach(function(y){var o=document.createElement('option');o.value=y;o.textContent=y;ySel.appendChild(o);});
+  mSel.innerHTML='<option value="">All Months</option>';
+  months.forEach(function(m){var p=m.split('-');var o=document.createElement('option');o.value=m;o.textContent=MN[parseInt(p[1])-1]+' '+p[0];mSel.appendChild(o);});
+  if(months.length){
+    ySel.value=months[months.length-1].slice(0,4);
+    populateCDMonths(ySel.value);
+    mSel.value=months[months.length-1];
+    var lp=months[months.length-1].split('-');
+    var lLast=new Date(parseInt(lp[0]),parseInt(lp[1]),0).getDate();
+    document.getElementById('cdDateFrom').value=months[months.length-1]+'-01';
+    document.getElementById('cdDateTo').value=months[months.length-1]+'-'+String(lLast).padStart(2,'0');
+  }
+}
+
+function populateCDMonths(year){
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var months=[...new Set(cdData.map(function(r){return r.month;}))].filter(Boolean).sort();
+  var filtered=year?months.filter(function(m){return m.startsWith(year);}):months;
+  var mSel=document.getElementById('cdMonthFilter');
+  mSel.innerHTML='<option value="">All Months</option>';
+  filtered.forEach(function(m){var p=m.split('-');var o=document.createElement('option');o.value=m;o.textContent=MN[parseInt(p[1])-1];mSel.appendChild(o);});
+}
+
+var _cdPreset='thismonth';
+
+function setCDPreset(preset){
+  _cdPreset=preset;
+  document.querySelectorAll('[id^="cdp_"]').forEach(function(b){b.classList.remove('active');});
+  var btn=document.getElementById('cdp_'+preset);
+  if(btn) btn.classList.add('active');
+  // Clear dropdowns
+  document.getElementById('cdYearFilter').value='';
+  document.getElementById('cdMonthFilter').value='';
+  var now=new Date();
+  var y=now.getFullYear(),m=now.getMonth();
+  var fr,to;
+  var pad=function(n){return String(n).padStart(2,'0');};
+  var fmt=function(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
+  if(preset==='today'){
+    fr=to=fmt(now);
+  } else if(preset==='yesterday'){
+    var yest=new Date(now); yest.setDate(now.getDate()-1);
+    fr=to=fmt(yest);
+  } else if(preset==='thisweek'){
+    var dow=now.getDay();
+    var mon=new Date(now); mon.setDate(now.getDate()-(dow===0?6:dow-1));
+    var sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    fr=fmt(mon); to=fmt(sun);
+  } else if(preset==='lastmonth'){
+    var lmFirst=new Date(y,m-1,1), lmLast=new Date(y,m,0);
+    fr=fmt(lmFirst); to=fmt(lmLast);
+  } else { // thismonth
+    fr=y+'-'+pad(m+1)+'-01';
+    to=fmt(new Date(y,m+1,0));
+  }
+  document.getElementById('cdDateFrom').value=fr;
+  document.getElementById('cdDateTo').value=to;
+  renderCaseDetail();
+}
+
+function onCDYearChange(){
+  _cdPreset='';
+  document.querySelectorAll('[id^="cdp_"]').forEach(function(b){b.classList.remove('active');});
+  populateCDMonths(document.getElementById('cdYearFilter').value);
+  document.getElementById('cdMonthFilter').value='';
+  document.getElementById('cdDateFrom').value='';
+  document.getElementById('cdDateTo').value='';
+  renderCaseDetail();
+}
+
+function onCDMonthChange(){
+  _cdPreset='';
+  document.querySelectorAll('[id^="cdp_"]').forEach(function(b){b.classList.remove('active');});
+  var m=document.getElementById('cdMonthFilter').value;
+  if(m){
+    var p=m.split('-'),lLast=new Date(parseInt(p[0]),parseInt(p[1]),0).getDate();
+    document.getElementById('cdDateFrom').value=m+'-01';
+    document.getElementById('cdDateTo').value=m+'-'+String(lLast).padStart(2,'0');
+  } else {
+    document.getElementById('cdDateFrom').value='';
+    document.getElementById('cdDateTo').value='';
+  }
+  renderCaseDetail();
+}
+
+function onCDDateChange(){
+  _cdPreset='';
+  document.querySelectorAll('[id^="cdp_"]').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('cdYearFilter').value='';
+  document.getElementById('cdMonthFilter').value='';
+  renderCaseDetail();
+}
+
+function resetCDFilters(){
+  document.getElementById('cdYearFilter').value='';
+  document.getElementById('cdMonthFilter').value='';
+  document.getElementById('cdDateFrom').value='';
+  document.getElementById('cdDateTo').value='';
+  document.getElementById('cdSearch').value='';
+  populateCDMonths('');
+  renderCaseDetail();
+}
+
+function renderCaseDetail(){
+  var yf=(document.getElementById('cdYearFilter')||{}).value||'';
+  var mf=(document.getElementById('cdMonthFilter')||{}).value||'';
+  var dfr=(document.getElementById('cdDateFrom')||{}).value||'';
+  var dto=(document.getElementById('cdDateTo')||{}).value||'';
+  var q=((document.getElementById('cdSearch')||{}).value||'').toLowerCase();
+  var f=cdData.filter(function(r){
+    if(yf&&!r.month.startsWith(yf)) return false;
+    if(mf&&r.month!==mf) return false;
+    if(dfr&&r.date<dfr) return false;
+    if(dto&&r.date>dto) return false;
+    return true;
+  });
+  var total=f.length;
+  var closed=f.filter(function(r){return isCDClosed(r.status);}).length;
+  var open=total-closed;
+  var agents=new Set(f.map(function(r){return r.agent;}).filter(Boolean)).size;
+  function pct(n,d){return d>0?(n/d*100).toFixed(2)+'%':'—';}
+  function st(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  st('cdKpiTotal',total.toLocaleString());
+  st('cdKpiClosed',closed.toLocaleString()); st('cdKpiClosedPct',pct(closed,total)+' of total');
+  st('cdKpiOpen',open.toLocaleString()); st('cdKpiOpenPct',pct(open,total)+' of total');
+  st('cdKpiAgents',agents);
+  // Period label
+  if(f.length){
+    var dates=f.map(function(r){return r.date;}).sort();
+    var pEl=document.getElementById('cdPeriod');
+    if(pEl) pEl.textContent=dates[0]+' to '+dates[dates.length-1]+' · '+total.toLocaleString()+' cases';
+  }
+  // Top 10
+  var catMap={};
+  f.forEach(function(r){
+    var k=r.cat||r.cat1;
+    if(!catMap[k]) catMap[k]={cat1:r.cat1,cat2:r.cat2,total:0,closed:0};
+    catMap[k].total++;
+    if(isCDClosed(r.status)) catMap[k].closed++;
+  });
+  var top10=Object.values(catMap).sort(function(a,b){return b.total-a.total;}).slice(0,10);
+  var tb=document.getElementById('cdTop10Body');
+  if(tb){
+    tb.innerHTML='';
+    var medals=['🥇','🥈','🥉','4','5','6','7','8','9','10'];
+    top10.forEach(function(c,i){
+      var op=c.total-c.closed;
+      var tr=document.createElement('tr');
+      tr.style.borderBottom='1px solid var(--border)';
+      tr.onmouseover=function(){this.style.background='var(--row-hover)';};
+      tr.onmouseout=function(){this.style.background='';};
+      [[medals[i],'var(--text2)','center'],[c.cat1,'var(--text)','left'],[c.cat2||'-','var(--text3)','left'],
+       [c.total.toLocaleString(),'var(--text)','right'],[c.closed.toLocaleString(),'#4ade80','right'],
+       [op>0?op.toLocaleString():'-',op>0?'#fb923c':'var(--text3)','right'],[pct(c.closed,c.total),'#60a5fa','right']
+      ].forEach(function(d){
+        var td=document.createElement('td');td.textContent=d[0];
+        td.style.cssText='padding:7px 10px;color:'+d[1]+';text-align:'+d[2]+';font-size:12px;';
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    // Totals footer
+    var t10total=top10.reduce(function(s,c){return s+c.total;},0);
+    var t10closed=top10.reduce(function(s,c){return s+c.closed;},0);
+    var t10open=t10total-t10closed;
+    var st2=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+    st2('cdTop10Total',t10total.toLocaleString());
+    st2('cdTop10Closed',t10closed.toLocaleString());
+    st2('cdTop10Open',t10open>0?t10open.toLocaleString():'-');
+    st2('cdTop10Pct',pct(t10closed,t10total));
+  }
+  // Agent table
+  var agMap={};
+  var fa=q?f.filter(function(r){return r.agent.toLowerCase().includes(q);}):f;
+  fa.forEach(function(r){
+    if(!r.agent) return;
+    if(!agMap[r.agent]) agMap[r.agent]={agent:r.agent,total:0,closed:0};
+    agMap[r.agent].total++;
+    if(isCDClosed(r.status)) agMap[r.agent].closed++;
+  });
+  var agRows=Object.values(agMap).sort(function(a,b){return b.total-a.total;});
+  var ab=document.getElementById('cdAgentBody');
+  if(ab){
+    ab.innerHTML='';
+    agRows.forEach(function(ag){
+      var op=ag.total-ag.closed;
+      var p3=pct(ag.closed,ag.total);
+      var pNum=parseFloat(p3);
+      var pCol=pNum>=95?'#34d399':pNum>=80?'#fbbf24':'#f87171';
+      var tr=document.createElement('tr');
+      tr.style.borderBottom='1px solid var(--border)';
+      tr.onmouseover=function(){this.style.background='var(--row-hover)';};
+      tr.onmouseout=function(){this.style.background='';};
+      [[ag.agent,'var(--text)','left'],[ag.total.toLocaleString(),'var(--text)','right'],
+       [ag.closed.toLocaleString(),'#4ade80','right'],[op>0?op.toLocaleString():'-',op>0?'#fb923c':'var(--text3)','right'],
+       [p3,pCol,'right']
+      ].forEach(function(d,di){
+        var td=document.createElement('td');td.textContent=d[0];
+        td.style.cssText='padding:7px 10px;color:'+d[1]+';text-align:'+d[2]+';font-size:12px;';
+        if(di===4) td.style.fontWeight='700';
+        tr.appendChild(td);
+      });
+      ab.appendChild(tr);
+    });
+  }
+  st('cdFootTotal',total.toLocaleString());
+  st('cdFootClosed',closed.toLocaleString());
+  st('cdFootOpen',open>0?open.toLocaleString():'-');
+  st('cdFootPct',pct(closed,total));
+}
+
+/* ── CASE DETAIL: REMOVE IMPORTED DATA ───────────────────────────────────── */
+var _cdRemoveSelected = {};
+
+function openCDRemoveData(){
+  _cdRemoveSelected = {};
+  var list = document.getElementById('cdRemoveDataList');
+  if(!list) return;
+  list.innerHTML = '';
+  var cEl=document.getElementById('cdRemoveSelCount'); if(cEl) cEl.textContent='0';
+  var stEl=document.getElementById('cdRemoveDataStatus'); if(stEl){ stEl.style.display='none'; stEl.textContent=''; }
+
+  if(!cdData.length){
+    list.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--text3);">No case data loaded.</div>';
+    document.getElementById('cdRemoveBackdrop').style.display='block';
+    document.getElementById('cdRemoveBox').style.display='block';
+    return;
+  }
+
+  // Count cases per date
+  var byDateCount = {};
+  cdData.forEach(function(r){ byDateCount[r.date] = (byDateCount[r.date]||0) + 1; });
+  var allDatesCD = Object.keys(byDateCount).sort().reverse();
+
+  // Group dates by month
+  var byMonth = {};
+  allDatesCD.forEach(function(d){
+    var m = d.slice(0,7);
+    if(!byMonth[m]) byMonth[m] = [];
+    byMonth[m].push(d);
+  });
+
+  var months = Object.keys(byMonth).sort().reverse();
+  var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  months.forEach(function(m){
+    var parts = m.split('-');
+    var mLabel = MN[parseInt(parts[1])-1]+' '+parts[0];
+
+    var mHdr = document.createElement('div');
+    mHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;padding:8px 4px 4px;border-bottom:1px solid var(--border);margin-bottom:4px;display:flex;align-items:center;gap:8px;';
+    var mCb = document.createElement('input'); mCb.type='checkbox'; mCb.style.accentColor='#3b82f6';
+    mCb.onchange=(function(mo){return function(){
+      byMonth[mo].forEach(function(d){ _cdRemoveSelected[d]=mCb.checked; var dcb=document.getElementById('cdrmcb_'+d); if(dcb) dcb.checked=mCb.checked; });
+      updateCDRemoveCount();
+    };})(m);
+    mHdr.appendChild(mCb);
+    mHdr.appendChild(document.createTextNode(mLabel + ' ('+byMonth[m].length+' days)'));
+    list.appendChild(mHdr);
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:4px 0 10px;';
+
+    byMonth[m].forEach(function(d){
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap;';
+      var cb = document.createElement('input'); cb.type='checkbox'; cb.id='cdrmcb_'+d; cb.style.accentColor='#f87171';
+      cb.onchange=function(){ _cdRemoveSelected[d]=cb.checked; updateCDRemoveCount(); };
+      lbl.appendChild(cb);
+      var p = d.split('-');
+      lbl.appendChild(document.createTextNode(p[2]+' '+MN[parseInt(p[1])-1]));
+      var sm=document.createElement('span'); sm.style.cssText='color:var(--text3);font-size:10px;'; sm.textContent=' ('+byDateCount[d]+')'; lbl.appendChild(sm);
+      grid.appendChild(lbl);
+    });
+    list.appendChild(grid);
+  });
+
+  document.getElementById('cdRemoveBackdrop').style.display='block';
+  document.getElementById('cdRemoveBox').style.display='block';
+}
+
+function updateCDRemoveCount(){
+  var n = Object.values(_cdRemoveSelected).filter(Boolean).length;
+  var el=document.getElementById('cdRemoveSelCount'); if(el) el.textContent = n;
+}
+function closeCDRemoveData(){
+  document.getElementById('cdRemoveBackdrop').style.display='none';
+  document.getElementById('cdRemoveBox').style.display='none';
+}
+function selectAllCDRemove(){
+  Object.keys(_cdRemoveSelected).length; // noop touch
+  document.querySelectorAll('#cdRemoveDataList input[type=checkbox]').forEach(function(cb){
+    if(cb.id && cb.id.indexOf('cdrmcb_')===0){ var d=cb.id.slice(7); _cdRemoveSelected[d]=true; cb.checked=true; }
+  });
+  updateCDRemoveCount();
+}
+function clearCDRemoveSelection(){
+  document.querySelectorAll('#cdRemoveDataList input[type=checkbox]').forEach(function(cb){
+    cb.checked=false;
+    if(cb.id && cb.id.indexOf('cdrmcb_')===0){ var d=cb.id.slice(7); _cdRemoveSelected[d]=false; }
+  });
+  updateCDRemoveCount();
+}
+function selectCDRemoveMonth(){
+  var dates=[...new Set(cdData.map(function(r){return r.date;}))].filter(Boolean).sort();
+  if(!dates.length) return;
+  var m = dates[dates.length-1].slice(0,7);
+  document.querySelectorAll('#cdRemoveDataList input[type=checkbox]').forEach(function(cb){
+    if(cb.id && cb.id.indexOf('cdrmcb_')===0){
+      var d=cb.id.slice(7);
+      var sel = d.startsWith(m);
+      _cdRemoveSelected[d]=sel;
+      cb.checked=sel;
+    }
+  });
+  updateCDRemoveCount();
+}
+
+async function confirmCDRemoveData(){
+  var toRemove = Object.keys(_cdRemoveSelected).filter(function(d){ return _cdRemoveSelected[d]; });
+  if(!toRemove.length){ alert('No dates selected.'); return; }
+  if(!confirm('Remove case data for '+toRemove.length+' date(s) permanently from Supabase and this dashboard? This cannot be undone.')) return;
+
+  var btn = document.getElementById('cdRemoveConfirmBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Removing...'; }
+  var statusEl = document.getElementById('cdRemoveDataStatus');
+  function setStatus(msg,color){ if(statusEl){ statusEl.style.display='block'; statusEl.textContent=msg; statusEl.style.color=color||'#fbbf24'; } }
+  setStatus('Removing '+toRemove.length+' date(s)...', '#fbbf24');
+
+  var removeSet = new Set(toRemove);
+  // Which months are touched, and which of those become completely empty
+  var touchedMonths = new Set(toRemove.map(function(d){return d.slice(0,7);}));
+  var remaining = cdData.filter(function(r){ return !removeSet.has(r.date); });
+  var remainingMonths = new Set(remaining.map(function(r){return r.month;}));
+  var emptiedMonths = [...touchedMonths].filter(function(m){ return !remainingMonths.has(m); });
+
+  cdData = remaining;
+
+  // Delete Supabase rows for months that now have zero remaining cases
+  var failed=[];
+  for(var i=0;i<emptiedMonths.length;i++){
+    try{
+      var r=await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail?month=eq.'+emptiedMonths[i],{
+        method:'DELETE',
+        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      });
+      if(!r.ok) failed.push(emptiedMonths[i]);
+    }catch(e){ failed.push(emptiedMonths[i]); }
+  }
+  // For months that still have data, upsert overwrites the row with the trimmed data
+  await saveCDToSupabase();
+
+  buildCDFilters();
+  renderCaseDetail();
+
+  if(failed.length){
+    setStatus('⚠ Removed locally. '+failed.length+' month row(s) may still be in Supabase — try again.', '#f87171');
+  } else {
+    setStatus('✓ Removed case data for '+toRemove.length+' date(s).', '#34d399');
+    setTimeout(function(){ closeCDRemoveData(); },1200);
+  }
+  if(btn){ btn.disabled=false; btn.textContent='Remove Selected'; }
+}
+
+async function saveCDToSupabase(){
+  if(!cdData.length) return;
+  var byMonth={};
+  cdData.forEach(function(r){ if(!byMonth[r.month]) byMonth[r.month]=[]; byMonth[r.month].push(r); });
+  var rows=Object.entries(byMonth).map(function(e){ return {month:e[0], data:e[1]}; });
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail',{
+      method:'POST',
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(rows)
+    });
+  }catch(e){ console.warn('CD save failed:',e.message); }
+}
+
+async function loadCDFromSupabase(){
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail?select=month,data&order=month.asc',{
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+    });
+    if(!r.ok) return;
+    var rows=await r.json();
+    if(!Array.isArray(rows)||!rows.length) return;
+    cdData=[];
+    rows.forEach(function(row){ if(Array.isArray(row.data)) cdData=cdData.concat(row.data); });
+    if(!cdData.length) return;
+    buildCDFilters();
+    var statusEl=document.getElementById('cdImportStatus');
+    if(statusEl) statusEl.textContent='✓ '+cdData.length.toLocaleString()+' cases loaded';
+    renderCaseDetail();
+  }catch(e){ console.warn('CD load failed:',e.message); }
+}
+
 restoreLayout();
 loadIncidents();
 loadRemarks();
+loadSLAFromSupabase();
+loadCDFromSupabase();
 checkSession();
 </script>
 
@@ -4493,6 +5135,119 @@ checkSession();
       </table>
     </div>
   </div>
+
+            <td id="slaFootPct" style="padding:7px 10px;text-align:right;font-weight:700;color:#34d399;"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end #content-casesla -->
+
+<!-- ── CASE DETAIL TAB ──────────────────────────────────────────────────── -->
+<div class="tab-content" id="content-casedetail">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);"><i class="ti ti-phone-call" style="color:#3b82f6;margin-right:8px;"></i>Case Detail Report</div>
+      <div id="cdPeriod" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <button onclick="setCDPreset('today')" class="fpreset" id="cdp_today">Today</button>
+      <button onclick="setCDPreset('yesterday')" class="fpreset" id="cdp_yesterday">Yesterday</button>
+      <button onclick="setCDPreset('thisweek')" class="fpreset" id="cdp_thisweek">This Week</button>
+      <button onclick="setCDPreset('lastmonth')" class="fpreset" id="cdp_lastmonth">Last Month</button>
+      <button onclick="setCDPreset('thismonth')" class="fpreset active" id="cdp_thismonth">This Month</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+    <select id="cdYearFilter" onchange="onCDYearChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;"><option value="">All Years</option></select>
+    <select id="cdMonthFilter" onchange="onCDMonthChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;"><option value="">All Months</option></select>
+    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;">From</label>
+    <input type="date" id="cdDateFrom" onchange="onCDDateChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;"/>
+    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;">To</label>
+    <input type="date" id="cdDateTo" onchange="onCDDateChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;"/>
+    <button onclick="resetCDFilters()" style="padding:5px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;"><i class="ti ti-refresh"></i> Reset</button>
+    <button onclick="document.getElementById('cdFileInput').click()" style="padding:8px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-import"></i> Import XLS</button>
+    <input type="file" id="cdFileInput" accept=".xls,.xlsx" style="display:none;" onchange="handleCDImport(this)">
+    <button onclick="openCDRemoveData()" style="padding:8px 14px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-minus"></i> Remove Data</button>
+    <div id="cdImportStatus" style="font-size:11px;color:var(--text3);"></div>
+  </div>
+  <!-- KPI Cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Total Cases</div>
+      <div style="font-size:28px;font-weight:700;color:#3b82f6;" id="cdKpiTotal">—</div>
+    </div>
+    <div style="background:#0d2218;border:1px solid #14532d;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#86efac;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Closed</div>
+      <div style="font-size:28px;font-weight:700;color:#4ade80;" id="cdKpiClosed">—</div>
+      <div style="font-size:10px;color:#86efac;margin-top:2px;" id="cdKpiClosedPct">—</div>
+    </div>
+    <div style="background:#2e1a0d;border:1px solid #92400e;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#fde68a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Open</div>
+      <div style="font-size:28px;font-weight:700;color:#fb923c;" id="cdKpiOpen">—</div>
+      <div style="font-size:10px;color:#fde68a;margin-top:2px;" id="cdKpiOpenPct">—</div>
+    </div>
+    <div style="background:#0d1e2e;border:1px solid #1e3a5f;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#93c5fd;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Agents</div>
+      <div style="font-size:28px;font-weight:700;color:#60a5fa;" id="cdKpiAgents">—</div>
+    </div>
+  </div>
+  <!-- Top 10 -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-trophy" style="color:#fbbf24;margin-right:6px;"></i>Top 10 Case Categories</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--border2);">
+          <th style="padding:7px 10px;text-align:center;font-size:10px;text-transform:uppercase;color:var(--text3);width:40px;">#</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">1st Category</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">2nd Category</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Total</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#4ade80;">Closed</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Open</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;">Close %</th>
+        </tr></thead>
+        <tbody id="cdTop10Body"></tbody>
+        <tfoot>
+          <tr style="border-top:2px solid var(--border2);background:var(--bg3);">
+            <td colspan="3" style="padding:7px 10px;font-weight:700;color:#3b82f6;">Total (Top 10)</td>
+            <td id="cdTop10Total" style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text);"></td>
+            <td id="cdTop10Closed" style="padding:7px 10px;text-align:right;font-weight:700;color:#4ade80;"></td>
+            <td id="cdTop10Open" style="padding:7px 10px;text-align:right;font-weight:700;color:#fb923c;"></td>
+            <td id="cdTop10Pct" style="padding:7px 10px;text-align:right;font-weight:700;color:#60a5fa;"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  <!-- Agent table -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-users" style="margin-right:5px;"></i>Agent Breakdown</div>
+      <input type="text" id="cdSearch" onkeyup="renderCaseDetail()" placeholder="Search agent..." style="padding:5px 10px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;width:180px;">
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--border2);">
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Agent</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Total</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#4ade80;">Closed</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Open</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;">Close %</th>
+        </tr></thead>
+        <tbody id="cdAgentBody"></tbody>
+        <tfoot><tr style="border-top:2px solid var(--border2);background:var(--bg3);">
+          <td style="padding:7px 10px;font-weight:700;color:#3b82f6;">Grand Total</td>
+          <td id="cdFootTotal" style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text);"></td>
+          <td id="cdFootClosed" style="padding:7px 10px;text-align:right;font-weight:700;color:#4ade80;"></td>
+          <td id="cdFootOpen" style="padding:7px 10px;text-align:right;font-weight:700;color:#fb923c;"></td>
+          <td id="cdFootPct" style="padding:7px 10px;text-align:right;font-weight:700;color:#60a5fa;"></td>
+        </tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div><!-- end #content-casedetail -->
 
 <!-- SLA Remove Data Modal -->
 <div id="slaRemoveBackdrop" onclick="closeSLARemove()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;backdrop-filter:blur(2px);"></div>
