@@ -620,6 +620,10 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <button class="btn btn-danger" onclick="openRemoveData()" title="Remove imported dates"><i class="ti ti-database-minus"></i> Remove Data</button>
     <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
     <button class="btn" id="userMgmtBtn" onclick="openUserMgmt()" style="display:none;background:#7c3aed;color:#fff;"><i class="ti ti-users-cog"></i> Users</button>
+    <button class="btn" onclick="openUpdateLog()" id="notifBtn" title="Data updates" style="position:relative;">
+      <i class="ti ti-bell"></i>
+      <span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#f87171;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;line-height:16px;text-align:center;"></span>
+    </button>
     <button class="btn" onclick="cycleFontSize()" id="fontSizeBtn" title="Font size"><i class="ti ti-text-size"></i> <span id="fontSizeLabel">A</span></button>
     <button class="btn" onclick="toggleTheme()" title="Toggle dark/light mode"><i class="ti ti-sun" id="themeIcon"></i></button>
     <button class="btn" id="signOutBtn" onclick="doSignOut()" style="display:none;"><i class="ti ti-logout"></i> Sign Out</button>
@@ -811,28 +815,6 @@ ON CONFLICT (id) DO NOTHING;</code></div>
   </div>
 </div>
 
-<!-- Case Detail Remove Data Modal -->
-<div id="cdRemoveBackdrop" onclick="closeCDRemoveData()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;"></div>
-<div id="cdRemoveBox" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:1px solid #7f1d1d;border-radius:14px;padding:26px;width:96%;max-width:560px;max-height:85vh;overflow-y:auto;z-index:401;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <div style="font-size:15px;font-weight:700;color:var(--text);"><i class="ti ti-database-minus" style="color:#f87171;margin-right:8px;"></i>Remove Imported Data</div>
-    <button onclick="closeCDRemoveData()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:22px;">&#x2715;</button>
-  </div>
-  <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Select specific dates to remove from the Case Detail Report. This removes them from Supabase and local memory. This cannot be undone.</p>
-  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="selectCDRemoveMonth()" style="font-size:11px;padding:4px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:6px;cursor:pointer;">Select current month</button>
-    <button onclick="selectAllCDRemove()" style="font-size:11px;padding:4px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:6px;cursor:pointer;">Select all</button>
-    <button onclick="clearCDRemoveSelection()" style="font-size:11px;padding:4px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:6px;cursor:pointer;">Clear</button>
-    <div style="margin-left:auto;font-size:11px;color:var(--text3);align-self:center;"><span id="cdRemoveSelCount">0</span> dates selected</div>
-  </div>
-  <div id="cdRemoveDataList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg);"></div>
-  <div id="cdRemoveDataStatus" style="margin-top:10px;font-size:12px;display:none;padding:8px;background:var(--bg4);border-radius:6px;"></div>
-  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-    <button onclick="closeCDRemoveData()" style="padding:8px 16px;background:var(--bg4);color:var(--text2);border:none;border-radius:8px;font-size:13px;cursor:pointer;">Cancel</button>
-    <button id="cdRemoveConfirmBtn" onclick="confirmCDRemoveData()" style="padding:8px 16px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"><i class="ti ti-trash"></i> Remove Selected</button>
-  </div>
-</div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
@@ -989,7 +971,7 @@ async function saveAllToSupabase(dataObj){
     }catch(e){ console.warn('Supabase batch save failed:',e.message); failed+=chunk.length; }
   }
   if(failed>0) showStatus('⚠ '+failed+' dates failed to save to Supabase','#f87171');
-  else showStatus('✓ Saved '+saved+' dates to Supabase','#34d399');
+  else{ showStatus('✓ Saved '+saved+' dates to Supabase','#34d399'); logDataUpdate('call_data','Call data imported: '+saved+' dates'); }
   setTimeout(function(){showStatus('','');},4000);
 }
 
@@ -1281,7 +1263,7 @@ function render(dates){
   var anchorDate = dates[dates.length-1];
   var trendMonth = anchorDate.slice(0,7);
   var trendDates;
-  var isMonthPreset = (_activePreset==='thismonth'||_activePreset==='lastmonth'||_activePreset==='yesterday');
+  var isMonthPreset = (_activePreset==='thismonth'||_activePreset==='lastmonth');
   if(isMonthPreset){
     // Full calendar month
     trendDates = allDates.filter(function(d){ return d.startsWith(trendMonth); });
@@ -2271,6 +2253,7 @@ function showDashboard(token,user){
   }catch(e){}
 
   setTimeout(function(){init();},100);
+  setTimeout(function(){checkForUpdates();},2000);
   }catch(e){
     // If showDashboard crashes, make sure login screen stays visible
     console.error('showDashboard error:',e);
@@ -3132,20 +3115,9 @@ function switchTab(tab){
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
     }, 100);
   }
-  if(tab==='dashboard'){
-    setTimeout(function(){
-      window.scrollTo({top:0, behavior:'smooth'});
-    }, 100);
-  }
   if(tab==='casesla'){
     setTimeout(function(){
       var el = document.getElementById('content-casesla');
-      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-    }, 100);
-  }
-  if(tab==='casedetail'){
-    setTimeout(function(){
-      var el = document.getElementById('content-casedetail');
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
     }, 100);
   }
@@ -4036,6 +4008,7 @@ function handleSLAImport(input){
 
       // Save to Supabase for persistence
       saveSLAToSupabase();
+      logDataUpdate('sla_data','Issue SLA imported: '+slaData.length.toLocaleString()+' cases');
 
       // Debug: log month counts to console
       var dbg={};
@@ -4274,7 +4247,7 @@ function slaSelectAll(val){
   document.querySelectorAll('#slaRemoveList input').forEach(function(cb){cb.checked=val;});
   updateSLARemoveCount();
 }
-async function confirmSLARemove(){
+function confirmSLARemove(){
   var checked=[...document.querySelectorAll('#slaRemoveList input:checked')].map(function(cb){return cb.value;});
   if(!checked.length){alert('No months selected.');return;}
   var toRemove=new Set(checked);
@@ -4292,34 +4265,11 @@ async function confirmSLARemove(){
   mSel.innerHTML='<option value="">All Months</option>';
   months.forEach(function(m){var p=m.split('-');var o=document.createElement('option');o.value=m;o.textContent=MN[parseInt(p[1])-1]+' '+p[0];mSel.appendChild(o);});
   var pEl=document.getElementById('slaCasePeriod');
-  if(pEl) pEl.textContent=slaData.length.toLocaleString()+' CC cases · '+(months.length?months[0]+' to '+months[months.length-1]:'');
+  if(pEl) pEl.textContent=slaData.length.toLocaleString()+' CC cases · '+months[0]+' to '+months[months.length-1];
   var statusEl=document.getElementById('slaImportStatus');
-  if(statusEl) statusEl.textContent='Removing '+(before-slaData.length).toLocaleString()+' cases from Supabase...';
+  if(statusEl) statusEl.textContent='Removed '+(before-slaData.length).toLocaleString()+' cases';
   renderCaseSLA();
-
-  // Actually delete the removed months from Supabase — the row for a
-  // removed month is never re-saved (it's gone from slaData), so it must
-  // be explicitly deleted or it will silently reappear on next reload.
-  var failed=[];
-  var toRemoveArr=[...toRemove];
-  for(var i=0;i<toRemoveArr.length;i++){
-    try{
-      var r=await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data?month=eq.'+toRemoveArr[i],{
-        method:'DELETE',
-        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
-      });
-      if(!r.ok) failed.push(toRemoveArr[i]);
-    }catch(e){ failed.push(toRemoveArr[i]); }
-  }
-  // Re-save any months that still have remaining data (in case a month was
-  // only partially affected in the future) — safe no-op if slaData is empty.
-  await saveSLAToSupabase();
-
-  if(statusEl){
-    statusEl.textContent = failed.length
-      ? '⚠ Removed locally, but '+failed.length+' month(s) failed to delete from Supabase — try again.'
-      : 'Removed '+(before-slaData.length).toLocaleString()+' cases ✓';
-  }
+  saveSLAToSupabase();
 }
 
 async function saveSLAToSupabase(){
@@ -4379,7 +4329,7 @@ var cdData = [];
 
 function isCDClosed(status){
   var s=(status||'').trim().toLowerCase();
-  return s==='closed & confirmed'||s==='closed and confirmed';
+  return s==='closed & confirmed'||s==='closed'||s.startsWith('closed')||s==='duplicate & closed';
 }
 
 function cdParseDate(val){
@@ -4408,51 +4358,26 @@ function handleCDImport(input){
         var ws=wb.Sheets[shName];
         var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
         if(!raw.length) return;
-        // Auto-detect the real header row: scan the first several rows for
-        // one that actually looks like column headers (title rows like
-        // "Case Detail Report (Call Centre)" would otherwise be mistaken
-        // for the header, leaving every column but the first empty)
-        var hdrRowIdx=0;
-        for(var hi=0; hi<Math.min(raw.length,10); hi++){
-          var rowVals=(raw[hi]||[]).map(function(v){return String(v||'').trim().toLowerCase();}).filter(Boolean);
-          var hasCase=rowVals.some(function(v){return v.indexOf('case')>=0;});
-          var hasStatus=rowVals.some(function(v){return v.indexOf('status')>=0;});
-          if(rowVals.length>3 && hasCase && hasStatus){ hdrRowIdx=hi; break; }
-        }
-        var hdr=raw[hdrRowIdx];
-        // Find columns by partial match (checks both directions to handle
-        // headers like "Status" when we search "Case Status" or vice versa)
-        var findCol=function(names){
-          if(!Array.isArray(names)) names=[names];
-          // Pass 1: exact match (case-insensitive)
-          for(var n=0;n<names.length;n++){
-            for(var j=0;j<hdr.length;j++){
-              var h=String(hdr[j]||'').trim().toLowerCase();
-              if(h===names[n].toLowerCase()) return j;
-            }
-          }
-          // Pass 2: substring match, either direction
-          for(var n2=0;n2<names.length;n2++){
-            var target=names[n2].toLowerCase();
-            for(var j2=0;j2<hdr.length;j2++){
-              var h2=String(hdr[j2]||'').trim().toLowerCase();
-              if(h2 && (h2.indexOf(target)>=0 || target.indexOf(h2)>=0)) return j2;
-            }
+        // Check if first row is header or data
+        var hdr=raw[0];
+        // Find columns by partial match to handle encoding issues
+        var findCol=function(name){
+          for(var j=0;j<hdr.length;j++){
+            if(String(hdr[j]||'').toLowerCase().indexOf(name.toLowerCase())>=0) return j;
           }
           return -1;
         };
-        var iCase=findCol(['Case ID','Case No','Case Number','Case']);
-        var iDate=findCol(['Date Created','Created Date','Date']);
-        var iCat=findCol(['Case Category','Category']);
-        var iStatus=findCol(['Case Status','Status']);
-        var iAssigned=findCol(['Assigned To','Assigned','Agent']);
-        // If a column truly can't be found, leave it as -1 (unmapped) rather
-        // than guessing a fixed index — a wrong guess silently corrupts data.
+        var iCase=findCol('Case'), iDate=findCol('Date'), iCat=findCol('Case Category');
+        var iStatus=findCol('Case Status'), iAssigned=findCol('Assigned To');
+        // Fallback fixed positions if header not found
         if(iCase<0) iCase=0;
         if(iDate<0) iDate=1;
-        // iCase and iCat should not point to the same column
-        if(iCat>=0 && iCat===iCase) iCat=-1;
-        var startRow=hdrRowIdx+1;
+        if(iCat<0) iCat=9;
+        if(iStatus<0) iStatus=13;
+        if(iAssigned<0) iAssigned=14;
+        // iCase and iDate might conflict — Case Category should be different from Case
+        // Make sure iCat != iCase
+        if(iCat===iCase) iCat=9;
         raw.slice(startRow).forEach(function(r){
           var caseId=String(r[iCase]||'').trim(); if(!caseId||caseId==='Case') return;
           var d=cdParseDate(r[iDate]); if(!d) return;
@@ -4475,10 +4400,9 @@ function handleCDImport(input){
       allRows.forEach(function(r){statusCount[r.status]=(statusCount[r.status]||0)+1;});
       console.log('=== CD Import Status Values ===', JSON.stringify(statusCount));
       buildCDFilters();
-      if(statusEl){
-        statusEl.textContent='✓ '+cdData.length.toLocaleString()+' cases loaded ('+newMonths.size+' months)';
-      }
+      if(statusEl) statusEl.textContent='✓ '+cdData.length.toLocaleString()+' cases loaded ('+newMonths.size+' months)';
       saveCDToSupabase();
+      logDataUpdate('case_detail','Case Detail imported: '+cdData.length.toLocaleString()+' cases ('+newMonths.size+' months)');
       renderCaseDetail();
     }catch(err){if(statusEl)statusEl.textContent='Error: '+err.message;alert('Import error: '+err.message);}
   };
@@ -4704,159 +4628,6 @@ function renderCaseDetail(){
   st('cdFootPct',pct(closed,total));
 }
 
-/* ── CASE DETAIL: REMOVE IMPORTED DATA ───────────────────────────────────── */
-var _cdRemoveSelected = {};
-
-function openCDRemoveData(){
-  _cdRemoveSelected = {};
-  var list = document.getElementById('cdRemoveDataList');
-  if(!list) return;
-  list.innerHTML = '';
-  var cEl=document.getElementById('cdRemoveSelCount'); if(cEl) cEl.textContent='0';
-  var stEl=document.getElementById('cdRemoveDataStatus'); if(stEl){ stEl.style.display='none'; stEl.textContent=''; }
-
-  if(!cdData.length){
-    list.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--text3);">No case data loaded.</div>';
-    document.getElementById('cdRemoveBackdrop').style.display='block';
-    document.getElementById('cdRemoveBox').style.display='block';
-    return;
-  }
-
-  // Count cases per date
-  var byDateCount = {};
-  cdData.forEach(function(r){ byDateCount[r.date] = (byDateCount[r.date]||0) + 1; });
-  var allDatesCD = Object.keys(byDateCount).sort().reverse();
-
-  // Group dates by month
-  var byMonth = {};
-  allDatesCD.forEach(function(d){
-    var m = d.slice(0,7);
-    if(!byMonth[m]) byMonth[m] = [];
-    byMonth[m].push(d);
-  });
-
-  var months = Object.keys(byMonth).sort().reverse();
-  var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  months.forEach(function(m){
-    var parts = m.split('-');
-    var mLabel = MN[parseInt(parts[1])-1]+' '+parts[0];
-
-    var mHdr = document.createElement('div');
-    mHdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;padding:8px 4px 4px;border-bottom:1px solid var(--border);margin-bottom:4px;display:flex;align-items:center;gap:8px;';
-    var mCb = document.createElement('input'); mCb.type='checkbox'; mCb.style.accentColor='#3b82f6';
-    mCb.onchange=(function(mo){return function(){
-      byMonth[mo].forEach(function(d){ _cdRemoveSelected[d]=mCb.checked; var dcb=document.getElementById('cdrmcb_'+d); if(dcb) dcb.checked=mCb.checked; });
-      updateCDRemoveCount();
-    };})(m);
-    mHdr.appendChild(mCb);
-    mHdr.appendChild(document.createTextNode(mLabel + ' ('+byMonth[m].length+' days)'));
-    list.appendChild(mHdr);
-
-    var grid = document.createElement('div');
-    grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:4px 0 10px;';
-
-    byMonth[m].forEach(function(d){
-      var lbl = document.createElement('label');
-      lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap;';
-      var cb = document.createElement('input'); cb.type='checkbox'; cb.id='cdrmcb_'+d; cb.style.accentColor='#f87171';
-      cb.onchange=function(){ _cdRemoveSelected[d]=cb.checked; updateCDRemoveCount(); };
-      lbl.appendChild(cb);
-      var p = d.split('-');
-      lbl.appendChild(document.createTextNode(p[2]+' '+MN[parseInt(p[1])-1]));
-      var sm=document.createElement('span'); sm.style.cssText='color:var(--text3);font-size:10px;'; sm.textContent=' ('+byDateCount[d]+')'; lbl.appendChild(sm);
-      grid.appendChild(lbl);
-    });
-    list.appendChild(grid);
-  });
-
-  document.getElementById('cdRemoveBackdrop').style.display='block';
-  document.getElementById('cdRemoveBox').style.display='block';
-}
-
-function updateCDRemoveCount(){
-  var n = Object.values(_cdRemoveSelected).filter(Boolean).length;
-  var el=document.getElementById('cdRemoveSelCount'); if(el) el.textContent = n;
-}
-function closeCDRemoveData(){
-  document.getElementById('cdRemoveBackdrop').style.display='none';
-  document.getElementById('cdRemoveBox').style.display='none';
-}
-function selectAllCDRemove(){
-  Object.keys(_cdRemoveSelected).length; // noop touch
-  document.querySelectorAll('#cdRemoveDataList input[type=checkbox]').forEach(function(cb){
-    if(cb.id && cb.id.indexOf('cdrmcb_')===0){ var d=cb.id.slice(7); _cdRemoveSelected[d]=true; cb.checked=true; }
-  });
-  updateCDRemoveCount();
-}
-function clearCDRemoveSelection(){
-  document.querySelectorAll('#cdRemoveDataList input[type=checkbox]').forEach(function(cb){
-    cb.checked=false;
-    if(cb.id && cb.id.indexOf('cdrmcb_')===0){ var d=cb.id.slice(7); _cdRemoveSelected[d]=false; }
-  });
-  updateCDRemoveCount();
-}
-function selectCDRemoveMonth(){
-  var dates=[...new Set(cdData.map(function(r){return r.date;}))].filter(Boolean).sort();
-  if(!dates.length) return;
-  var m = dates[dates.length-1].slice(0,7);
-  document.querySelectorAll('#cdRemoveDataList input[type=checkbox]').forEach(function(cb){
-    if(cb.id && cb.id.indexOf('cdrmcb_')===0){
-      var d=cb.id.slice(7);
-      var sel = d.startsWith(m);
-      _cdRemoveSelected[d]=sel;
-      cb.checked=sel;
-    }
-  });
-  updateCDRemoveCount();
-}
-
-async function confirmCDRemoveData(){
-  var toRemove = Object.keys(_cdRemoveSelected).filter(function(d){ return _cdRemoveSelected[d]; });
-  if(!toRemove.length){ alert('No dates selected.'); return; }
-  if(!confirm('Remove case data for '+toRemove.length+' date(s) permanently from Supabase and this dashboard? This cannot be undone.')) return;
-
-  var btn = document.getElementById('cdRemoveConfirmBtn');
-  if(btn){ btn.disabled=true; btn.textContent='Removing...'; }
-  var statusEl = document.getElementById('cdRemoveDataStatus');
-  function setStatus(msg,color){ if(statusEl){ statusEl.style.display='block'; statusEl.textContent=msg; statusEl.style.color=color||'#fbbf24'; } }
-  setStatus('Removing '+toRemove.length+' date(s)...', '#fbbf24');
-
-  var removeSet = new Set(toRemove);
-  // Which months are touched, and which of those become completely empty
-  var touchedMonths = new Set(toRemove.map(function(d){return d.slice(0,7);}));
-  var remaining = cdData.filter(function(r){ return !removeSet.has(r.date); });
-  var remainingMonths = new Set(remaining.map(function(r){return r.month;}));
-  var emptiedMonths = [...touchedMonths].filter(function(m){ return !remainingMonths.has(m); });
-
-  cdData = remaining;
-
-  // Delete Supabase rows for months that now have zero remaining cases
-  var failed=[];
-  for(var i=0;i<emptiedMonths.length;i++){
-    try{
-      var r=await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail?month=eq.'+emptiedMonths[i],{
-        method:'DELETE',
-        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
-      });
-      if(!r.ok) failed.push(emptiedMonths[i]);
-    }catch(e){ failed.push(emptiedMonths[i]); }
-  }
-  // For months that still have data, upsert overwrites the row with the trimmed data
-  await saveCDToSupabase();
-
-  buildCDFilters();
-  renderCaseDetail();
-
-  if(failed.length){
-    setStatus('⚠ Removed locally. '+failed.length+' month row(s) may still be in Supabase — try again.', '#f87171');
-  } else {
-    setStatus('✓ Removed case data for '+toRemove.length+' date(s).', '#34d399');
-    setTimeout(function(){ closeCDRemoveData(); },1200);
-  }
-  if(btn){ btn.disabled=false; btn.textContent='Remove Selected'; }
-}
-
 async function saveCDToSupabase(){
   if(!cdData.length) return;
   var byMonth={};
@@ -4889,12 +4660,149 @@ async function loadCDFromSupabase(){
   }catch(e){ console.warn('CD load failed:',e.message); }
 }
 
+/* ══ UPDATE NOTIFICATIONS ════════════════════════════════════════════════ */
+async function logDataUpdate(type, detail){
+  if(!currentUser) return;
+  try{
+    var res = await fetch(SUPABASE_URL+'/rest/v1/cc_update_log',{
+      method:'POST',
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({
+        type:type,
+        detail:detail,
+        updated_by:currentUser.name||currentUser.email||'Unknown',
+        updated_at:new Date().toISOString()
+      })
+    });
+    if(!res.ok){
+      var errTxt = await res.text().catch(function(){return '';});
+      console.error('logDataUpdate failed:', res.status, errTxt);
+    }
+    checkForUpdates();
+  }catch(e){ console.error('logDataUpdate error:', e); }
+}
+
+async function checkForUpdates(){
+  try{
+    var lastSeen = localStorage.getItem('xox_last_seen_update')||'2000-01-01T00:00:00Z';
+    var r=await fetch(SUPABASE_URL+'/rest/v1/cc_update_log?select=*&order=updated_at.desc&limit=50',{
+      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+    });
+    if(!r.ok){
+      var errTxt = await r.text().catch(function(){return '';});
+      console.error('checkForUpdates fetch failed:', r.status, errTxt);
+      return;
+    }
+    var logs=await r.json();
+    if(!Array.isArray(logs)||!logs.length) return;
+    // Check for new call_data updates from others
+    var lastChecked = localStorage.getItem('xox_last_data_check')||'2000-01-01T00:00:00Z';
+    var newCallData = logs.filter(function(l){
+      return l.type==='call_data' &&
+             l.updated_at > lastChecked &&
+             l.updated_by !== (currentUser&&(currentUser.name||currentUser.email));
+    });
+    localStorage.setItem('xox_last_data_check', new Date().toISOString());
+    // Auto-reload call data if colleague uploaded
+    if(newCallData.length > 0){
+      var upd = newCallData[0];
+      var dt = new Date(upd.updated_at);
+      var timeStr = dt.toLocaleDateString('en-MY',{day:'2-digit',month:'short'})+' '+dt.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
+      showStatus('📥 '+upd.updated_by+' uploaded new data ('+timeStr+') — reloading...','#34d399');
+      setTimeout(async function(){
+        var sb = await loadFromSupabase();
+        if(sb && Object.keys(sb).length){
+          Object.assign(allData, sb);
+          allDates = Object.keys(allData).sort();
+          setPreset(_activePreset);
+          showStatus('✓ Dashboard updated','#34d399');
+          setTimeout(function(){showStatus('','');},3000);
+        }
+      }, 1500);
+    }
+    // Count unseen notifications (all types)
+    var unseen=logs.filter(function(l){
+      return l.updated_at>lastSeen &&
+             l.updated_by!==(currentUser&&(currentUser.name||currentUser.email));
+    });
+    var badge=document.getElementById('notifBadge');
+    if(badge){
+      if(unseen.length>0){
+        badge.style.display='block';
+        badge.textContent=unseen.length>9?'9+':unseen.length;
+      } else {
+        badge.style.display='none';
+      }
+    }
+    window._updateLogs=logs;
+  }catch(e){}
+}
+
+function renderUpdateLogList(logs){
+  var list=document.getElementById('updateLogList');
+  if(!list) return;
+  if(!logs.length){
+    list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px;">No updates yet</div>';
+    return;
+  }
+  list.innerHTML='';
+  logs.forEach(function(l){
+    var dt=new Date(l.updated_at);
+    var timeStr=dt.toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'})+' '+dt.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
+    var me=(currentUser&&(l.updated_by===(currentUser.name||currentUser.email)));
+    var iconMap={'call_data':'ti-database-import','sla_data':'ti-clipboard-check','case_detail':'ti-phone-call','incident':'ti-alert-triangle'};
+    var colorMap={'call_data':'#3b82f6','sla_data':'#8b5cf6','case_detail':'#10b981','incident':'#f59e0b'};
+    var icon=iconMap[l.type]||'ti-refresh', color=colorMap[l.type]||'#94a3b8';
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);';
+    row.innerHTML='<div style="width:32px;height:32px;border-radius:8px;background:'+color+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+      +'<i class="ti '+icon+'" style="color:'+color+';font-size:15px;"></i></div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:13px;font-weight:600;color:var(--text);">'+l.detail+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+(me?'<span style="color:#3b82f6;">You</span>':l.updated_by)+' · '+timeStr+'</div>'
+      +'</div>';
+    list.appendChild(row);
+  });
+}
+
+async function openUpdateLog(){
+  document.getElementById('notifBadge').style.display='none';
+  document.getElementById('updateLogBackdrop').style.display='block';
+  document.getElementById('updateLogBox').style.display='block';
+  var list=document.getElementById('updateLogList');
+  // Show existing/cached logs immediately (if any) so the modal isn't empty while we fetch
+  var cached=window._updateLogs||[];
+  if(list) renderUpdateLogList(cached);
+  else return;
+  if(!cached.length){
+    list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px;">Loading updates…</div>';
+  }
+  // Always fetch fresh history from Supabase when opened, instead of relying on the
+  // background 2s poll — this is what surfaces past updates (e.g. a colleague's earlier
+  // uploads) reliably instead of showing "No updates yet" on a slow/first load.
+  await checkForUpdates();
+  var logs=window._updateLogs||cached;
+  if(logs.length) localStorage.setItem('xox_last_seen_update', logs[0].updated_at);
+  renderUpdateLogList(logs);
+}
+
+function closeUpdateLog(){
+  document.getElementById('updateLogBackdrop').style.display='none';
+  document.getElementById('updateLogBox').style.display='none';
+}
+
 restoreLayout();
 loadIncidents();
 loadRemarks();
 loadSLAFromSupabase();
 loadCDFromSupabase();
 checkSession();
+// Check for updates every 30 seconds
+setInterval(checkForUpdates, 30*1000);
+// Also check when user comes back to the tab
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) checkForUpdates();
+});
 </script>
 
 
@@ -5170,7 +5078,6 @@ checkSession();
     <button onclick="resetCDFilters()" style="padding:5px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;"><i class="ti ti-refresh"></i> Reset</button>
     <button onclick="document.getElementById('cdFileInput').click()" style="padding:8px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-import"></i> Import XLS</button>
     <input type="file" id="cdFileInput" accept=".xls,.xlsx" style="display:none;" onchange="handleCDImport(this)">
-    <button onclick="openCDRemoveData()" style="padding:8px 14px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-minus"></i> Remove Data</button>
     <div id="cdImportStatus" style="font-size:11px;color:var(--text3);"></div>
   </div>
   <!-- KPI Cards -->
@@ -5248,6 +5155,16 @@ checkSession();
     </div>
   </div>
 </div><!-- end #content-casedetail -->
+
+<!-- Update Log Modal -->
+<div id="updateLogBackdrop" onclick="closeUpdateLog()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;backdrop-filter:blur(2px);"></div>
+<div id="updateLogBox" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:24px;width:90%;max-width:500px;z-index:401;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div style="font-size:15px;font-weight:700;color:var(--text);"><i class="ti ti-bell" style="color:#3b82f6;margin-right:8px;"></i>Data Update Log</div>
+    <button onclick="closeUpdateLog()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;"><i class="ti ti-x"></i></button>
+  </div>
+  <div id="updateLogList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+</div>
 
 <!-- SLA Remove Data Modal -->
 <div id="slaRemoveBackdrop" onclick="closeSLARemove()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;backdrop-filter:blur(2px);"></div>
