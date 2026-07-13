@@ -936,9 +936,11 @@ function sbHeaders(write){
     'Content-Type':'application/json','Prefer':'return=minimal'};
 }
 
-async function loadFromSupabase(){
+async function loadFromSupabase(sinceDate){
   try{
-    const res = await fetch(SUPABASE_URL+'/rest/v1/cc_call_data?select=date,data&order=date.asc',
+    var url = SUPABASE_URL+'/rest/v1/cc_call_data?select=date,data&order=date.asc';
+    if(sinceDate) url += '&date=gte.'+sinceDate;
+    const res = await fetch(url,
       {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const rows = await res.json();
@@ -1025,11 +1027,17 @@ async function init(){
     }
   }catch(e){ console.warn('Supabase:', e); }
 
-  // Step 3: Auto-refresh every 60s
+  // Step 3: Auto-refresh every 60s — only pull recent days (not the whole
+  // table) and skip entirely when the tab is backgrounded, to avoid a
+  // continuous full-table read hitting the database every minute from
+  // every open tab all day.
   setInterval(async function(){
+    if(document.hidden) return;
     try{
-      var fresh = await loadFromSupabase();
-      if(fresh && Object.keys(fresh).length > Object.keys(allData).length){
+      var since = new Date(); since.setDate(since.getDate()-14);
+      var sinceStr = since.getFullYear()+'-'+String(since.getMonth()+1).padStart(2,'0')+'-'+String(since.getDate()).padStart(2,'0');
+      var fresh = await loadFromSupabase(sinceStr);
+      if(fresh){
         Object.assign(allData, fresh);
         allDates = Object.keys(allData).sort();
         buildMonthFilter(); updatePill(); applyFilters();
@@ -4470,7 +4478,7 @@ function handleCDImport(input){
       if(statusEl){
         statusEl.textContent='✓ '+cdData.length.toLocaleString()+' cases loaded ('+newMonths.size+' months)';
       }
-      saveCDToSupabase();
+      saveCDToSupabase([...newMonths]);
       renderCaseDetail();
     }catch(err){if(statusEl)statusEl.textContent='Error: '+err.message;alert('Import error: '+err.message);}
   };
@@ -4849,11 +4857,13 @@ async function confirmCDRemoveData(){
   if(btn){ btn.disabled=false; btn.textContent='Remove Selected'; }
 }
 
-async function saveCDToSupabase(){
+async function saveCDToSupabase(onlyMonths){
   if(!cdData.length) return;
   var byMonth={};
   cdData.forEach(function(r){ if(!byMonth[r.month]) byMonth[r.month]=[]; byMonth[r.month].push(r); });
-  var rows=Object.entries(byMonth).map(function(e){ return {month:e[0], data:e[1]}; });
+  var monthsToSave = onlyMonths && onlyMonths.length ? onlyMonths : Object.keys(byMonth);
+  var rows=monthsToSave.filter(function(m){return byMonth[m];}).map(function(m){ return {month:m, data:byMonth[m]}; });
+  if(!rows.length) return;
   try{
     await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail',{
       method:'POST',
