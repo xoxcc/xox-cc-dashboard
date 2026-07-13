@@ -837,8 +837,10 @@ ON CONFLICT (id) DO NOTHING;</code></div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL = 'https://jrfiyliesitsgnehxqtv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZml5bGllc2l0c2duZWh4cXR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODAwNjAsImV4cCI6MjA5NTI1NjA2MH0.ZO-4OYF9_1NRduLZlKiSVStOfg07W4Ozx7vhvUTuozA';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZml5bGllc2l0c2duZWh4cXR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTY4MDA2MCwiZXhwIjoyMDk1MjU2MDYwfQ.J69PJrZnzIMky0z1wLvzLOwZzl3BEXEaJBgT_XwMFpM';
+const SUPABASE_KEY = 'sb_publishable_-AOpf0GlT5MeQh5-NMZc9g_CD2xu9Ch';
+// SERVICE_KEY removed — never ship the service_role/secret key in client code.
+// All requests now use SUPABASE_KEY (publishable) + the signed-in user's session
+// token (SUPABASE_AUTH_TOKEN), authorized via Row Level Security policies.
 var SUPABASE_AUTH_TOKEN = SUPABASE_KEY;
 var currentUser = null, currentPerms = null;
 var ADMIN_EMAILS = ['sarifen@yahoo.com','suffian@xox.com.my','bcchow@xox.com.my','zaid.amirul@xox.com.my'];
@@ -930,15 +932,14 @@ function fmtDate(iso){ // "2026-06-09" → "09 Jun 2026"
 function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 
 function sbHeaders(write){
-  var key = write ? SERVICE_KEY : SUPABASE_KEY;
-  return {'apikey':key,'Authorization':'Bearer '+key,
+  return {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,
     'Content-Type':'application/json','Prefer':'return=minimal'};
 }
 
 async function loadFromSupabase(){
   try{
     const res = await fetch(SUPABASE_URL+'/rest/v1/cc_call_data?select=date,data&order=date.asc',
-      {headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}});
+      {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const rows = await res.json();
     if(rows && rows.length>0){
@@ -981,7 +982,7 @@ async function saveAllToSupabase(dataObj){
     try{
       var r = await fetch(SUPABASE_URL+'/rest/v1/cc_call_data',{
         method:'POST',
-        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
         body:JSON.stringify(chunk)
       });
       if(r.ok||r.status===201||r.status===204){ saved+=chunk.length; }
@@ -2254,7 +2255,7 @@ function showDashboard(token,user){
         var assignedRole = isAdmin?'admin':'viewer';
         fetch(SUPABASE_URL+'/rest/v1/cc_users',{
           method:'POST',
-          headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+          headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
           body:JSON.stringify({id:user.id,email:user.email,name:name,role:assignedRole,permissions:defaultPerms,active:true})
         }).catch(function(){});
       }
@@ -2332,7 +2333,7 @@ async function createUser(){
     // Approach: store a cc_users row keyed by email (no id yet), then on first login the id gets matched
     var r = await fetch(SUPABASE_URL+'/rest/v1/cc_users',{
       method:'POST',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
       body:JSON.stringify({email:email, name:name||email.split('@')[0], role:role, permissions:perms, active:true})
     });
     if(r.ok||r.status===201||r.status===204){
@@ -2397,7 +2398,7 @@ async function bulkCreateFromAuth(){
     logEl.innerHTML='';
 
     // Get existing cc_users
-    var ccRes = await fetch(SUPABASE_URL+'/rest/v1/cc_users?select=email',{headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}});
+    var ccRes = await fetch(SUPABASE_URL+'/rest/v1/cc_users?select=email',{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}});
     var ccUsers = await ccRes.json();
     var existing={};
     (ccUsers||[]).forEach(function(u){existing[u.email.toLowerCase()]=true;});
@@ -2411,7 +2412,7 @@ async function bulkCreateFromAuth(){
       try{
         var r=await fetch(SUPABASE_URL+'/rest/v1/cc_users',{
           method:'POST',
-          headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+          headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
           body:JSON.stringify({email:em,name:em.split('@')[0],role:role,permissions:defaultPerms,active:true})
         });
         if(r.ok||r.status===201||r.status===204){ log('✓ Linked: '+em,'#34d399'); created++; }
@@ -2495,27 +2496,18 @@ async function confirmSetPassword(uid, email){
 
   msg.style.color='#fbbf24'; msg.textContent='Trying...';
 
-  // Try Admin API
-  try{
-    var r = await fetch(SUPABASE_URL+'/auth/v1/admin/users/'+uid,{
-      method:'PUT',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({password:pwd})
-    });
-    if(r.ok){
-      msg.style.color='#34d399';
-      msg.textContent='✓ Password set for '+email+'! They can login now.';
-      writeAuditLog('password_set',{target_email:email});
-      setTimeout(function(){ var m=document.getElementById('setPwdModal'); if(m) m.remove(); },2000);
-      return;
-    }
-  }catch(e){}
+  // Note: the raw Supabase Admin API (/auth/v1/admin/users/...) requires the
+  // service_role/secret key, which must never be shipped in browser code.
+  // We rely on the set_user_password RPC instead — a Postgres function that
+  // should be defined with SECURITY DEFINER server-side so it can safely
+  // perform this privileged action after checking the caller is an admin.
+  // If that RPC hasn't been created yet, this falls back to manual SQL below.
 
   // Try RPC
   try{
     var r2 = await fetch(SUPABASE_URL+'/rest/v1/rpc/set_user_password',{
       method:'POST',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json'},
       body:JSON.stringify({uid:uid, new_password:pwd})
     });
     if(r2.ok){
@@ -2544,7 +2536,7 @@ async function deleteUser(uid, email){
   if(!confirm('Delete user '+email+'? This removes dashboard access only — Supabase Auth account is kept.')) return;
   try{
     await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{
-      method:'DELETE',headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
     });
     writeAuditLog('user_deleted',{target_id:uid,email:email});
     loadUserList();
@@ -2557,7 +2549,7 @@ async function loadUserList(){
   div.innerHTML='<div style="color:#64748b;padding:8px 0;">Loading...</div>';
   try{
     var res=await fetch(SUPABASE_URL+'/rest/v1/cc_users?select=*&order=name.asc',{
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
     });
     var users=await res.json();
     if(!Array.isArray(users)||!users.length){div.innerHTML='<div style="color:#64748b;padding:8px;">No users yet. Staff will appear here after their first login.</div>';return;}
@@ -2820,7 +2812,7 @@ async function doChangePassword(){
 async function updateName(uid, newName){
   await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{
     method:'PATCH',
-    headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json'},
     body:JSON.stringify({name:newName})
   });
 }
@@ -2829,7 +2821,7 @@ async function writeAuditLog(action, details){
   try{
     await fetch(SUPABASE_URL+'/rest/v1/cc_audit_log',{
       method:'POST',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json'},
       body:JSON.stringify({
         user_id:   currentUser.id,
         user_email:currentUser.email,
@@ -2848,7 +2840,7 @@ async function loadAuditLog(){
   div.innerHTML='<span style="color:#64748b;">Loading...</span>';
   try{
     var res=await fetch(SUPABASE_URL+'/rest/v1/cc_audit_log?order=created_at.desc&limit=100',{
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
     });
     var logs=await res.json();
     if(!Array.isArray(logs)||!logs.length){div.innerHTML='<span style="color:#64748b;">No audit logs yet.</span>';return;}
@@ -2904,17 +2896,17 @@ async function loadAuditLog(){
 }
 
 async function updateRole(uid,role){
-  await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{method:'PATCH',headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},body:JSON.stringify({role:role})});
+  await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({role:role})});
   writeAuditLog('user_role_change',{target_id:uid,new_role:role});
   loadUserList();
 }
 async function toggleActive(uid,active){
-  await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{method:'PATCH',headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},body:JSON.stringify({active:active})});
+  await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({active:active})});
   writeAuditLog('user_status_change',{target_id:uid,active:active});
   loadUserList();
 }
 async function updatePerms(uid, perms){
-  await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{method:'PATCH',headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json'},body:JSON.stringify({permissions:perms})});
+  await fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+uid,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({permissions:perms})});
   writeAuditLog('user_perms_change',{target_id:uid,permissions:perms});
   // If changing own permissions, apply immediately
   if(currentUser && currentUser.id===uid){ currentPerms=perms; applyPermissions(); }
@@ -3189,12 +3181,12 @@ function saveIncidents(){
   // Also save to Supabase for cross-device sync
   if(currentUser){
     fetch(SUPABASE_URL+'/rest/v1/cc_incidents?select=id',{
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
     }).then(function(){ 
       // Upsert all incidents
       return fetch(SUPABASE_URL+'/rest/v1/cc_incidents',{
         method:'POST',
-        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
         body:JSON.stringify(incidents.map(function(i){ return {id:i.id, data:i}; }))
       });
     }).catch(function(){});
@@ -3204,7 +3196,7 @@ function saveIncidents(){
 async function loadIncidentsFromSupabase(){
   try{
     var r = await fetch(SUPABASE_URL+'/rest/v1/cc_incidents?select=*&order=data->>date.asc',{
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
     });
     if(!r.ok) return;
     var rows = await r.json();
@@ -3688,7 +3680,7 @@ async function confirmRemoveData(){
     try{
       var r = await fetch(SUPABASE_URL+'/rest/v1/cc_call_data?date=in.('+batch.join(',')+')',{
         method:'DELETE',
-        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'return=representation'}
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'return=representation'}
       });
       if(!r.ok){
         var errText = await r.text();
@@ -4306,7 +4298,7 @@ async function confirmSLARemove(){
     try{
       var r=await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data?month=eq.'+toRemoveArr[i],{
         method:'DELETE',
-        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
       });
       if(!r.ok) failed.push(toRemoveArr[i]);
     }catch(e){ failed.push(toRemoveArr[i]); }
@@ -4331,7 +4323,7 @@ async function saveSLAToSupabase(){
   try{
     await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data',{
       method:'POST',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
       body:JSON.stringify(rows)
     });
   }catch(e){ console.warn('SLA save failed:',e.message); }
@@ -4340,7 +4332,7 @@ async function saveSLAToSupabase(){
 async function loadSLAFromSupabase(){
   try{
     var r=await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data?select=month,data&order=month.asc',{
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
     });
     if(!r.ok) return;
     var rows=await r.json();
@@ -4837,7 +4829,7 @@ async function confirmCDRemoveData(){
     try{
       var r=await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail?month=eq.'+emptiedMonths[i],{
         method:'DELETE',
-        headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
       });
       if(!r.ok) failed.push(emptiedMonths[i]);
     }catch(e){ failed.push(emptiedMonths[i]); }
@@ -4865,7 +4857,7 @@ async function saveCDToSupabase(){
   try{
     await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail',{
       method:'POST',
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
       body:JSON.stringify(rows)
     });
   }catch(e){ console.warn('CD save failed:',e.message); }
@@ -4874,7 +4866,7 @@ async function saveCDToSupabase(){
 async function loadCDFromSupabase(){
   try{
     var r=await fetch(SUPABASE_URL+'/rest/v1/cc_case_detail?select=month,data&order=month.asc',{
-      headers:{'apikey':SERVICE_KEY,'Authorization':'Bearer '+SERVICE_KEY}
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
     });
     if(!r.ok) return;
     var rows=await r.json();
