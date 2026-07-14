@@ -622,8 +622,22 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <button class="btn" id="userMgmtBtn" onclick="openUserMgmt()" style="display:none;background:#7c3aed;color:#fff;"><i class="ti ti-users-cog"></i> Users</button>
     <button class="btn" onclick="cycleFontSize()" id="fontSizeBtn" title="Font size"><i class="ti ti-text-size"></i> <span id="fontSizeLabel">A</span></button>
     <button class="btn" onclick="toggleTheme()" title="Toggle dark/light mode"><i class="ti ti-sun" id="themeIcon"></i></button>
+    <button class="btn" id="notifBellBtn" onclick="openUpdateLog()" title="Data Update Log" style="position:relative;">
+      <i class="ti ti-bell"></i>
+      <span id="notifBellDot" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#3b82f6;"></span>
+    </button>
     <button class="btn" id="signOutBtn" onclick="doSignOut()" style="display:none;"><i class="ti ti-logout"></i> Sign Out</button>
   </div>
+</div>
+
+<!-- Data Update Log panel -->
+<div id="updateLogBackdrop" onclick="closeUpdateLog()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;"></div>
+<div id="updateLogPanel" style="display:none;position:fixed;top:0;right:0;bottom:0;width:380px;max-width:92vw;background:var(--bg2);border-left:1px solid var(--border);z-index:501;overflow-y:auto;box-shadow:-8px 0 24px rgba(0,0,0,.3);">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 18px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);">
+    <div style="font-size:15px;font-weight:700;color:var(--text);"><i class="ti ti-bell" style="color:#3b82f6;margin-right:8px;"></i>Data Update Log</div>
+    <button onclick="closeUpdateLog()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;">&#x2715;</button>
+  </div>
+  <div id="updateLogList" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
 <div class="filterbar" style="flex-direction:column;gap:8px;padding:10px 14px;">
@@ -1832,12 +1846,7 @@ function processImport(){
               showStatus('Saved to Supabase!','#34d399');
               setTimeout(function(){ showStatus('',''); },3000);
               // Audit trail
-              writeAuditLog('import', {
-                file: pendingFile.name,
-                dates_added: added,
-                dates_updated: updated,
-                total_dates: allDates.length
-              });
+              writeAuditLog('Call Report imported: '+ndKeys.length.toLocaleString()+' date(s)'+(added.length?' ('+added.length+' new)':''));
             });
             allDates=Object.keys(allData).sort();
             dayIdx=allDates.length-1;
@@ -2233,6 +2242,11 @@ function showDashboard(token,user){
     currentUser={token:token,id:user.id,email:user.email,name:name,role:role};
     currentPerms={kpi:true,trend:true,hourly:true,sla:true,agent_cards:true,agent_table:true,incidents:true};
     SUPABASE_AUTH_TOKEN=token;
+    // Load Case Detail / Issue SLA data now — not before — since these
+    // requests are RLS-protected and require a signed-in user. Loading
+    // them earlier (before login finishes) would silently return nothing.
+    loadSLAFromSupabase();
+    loadCDFromSupabase();
     document.getElementById('loginScreen').style.display='none';
     var bar=document.getElementById('userBar');
     if(bar){bar.style.display='inline';bar.textContent='Signed in as '+name+' ('+role+')';}
@@ -2824,6 +2838,45 @@ async function updateName(uid, newName){
     body:JSON.stringify({name:newName})
   });
 }
+async function openUpdateLog(){
+  document.getElementById('updateLogBackdrop').style.display='block';
+  document.getElementById('updateLogPanel').style.display='block';
+  var dot=document.getElementById('notifBellDot'); if(dot) dot.style.display='none';
+  var list=document.getElementById('updateLogList');
+  list.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px;">Loading...</div>';
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/cc_audit_log?select=*&order=created_at.desc&limit=50',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
+    });
+    var rows = r.ok ? await r.json() : [];
+    if(!rows.length){
+      list.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px;">No updates yet.</div>';
+      return;
+    }
+    list.innerHTML='';
+    rows.forEach(function(row){
+      var who = (currentUser && row.user_id===currentUser.id) ? 'You' : (row.user_name||row.user_email||'Someone');
+      var when = row.created_at ? new Date(row.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      var card=document.createElement('div');
+      card.style.cssText='background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;';
+      card.innerHTML =
+        '<div style="width:32px;height:32px;border-radius:8px;background:#3730a3;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        + '<i class="ti ti-clipboard-check" style="color:#a5b4fc;font-size:16px;"></i></div>'
+        + '<div style="min-width:0;">'
+        + '<div style="font-size:13px;font-weight:600;color:var(--text);">'+ (row.action||'Update') +'</div>'
+        + '<div style="font-size:11px;color:#60a5fa;margin-top:2px;">'+ who +' · '+ when +'</div>'
+        + '</div>';
+      list.appendChild(card);
+    });
+  }catch(e){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:#f87171;font-size:12px;">Failed to load updates.</div>';
+  }
+}
+function closeUpdateLog(){
+  document.getElementById('updateLogBackdrop').style.display='none';
+  document.getElementById('updateLogPanel').style.display='none';
+}
+
 async function writeAuditLog(action, details){
   if(!currentUser) return;
   try{
@@ -4034,8 +4087,9 @@ function handleSLAImport(input){
       if(pEl) pEl.textContent=sheetName+' · '+slaData.length.toLocaleString()+' CC cases · '+months[0]+' to '+months[months.length-1];
       if(statusEl) statusEl.textContent='✓ '+slaData.length.toLocaleString()+' CC cases loaded';
 
-      // Save to Supabase for persistence
-      saveSLAToSupabase();
+      // Save to Supabase for persistence — only the months that changed
+      saveSLAToSupabase([...newMonths]);
+      writeAuditLog('Issue SLA imported: '+slaData.filter(function(r){return newMonths.has(r.month);}).length.toLocaleString()+' cases');
 
       // Debug: log month counts to console
       var dbg={};
@@ -4322,12 +4376,13 @@ async function confirmSLARemove(){
   }
 }
 
-async function saveSLAToSupabase(){
+async function saveSLAToSupabase(onlyMonths){
   if(!slaData.length) return;
-  // Group by month and save each month as one row
   var byMonth={};
   slaData.forEach(function(r){ if(!byMonth[r.month]) byMonth[r.month]=[]; byMonth[r.month].push(r); });
-  var rows=Object.entries(byMonth).map(function(e){ return {month:e[0], data:e[1]}; });
+  var monthsToSave = onlyMonths && onlyMonths.length ? onlyMonths : Object.keys(byMonth);
+  var rows=monthsToSave.filter(function(m){return byMonth[m];}).map(function(m){ return {month:m, data:byMonth[m]}; });
+  if(!rows.length) return;
   try{
     await fetch(SUPABASE_URL+'/rest/v1/cc_sla_data',{
       method:'POST',
@@ -4479,6 +4534,7 @@ function handleCDImport(input){
         statusEl.textContent='✓ '+cdData.length.toLocaleString()+' cases loaded ('+newMonths.size+' months)';
       }
       saveCDToSupabase([...newMonths]);
+      writeAuditLog('Case Detail imported: '+allRows.length.toLocaleString()+' cases');
       renderCaseDetail();
     }catch(err){if(statusEl)statusEl.textContent='Error: '+err.message;alert('Import error: '+err.message);}
   };
@@ -4894,8 +4950,6 @@ async function loadCDFromSupabase(){
 restoreLayout();
 loadIncidents();
 loadRemarks();
-loadSLAFromSupabase();
-loadCDFromSupabase();
 checkSession();
 </script>
 
