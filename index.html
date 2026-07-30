@@ -4088,9 +4088,19 @@ function renderIncidents(){
   try{
   list.innerHTML = '';
 
-  // Build incident lookup by date
+  // Build incident lookup by date — an ARRAY per date, since a day can
+  // have more than one incident. (Previously this kept only the last
+  // incident per date, silently hiding any earlier ones on the same day.)
   var incByDate = {};
-  incidents.forEach(function(inc){ if(inc.date) incByDate[inc.date] = inc; });
+  incidents.forEach(function(inc){
+    if(!inc.date) return;
+    if(!incByDate[inc.date]) incByDate[inc.date] = [];
+    incByDate[inc.date].push(inc);
+  });
+  // Show most recently created first within a day
+  Object.keys(incByDate).forEach(function(d){
+    incByDate[d].sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
+  });
 
   // Determine target month
   var selMonth = '';
@@ -4144,23 +4154,16 @@ function renderIncidents(){
   var totAbandoned=0,totAnswered=0,totAns30=0,totTotal=0;
 
   dates.forEach(function(d){
-    var inc = incByDate[d]||null;
+    var incList = incByDate[d]||[];
     var dv  = allData[d]||null;
 
+    // Only count each date's call KPIs into the totals ONCE, regardless of
+    // how many incidents happened that day.
     if(dv){ totAbandoned+=dv.abandoned||0; totAnswered+=dv.answered||0; totAns30+=dv.ans30||0; totTotal+=dv.total||0; }
 
     var sla    = dv&&dv.total>0?(dv.ans30/dv.total*100).toFixed(2)+'%':'-';
     var ansPct = dv&&dv.total>0?(dv.answered/dv.total*100).toFixed(2)+'%':'-';
     var slaCol = parseFloat(sla)>=95?'#34d399':parseFloat(sla)>=85?'#fbbf24':'#f87171';
-    var duration = inc?calcDuration(inc.start,inc.end||null):'-';
-    var sev = inc?inc.severity||'minor':null;
-    var sevParts = sev?(sevColors[sev]||sevColors.minor).split(','):null;
-
-    var tr=document.createElement('tr');
-    tr.style.borderBottom='1px solid var(--border)';
-    tr.style.background = inc?'rgba(251,191,36,0.04)':'';
-    tr.onmouseover=function(){this.style.background='var(--row-hover)';};
-    tr.onmouseout=function(){this.style.background=inc?'rgba(251,191,36,0.04)':'';};
 
     function mkTd(val,color,align,bold,extra){
       var td=document.createElement('td');
@@ -4174,54 +4177,92 @@ function renderIncidents(){
       return td;
     }
 
-    tr.appendChild(mkTd(fmtDate(d),'var(--text)','left',true));
-    tr.appendChild(mkTd(dv&&dv.abandoned>0?dv.abandoned:'-',dv&&dv.abandoned>0?'#f87171':'var(--text4)','right'));
-    tr.appendChild(mkTd(dv?dv.answered.toLocaleString():'-','#60a5fa','right'));
-    tr.appendChild(mkTd(dv&&dv.ans30>0?dv.ans30.toLocaleString():'-','#fbbf24','right'));
-    tr.appendChild(mkTd(dv?dv.total.toLocaleString():'-','var(--text2)','right'));
-    tr.appendChild(mkTd(sla,slaCol,'right',true));
-    tr.appendChild(mkTd(ansPct,'#a78bfa','right'));
-    tr.appendChild(mkTd(inc?inc.title:'','#fbbf24','left',true,'white-space:normal;max-width:200px;'));
-    tr.appendChild(mkTd(inc?inc.desc:'','var(--text2)','left',false,'white-space:normal;line-height:1.5;max-width:250px;'));
-    tr.appendChild(mkTd(inc?inc.start||'-':'-','var(--text3)','left'));
-    tr.appendChild(mkTd(inc?(inc.end||'Ongoing'):'-',inc&&!inc.end?'#fbbf24':'var(--text3)','left'));
-    tr.appendChild(mkTd(duration,'var(--text3)','center'));
-    tr.appendChild(mkTd(inc?inc.res||'-':'-','var(--text2)','left',false,'white-space:normal;max-width:180px;'));
+    // Render one row per incident on this date, or a single empty row if none.
+    var rowsForDate = incList.length ? incList : [null];
+    rowsForDate.forEach(function(inc, idx){
+      var isFirstRow = idx===0;
+      var duration = inc?calcDuration(inc.start,inc.end||null):'-';
+      var sev = inc?inc.severity||'minor':null;
+      var sevParts = sev?(sevColors[sev]||sevColors.minor).split(','):null;
 
-    // Severity badge
-    var tdSev=document.createElement('td'); tdSev.style.cssText='padding:9px 8px;text-align:center;vertical-align:top;';
-    if(sev && sevParts){
-      var badge=document.createElement('span');
-      badge.textContent=sev.charAt(0).toUpperCase()+sev.slice(1);
-      badge.style.cssText='font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+sevParts[0]+'22;color:'+sevParts[1]+';border:1px solid '+sevParts[0]+';text-transform:uppercase;';
-      tdSev.appendChild(badge);
-    } else { tdSev.textContent='-'; tdSev.style.color='var(--text4)'; }
-    tr.appendChild(tdSev);
+      var tr=document.createElement('tr');
+      tr.style.borderBottom = (idx===rowsForDate.length-1) ? '1px solid var(--border)' : '1px solid rgba(255,255,255,0.03)';
+      tr.style.background = inc?'rgba(251,191,36,0.04)':'';
+      tr.onmouseover=function(){this.style.background='var(--row-hover)';};
+      tr.onmouseout=function(){this.style.background=inc?'rgba(251,191,36,0.04)':'';};
 
-    // Actions
-    var tdAct=document.createElement('td'); tdAct.style.cssText='padding:9px 8px;text-align:center;vertical-align:top;white-space:nowrap;';
-    if(inc){
-      var bE=document.createElement('button');
-      bE.textContent='Edit';
-      bE.style.cssText='padding:3px 8px;background:#1e3a5f;color:#60a5fa;border:none;border-radius:5px;cursor:pointer;font-size:11px;margin-right:4px;';
-      bE.onclick=(function(id){return function(){openIncidentForm(id);};})(inc.id);
-      tdAct.appendChild(bE);
-      if(inc.status!=='resolved'){
-        var bR=document.createElement('button');
-        bR.textContent='Resolve';
-        bR.style.cssText='padding:3px 8px;background:#14532d;color:#86efac;border:none;border-radius:5px;cursor:pointer;font-size:11px;';
-        bR.onclick=(function(id){return function(){resolveNow(id);};})(inc.id);
-        tdAct.appendChild(bR);
+      // Date/call-KPI columns only shown on the first row for this date —
+      // subsequent incidents on the same day leave these blank so the
+      // numbers aren't visually duplicated or misread as separate days.
+      if(isFirstRow){
+        tr.appendChild(mkTd(fmtDate(d)+(incList.length>1?' ('+incList.length+' incidents)':''),'var(--text)','left',true));
+        tr.appendChild(mkTd(dv&&dv.abandoned>0?dv.abandoned:'-',dv&&dv.abandoned>0?'#f87171':'var(--text4)','right'));
+        tr.appendChild(mkTd(dv?dv.answered.toLocaleString():'-','#60a5fa','right'));
+        tr.appendChild(mkTd(dv&&dv.ans30>0?dv.ans30.toLocaleString():'-','#fbbf24','right'));
+        tr.appendChild(mkTd(dv?dv.total.toLocaleString():'-','var(--text2)','right'));
+        tr.appendChild(mkTd(sla,slaCol,'right',true));
+        tr.appendChild(mkTd(ansPct,'#a78bfa','right'));
+      } else {
+        tr.appendChild(mkTd('↳','var(--text4)','left'));
+        tr.appendChild(mkTd('','var(--text4)','right'));
+        tr.appendChild(mkTd('','var(--text4)','right'));
+        tr.appendChild(mkTd('','var(--text4)','right'));
+        tr.appendChild(mkTd('','var(--text4)','right'));
+        tr.appendChild(mkTd('','var(--text4)','right'));
+        tr.appendChild(mkTd('','var(--text4)','right'));
       }
-    } else {
-      var bA=document.createElement('button');
-      bA.innerHTML='<i class="ti ti-plus"></i> Add';
-      bA.style.cssText='padding:3px 8px;background:#1e3a5f;color:#60a5fa;border:none;border-radius:5px;cursor:pointer;font-size:11px;';
-      bA.onclick=(function(dt){return function(){openIncidentForm(null,dt);};})(d);
-      tdAct.appendChild(bA);
-    }
-    tr.appendChild(tdAct);
-    list.appendChild(tr);
+
+      tr.appendChild(mkTd(inc?inc.title:'','#fbbf24','left',true,'white-space:normal;max-width:200px;'));
+      tr.appendChild(mkTd(inc?inc.desc:'','var(--text2)','left',false,'white-space:normal;line-height:1.5;max-width:250px;'));
+      tr.appendChild(mkTd(inc?inc.start||'-':'-','var(--text3)','left'));
+      tr.appendChild(mkTd(inc?(inc.end||'Ongoing'):'-',inc&&!inc.end?'#fbbf24':'var(--text3)','left'));
+      tr.appendChild(mkTd(duration,'var(--text3)','center'));
+      tr.appendChild(mkTd(inc?inc.res||'-':'-','var(--text2)','left',false,'white-space:normal;max-width:180px;'));
+
+      // Severity badge
+      var tdSev=document.createElement('td'); tdSev.style.cssText='padding:9px 8px;text-align:center;vertical-align:top;';
+      if(sev && sevParts){
+        var badge=document.createElement('span');
+        badge.textContent=sev.charAt(0).toUpperCase()+sev.slice(1);
+        badge.style.cssText='font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+sevParts[0]+'22;color:'+sevParts[1]+';border:1px solid '+sevParts[0]+';text-transform:uppercase;';
+        tdSev.appendChild(badge);
+      } else { tdSev.textContent='-'; tdSev.style.color='var(--text4)'; }
+      tr.appendChild(tdSev);
+
+      // Actions — Edit/Resolve for an existing incident, always plus a
+      // small "+" to add another incident on the same date.
+      var tdAct=document.createElement('td'); tdAct.style.cssText='padding:9px 8px;text-align:center;vertical-align:top;white-space:nowrap;';
+      if(inc){
+        var bE=document.createElement('button');
+        bE.textContent='Edit';
+        bE.style.cssText='padding:3px 8px;background:#1e3a5f;color:#60a5fa;border:none;border-radius:5px;cursor:pointer;font-size:11px;margin-right:4px;';
+        bE.onclick=(function(id){return function(){openIncidentForm(id);};})(inc.id);
+        tdAct.appendChild(bE);
+        if(inc.status!=='resolved'){
+          var bR=document.createElement('button');
+          bR.textContent='Resolve';
+          bR.style.cssText='padding:3px 8px;background:#14532d;color:#86efac;border:none;border-radius:5px;cursor:pointer;font-size:11px;margin-right:4px;';
+          bR.onclick=(function(id){return function(){resolveNow(id);};})(inc.id);
+          tdAct.appendChild(bR);
+        }
+        if(idx===rowsForDate.length-1){
+          var bA2=document.createElement('button');
+          bA2.innerHTML='<i class="ti ti-plus"></i>';
+          bA2.title='Add another incident on '+fmtDate(d);
+          bA2.style.cssText='padding:3px 7px;background:#1e3a5f;color:#60a5fa;border:none;border-radius:5px;cursor:pointer;font-size:11px;';
+          bA2.onclick=(function(dt){return function(){openIncidentForm(null,dt);};})(d);
+          tdAct.appendChild(bA2);
+        }
+      } else {
+        var bA=document.createElement('button');
+        bA.innerHTML='<i class="ti ti-plus"></i> Add';
+        bA.style.cssText='padding:3px 8px;background:#1e3a5f;color:#60a5fa;border:none;border-radius:5px;cursor:pointer;font-size:11px;';
+        bA.onclick=(function(dt){return function(){openIncidentForm(null,dt);};})(d);
+        tdAct.appendChild(bA);
+      }
+      tr.appendChild(tdAct);
+      list.appendChild(tr);
+    });
   });
 
   // Totals footer
@@ -5382,6 +5423,7 @@ function handleCDImport(input){
         var iCat=findCol(['Case Category','Category']);
         var iStatus=findCol(['Case Status','Status']);
         var iAssigned=findCol(['Assigned To','Assigned','Agent']);
+        var iChannel=findCol(['Case Channel','Channel','Source','Contact Channel','Contact Method','Medium']);
         // If a column truly can't be found, leave it as -1 (unmapped) rather
         // than guessing a fixed index — a wrong guess silently corrupts data.
         if(iCase<0) iCase=0;
@@ -5402,11 +5444,12 @@ function handleCDImport(input){
           var agentName=String(r[iAssigned]||'').trim().replace(/^CC[-.\s]+/i,'');
           if(!agentName) qcMissingAgent++;
           if(seenCaseIds[caseId]) qcDuplicateIds++; else seenCaseIds[caseId]=true;
+          var channel=iChannel>=0 ? String(r[iChannel]||'').trim() : '';
           allRows.push({
             id:caseId, date:d, month:d.slice(0,7),
             cat1:cat.split('>')[0].trim(), cat2:cat.split('>')[1]?cat.split('>')[1].trim():'',
             cat:cat, status:String(r[iStatus]||'').trim(),
-            agent:agentName
+            agent:agentName, channel:channel
           });
         });
       });
@@ -5515,6 +5558,16 @@ function buildCDFilters(){
   years.forEach(function(y){var o=document.createElement('option');o.value=y;o.textContent=y;ySel.appendChild(o);});
   mSel.innerHTML='<option value="">All Months</option>';
   months.forEach(function(m){var p=m.split('-');var o=document.createElement('option');o.value=m;o.textContent=MN[parseInt(p[1])-1]+' '+p[0];mSel.appendChild(o);});
+
+  var chSel=document.getElementById('cdChannelFilter');
+  if(chSel){
+    var channels=[...new Set(cdData.map(function(r){return r.channel;}))].filter(Boolean).sort();
+    var curCh=chSel.value;
+    chSel.innerHTML='<option value="">All Channels</option>';
+    channels.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;chSel.appendChild(o);});
+    if(channels.includes(curCh)) chSel.value=curCh;
+  }
+
   if(months.length){
     ySel.value=months[months.length-1].slice(0,4);
     populateCDMonths(ySel.value);
@@ -5620,12 +5673,14 @@ function renderCaseDetail(){
   var mf=(document.getElementById('cdMonthFilter')||{}).value||'';
   var dfr=(document.getElementById('cdDateFrom')||{}).value||'';
   var dto=(document.getElementById('cdDateTo')||{}).value||'';
+  var chf=(document.getElementById('cdChannelFilter')||{}).value||'';
   var q=((document.getElementById('cdSearch')||{}).value||'').toLowerCase();
   var f=cdData.filter(function(r){
     if(yf&&!r.month.startsWith(yf)) return false;
     if(mf&&r.month!==mf) return false;
     if(dfr&&r.date<dfr) return false;
     if(dto&&r.date>dto) return false;
+    if(chf&&(r.channel||'')!==chf) return false;
     return true;
   });
   var total=f.length;
@@ -5644,13 +5699,39 @@ function renderCaseDetail(){
     var pEl=document.getElementById('cdPeriod');
     if(pEl) pEl.textContent=dates[0]+' to '+dates[dates.length-1]+' · '+total.toLocaleString()+' cases';
   }
+  // Determine which channels exist in the current filtered data, so the
+  // Top 10 table can show one column per channel (e.g. Call, WhatsApp)
+  var allChannels=[...new Set(f.map(function(r){return r.channel||'Unspecified';}))].sort();
+  var chIcons={'call':'📞','phone':'📞','voice':'📞','whatsapp':'💬','wa':'💬','email':'✉️','chat':'💬'};
+  var chColorList=['#a78bfa','#22d3ee','#fbbf24','#a3e635','#f472b6','#38bdf8'];
+
+  // Rebuild the Top 10 header row with channel columns inserted right after "Total"
+  var hdrRow=document.getElementById('cdTop10HeaderRow');
+  if(hdrRow){
+    var chHeaderHtml=allChannels.map(function(ch,i){
+      var icon=chIcons[ch.toLowerCase()]||'📋';
+      return '<th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:'+chColorList[i%chColorList.length]+';white-space:nowrap;">'+icon+' '+ch+'</th>';
+    }).join('');
+    hdrRow.innerHTML=
+      '<th style="padding:7px 10px;text-align:center;font-size:10px;text-transform:uppercase;color:var(--text3);width:40px;">#</th>'
+      +'<th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">1st Category</th>'
+      +'<th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">2nd Category</th>'
+      +'<th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Total</th>'
+      +chHeaderHtml
+      +'<th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#4ade80;">Closed</th>'
+      +'<th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Open</th>'
+      +'<th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;">Close %</th>';
+  }
+
   // Top 10
   var catMap={};
   f.forEach(function(r){
     var k=r.cat||r.cat1;
-    if(!catMap[k]) catMap[k]={cat1:r.cat1,cat2:r.cat2,total:0,closed:0};
+    if(!catMap[k]) catMap[k]={cat1:r.cat1,cat2:r.cat2,total:0,closed:0,channels:{}};
     catMap[k].total++;
     if(isCDClosed(r.status)) catMap[k].closed++;
+    var ch=r.channel||'Unspecified';
+    catMap[k].channels[ch]=(catMap[k].channels[ch]||0)+1;
   });
   var top10=Object.values(catMap).sort(function(a,b){return b.total-a.total;}).slice(0,10);
   var tb=document.getElementById('cdTop10Body');
@@ -5663,25 +5744,67 @@ function renderCaseDetail(){
       tr.style.borderBottom='1px solid var(--border)';
       tr.onmouseover=function(){this.style.background='var(--row-hover)';};
       tr.onmouseout=function(){this.style.background='';};
-      [[medals[i],'var(--text2)','center'],[c.cat1,'var(--text)','left'],[c.cat2||'-','var(--text3)','left'],
-       [c.total.toLocaleString(),'var(--text)','right'],[c.closed.toLocaleString(),'#4ade80','right'],
-       [op>0?op.toLocaleString():'-',op>0?'#fb923c':'var(--text3)','right'],[pct(c.closed,c.total),'#60a5fa','right']
-      ].forEach(function(d){
+      var cells=[[medals[i],'var(--text2)','center'],[c.cat1,'var(--text)','left'],[c.cat2||'-','var(--text3)','left'],
+       [c.total.toLocaleString(),'var(--text)','right']];
+      allChannels.forEach(function(ch){
+        var n=c.channels[ch]||0;
+        cells.push([n>0?n.toLocaleString():'-', n>0?'var(--text2)':'var(--text4)','right']);
+      });
+      cells.push([c.closed.toLocaleString(),'#4ade80','right'],
+       [op>0?op.toLocaleString():'-',op>0?'#fb923c':'var(--text3)','right'],[pct(c.closed,c.total),'#60a5fa','right']);
+      cells.forEach(function(d){
         var td=document.createElement('td');td.textContent=d[0];
-        td.style.cssText='padding:7px 10px;color:'+d[1]+';text-align:'+d[2]+';font-size:12px;';
+        td.style.cssText='padding:7px 10px;color:'+d[1]+';text-align:'+d[2]+';font-size:12px;white-space:nowrap;';
         tr.appendChild(td);
       });
       tb.appendChild(tr);
     });
-    // Totals footer
+    // Totals footer — rebuild to include per-channel totals too
     var t10total=top10.reduce(function(s,c){return s+c.total;},0);
     var t10closed=top10.reduce(function(s,c){return s+c.closed;},0);
     var t10open=t10total-t10closed;
-    var st2=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
-    st2('cdTop10Total',t10total.toLocaleString());
-    st2('cdTop10Closed',t10closed.toLocaleString());
-    st2('cdTop10Open',t10open>0?t10open.toLocaleString():'-');
-    st2('cdTop10Pct',pct(t10closed,t10total));
+    var footerRow=document.getElementById('cdTop10FooterRow');
+    if(footerRow){
+      var chFooterHtml=allChannels.map(function(ch){
+        var n=top10.reduce(function(s,c){return s+(c.channels[ch]||0);},0);
+        return '<td style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text2);">'+(n>0?n.toLocaleString():'-')+'</td>';
+      }).join('');
+      footerRow.innerHTML=
+        '<td colspan="3" style="padding:7px 10px;font-weight:700;color:#3b82f6;">Total (Top 10)</td>'
+        +'<td style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text);">'+t10total.toLocaleString()+'</td>'
+        +chFooterHtml
+        +'<td style="padding:7px 10px;text-align:right;font-weight:700;color:#4ade80;">'+t10closed.toLocaleString()+'</td>'
+        +'<td style="padding:7px 10px;text-align:right;font-weight:700;color:#fb923c;">'+(t10open>0?t10open.toLocaleString():'-')+'</td>'
+        +'<td style="padding:7px 10px;text-align:right;font-weight:700;color:#60a5fa;">'+pct(t10closed,t10total)+'</td>';
+    }
+  }
+  // By Channel — rendered as extra KPI cards right beside Open/Closed/Agents
+  var chMap={};
+  f.forEach(function(r){
+    var ch=r.channel||'Unspecified';
+    if(!chMap[ch]) chMap[ch]={channel:ch,total:0,closed:0};
+    chMap[ch].total++;
+    if(isCDClosed(r.status)) chMap[ch].closed++;
+  });
+  var chList=Object.values(chMap).sort(function(a,b){return b.total-a.total;});
+  var chKpiWrap=document.getElementById('cdChannelKpis');
+  if(chKpiWrap){
+    var chIcons={'call':'📞','phone':'📞','voice':'📞','whatsapp':'💬','wa':'💬','email':'✉️','chat':'💬'};
+    var chColors=[
+      {bg:'#1a1030',border:'#4c1d95',text:'#c4b5fd',val:'#a78bfa'},
+      {bg:'#0d2a2e',border:'#0e7490',text:'#67e8f9',val:'#22d3ee'},
+      {bg:'#2a1a0d',border:'#9a5b13',text:'#fcd34d',val:'#fbbf24'},
+      {bg:'#1a2a0d',border:'#4d7c0f',text:'#bef264',val:'#a3e635'}
+    ];
+    chKpiWrap.innerHTML=chList.map(function(c,i){
+      var icon=chIcons[c.channel.toLowerCase()]||'📋';
+      var col=chColors[i%chColors.length];
+      return '<div style="background:'+col.bg+';border:1px solid '+col.border+';border-radius:10px;padding:14px 16px;">'
+        +'<div style="font-size:10px;color:'+col.text+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">'+icon+' '+c.channel+'</div>'
+        +'<div style="font-size:28px;font-weight:700;color:'+col.val+';">'+c.total.toLocaleString()+'</div>'
+        +'<div style="font-size:10px;color:'+col.text+';margin-top:2px;">'+c.closed.toLocaleString()+' closed · '+pct(c.closed,c.total)+'</div>'
+        +'</div>';
+    }).join('');
   }
   // Agent table
   var agMap={};
@@ -6189,6 +6312,7 @@ checkSession();
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
     <select id="cdYearFilter" onchange="onCDYearChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;"><option value="">All Years</option></select>
     <select id="cdMonthFilter" onchange="onCDMonthChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;"><option value="">All Months</option></select>
+    <select id="cdChannelFilter" onchange="renderCaseDetail()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;"><option value="">All Channels</option></select>
     <label style="font-size:10px;color:var(--text3);text-transform:uppercase;">From</label>
     <input type="date" id="cdDateFrom" onchange="onCDDateChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;"/>
     <label style="font-size:10px;color:var(--text3);text-transform:uppercase;">To</label>
@@ -6219,13 +6343,14 @@ checkSession();
       <div style="font-size:10px;color:#93c5fd;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Agents</div>
       <div style="font-size:28px;font-weight:700;color:#60a5fa;" id="cdKpiAgents">—</div>
     </div>
+    <div id="cdChannelKpis" style="display:contents"></div>
   </div>
   <!-- Top 10 -->
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
     <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-trophy" style="color:#fbbf24;margin-right:6px;"></i>Top 10 Case Categories</div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr style="border-bottom:2px solid var(--border2);">
+        <thead><tr id="cdTop10HeaderRow" style="border-bottom:2px solid var(--border2);">
           <th style="padding:7px 10px;text-align:center;font-size:10px;text-transform:uppercase;color:var(--text3);width:40px;">#</th>
           <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">1st Category</th>
           <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">2nd Category</th>
@@ -6236,7 +6361,7 @@ checkSession();
         </tr></thead>
         <tbody id="cdTop10Body"></tbody>
         <tfoot>
-          <tr style="border-top:2px solid var(--border2);background:var(--bg3);">
+          <tr id="cdTop10FooterRow" style="border-top:2px solid var(--border2);background:var(--bg3);">
             <td colspan="3" style="padding:7px 10px;font-weight:700;color:#3b82f6;">Total (Top 10)</td>
             <td id="cdTop10Total" style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text);"></td>
             <td id="cdTop10Closed" style="padding:7px 10px;text-align:right;font-weight:700;color:#4ade80;"></td>
