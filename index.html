@@ -500,10 +500,10 @@ input::placeholder,textarea::placeholder{color:var(--text3);}
     <!-- Forgot Password form -->
     <div id="forgotForm" style="display:none;">
       <h2 style="font-size:20px;font-weight:700;color:#e8ecf0;margin-bottom:4px;">Reset Password</h2>
-      <p style="font-size:13px;color:#64748b;margin-bottom:20px;">Enter your email and we'll send a reset link.</p>
-      <div style="margin-bottom:12px;"><label style="display:block;font-size:11px;text-transform:uppercase;color:#64748b;letter-spacing:.5px;margin-bottom:4px;">Email</label><input type="email" id="resetEmail" placeholder="your@xox.com.my" onkeydown="if(event.key==='Enter')doForgotPassword()" style="width:100%;background:#0f1117;border:1px solid #2d3748;border-radius:8px;color:#e8ecf0;padding:10px 12px;font-size:14px;outline:none;box-sizing:border-box;"/></div>
-      <div id="resetMsg" style="font-size:12px;margin-bottom:10px;min-height:16px;"></div>
-      <button onclick="doForgotPassword()" style="width:100%;padding:11px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">Send Reset Link</button>
+      <div style="font-size:13px;line-height:1.5;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);color:#93b4f8;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+        Please contact your system administrator to reset your password.<br>
+        <span style="font-size:11px;opacity:.8">Admin: Suffian bin Arifen (suffian@xox.com.my)</span>
+      </div>
       <button onclick="showLoginForm()" style="width:100%;padding:9px;background:none;color:#64748b;border:1px solid #2d3748;border-radius:8px;font-size:13px;cursor:pointer;">← Back to Sign In</button>
     </div>
 
@@ -642,6 +642,18 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <button onclick="closeUpdateLog()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;">&#x2715;</button>
   </div>
   <div id="updateLogList" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
+</div>
+
+<div id="slaDrilldownBackdrop" onclick="closeSLADrilldown()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;"></div>
+<div id="slaDrilldownPanel" style="display:none;position:fixed;top:0;right:0;bottom:0;width:440px;max-width:92vw;background:var(--bg2);border-left:1px solid var(--border);z-index:501;overflow-y:auto;box-shadow:-8px 0 24px rgba(0,0,0,.3);">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 18px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);">
+    <div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);" id="slaDrilldownTitle"><i class="ti ti-category" style="color:#3b82f6;margin-right:8px;"></i>Category Breakdown</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="slaDrilldownSubtitle"></div>
+    </div>
+    <button onclick="closeSLADrilldown()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;">&#x2715;</button>
+  </div>
+  <div id="slaDrilldownList" style="padding:12px;overflow-x:auto;"></div>
 </div>
 
 <div class="filterbar" style="flex-direction:column;gap:8px;padding:10px 14px;">
@@ -3448,35 +3460,11 @@ function showForgotPassword(){
   document.getElementById('loginForm').style.display='none';
   document.getElementById('forgotForm').style.display='block';
   document.getElementById('changePassForm').style.display='none';
-  var em=document.getElementById('loginEmail').value;
-  if(em) document.getElementById('resetEmail').value=em;
 }
 function showLoginForm(){
   document.getElementById('loginForm').style.display='block';
   document.getElementById('forgotForm').style.display='none';
   document.getElementById('changePassForm').style.display='none';
-  document.getElementById('resetMsg').textContent='';
-}
-
-async function doForgotPassword(){
-  var email=document.getElementById('resetEmail').value.trim();
-  var msg=document.getElementById('resetMsg');
-  if(!email){msg.style.color='#f87171';msg.textContent='Please enter your email.';return;}
-  msg.style.color='#fbbf24';msg.textContent='Sending...';
-  try{
-    var r=await fetch(SUPABASE_URL+'/auth/v1/recover',{
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email:email, options:{redirectTo: window.location.href}})
-    });
-    if(r.ok||r.status===200){
-      msg.style.color='#34d399';
-      msg.textContent='✓ Reset link sent! Check your email inbox.';
-    } else {
-      var d=await r.json();
-      throw new Error(d.error_description||d.msg||'Failed to send reset email');
-    }
-  }catch(e){msg.style.color='#f87171';msg.textContent='Error: '+e.message;}
 }
 
 async function doChangePassword(){
@@ -5012,6 +5000,115 @@ function resetSLAFilters(){
   renderCaseSLA();
 }
 
+function escapeHtml(str){
+  if(str===null||str===undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function openSLADrilldown(agentName){
+  var f = window._slaCurrentFiltered || [];
+  var agentRows = f.filter(function(r){ return r.agent === agentName; });
+  var closedRows = agentRows.filter(function(r){
+    return r.status.trim()==='Closed' || r.status.trim()==='Closed > Closed';
+  });
+
+  var catMap = {};
+  closedRows.forEach(function(r){
+    var parts = r.category.split('>');
+    var cat1 = parts[0].trim();
+    var cat2 = parts.length>1 ? parts[1].trim() : '';
+    var key = r.category;
+    if(!catMap[key]) catMap[key] = {cat1:cat1, cat2:cat2, w3:0, w5:0, w10:0, total:0};
+    catMap[key].total++;
+    if(r.days<=3)  catMap[key].w3++;
+    if(r.days<=5)  catMap[key].w5++;
+    if(r.days<=10) catMap[key].w10++;
+  });
+  var cats = Object.values(catMap).sort(function(a,b){return b.total-a.total;});
+
+  document.getElementById('slaDrilldownTitle').innerHTML = '<i class="ti ti-category" style="color:#3b82f6;margin-right:8px;"></i>Category Breakdown';
+  document.getElementById('slaDrilldownSubtitle').textContent = agentName + ' \u2014 ' + closedRows.length + ' closed case' + (closedRows.length!==1?'s':'') + ' of ' + agentRows.length + ' total';
+
+  var listEl = document.getElementById('slaDrilldownList');
+  if(!cats.length){
+    listEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px;">No closed cases found for this agent.</div>';
+    document.getElementById('slaDrilldownBackdrop').style.display='block';
+    document.getElementById('slaDrilldownPanel').style.display='block';
+    return;
+  }
+
+  var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+    + '<thead><tr style="border-bottom:1px solid var(--border2);">'
+    + '<th style="padding:6px 4px;text-align:left;color:var(--text3);text-transform:uppercase;font-size:9px;">Category</th>'
+    + '<th style="padding:6px 4px;text-align:right;color:var(--text3);text-transform:uppercase;font-size:9px;">Total</th>'
+    + '<th style="padding:6px 4px;text-align:right;color:#34d399;text-transform:uppercase;font-size:9px;">\u22643d</th>'
+    + '<th style="padding:6px 4px;text-align:right;color:#60a5fa;text-transform:uppercase;font-size:9px;">\u22645d</th>'
+    + '<th style="padding:6px 4px;text-align:right;color:#fbbf24;text-transform:uppercase;font-size:9px;">\u226410d</th>'
+    + '</tr></thead><tbody>'
+    + cats.map(function(c){
+        return '<tr style="border-bottom:1px solid var(--border);">'
+          + '<td style="padding:6px 4px;">'
+          + '<div style="color:var(--text);font-weight:600;">'+escapeHtml(c.cat1)+'</div>'
+          + (c.cat2 ? '<div style="color:var(--text3);font-size:10px;">'+escapeHtml(c.cat2)+'</div>' : '')
+          + '</td>'
+          + '<td style="padding:6px 4px;text-align:right;color:var(--text);">'+c.total+'</td>'
+          + '<td style="padding:6px 4px;text-align:right;color:#34d399;">'+c.w3+'</td>'
+          + '<td style="padding:6px 4px;text-align:right;color:#60a5fa;">'+c.w5+'</td>'
+          + '<td style="padding:6px 4px;text-align:right;color:#fbbf24;">'+c.w10+'</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table>';
+
+  listEl.innerHTML = tableHtml;
+
+  document.getElementById('slaDrilldownBackdrop').style.display='block';
+  document.getElementById('slaDrilldownPanel').style.display='block';
+}
+function closeSLADrilldown(){
+  document.getElementById('slaDrilldownBackdrop').style.display='none';
+  document.getElementById('slaDrilldownPanel').style.display='none';
+}
+
+function exportSLAAgentTable(format){
+  var f = window._slaCurrentFiltered || [];
+  if(!f.length){ alert('No data to export — adjust your filters first.'); return; }
+
+  // Same aggregation as the table itself, recomputed fresh so the export
+  // always matches exactly what's currently on screen (same filters).
+  var agMap = {};
+  f.forEach(function(r){
+    if(!agMap[r.agent]) agMap[r.agent]={agent:r.agent,total:0,open:0,w3:0,w5:0,w10:0};
+    agMap[r.agent].total++;
+    var isClosed=r.status.trim()==='Closed'||r.status.trim()==='Closed > Closed';
+    if(!isClosed) agMap[r.agent].open++;
+    if(isClosed&&r.days<=3)  agMap[r.agent].w3++;
+    if(isClosed&&r.days<=5)  agMap[r.agent].w5++;
+    if(isClosed&&r.days<=10) agMap[r.agent].w10++;
+  });
+  var rows = Object.values(agMap).sort(function(a,b){return b.total-a.total;});
+
+  var exportRows = rows.map(function(ag){
+    var rem = ag.total-ag.w10;
+    var p3 = ag.total>0 ? (ag.w3/ag.total*100).toFixed(2)+'%' : '0.00%';
+    return {
+      'Agent': ag.agent,
+      'Total': ag.total,
+      'Open': ag.open,
+      '<=3 Days': ag.w3,
+      '<=5 Days': ag.w5,
+      '<=10 Days': ag.w10,
+      'Remaining': rem,
+      '3-Day %': p3
+    };
+  });
+
+  var ws = XLSX.utils.json_to_sheet(exportRows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Agent SLA');
+  var dateStamp = new Date().toISOString().slice(0,10);
+  var filename = 'Agent_SLA_Breakdown_'+dateStamp+(format==='csv'?'.csv':'.xlsx');
+  XLSX.writeFile(wb, filename, {bookType: format});
+}
+
 function renderCaseSLA(){
   var yf=(document.getElementById('slaYearFilter')||{}).value||'';
   var mf=(document.getElementById('slaMonthFilter')||{}).value||'';
@@ -5029,6 +5126,7 @@ function renderCaseSLA(){
     if(q && !r.agent.toLowerCase().includes(q)) return false;
     return true;
   });
+  window._slaCurrentFiltered = f; // for the category drilldown panel
   var total=f.length;
   var closedRows=f.filter(function(r){var s=r.status.trim();return s==='Closed'||s==='Closed > Closed';});
   var closed=closedRows.length;
@@ -5112,7 +5210,7 @@ function renderCaseSLA(){
       var rem=ag.total-ag.w10;
       var p3=pct(ag.w3,ag.total);
       var pNum=parseFloat(p3);
-      var pCol=pNum>=95?'#34d399':pNum>=80?'#fbbf24':'#f87171';
+      var pCol=pNum>=95?'#34d399':pNum>=88?'#fbbf24':'#f87171';
       var tr=document.createElement('tr');
       tr.style.borderBottom='1px solid var(--border)';
       tr.onmouseover=function(){this.style.background='var(--row-hover)';};
@@ -5123,9 +5221,16 @@ function renderCaseSLA(){
        [ag.w10.toLocaleString(),'#fbbf24','right'],[rem.toLocaleString(),rem>0?'#f87171':'var(--text3)','right'],
        [p3,pCol,'right']
       ].forEach(function(d,di){
-        var td=document.createElement('td');td.textContent=d[0];
+        var td=document.createElement('td');
+        td.textContent=d[0];
         td.style.cssText='padding:7px 10px;color:'+d[1]+';text-align:'+d[2]+';font-size:12px;';
         if(di===7) td.style.fontWeight='700';
+        if(di===0){
+          td.style.cursor='pointer';
+          td.style.textDecoration='underline dotted';
+          td.title='Click to see this agent\'s issue categories across all SLA buckets';
+          td.onclick=(function(agentName){return function(){openSLADrilldown(agentName);};})(ag.agent);
+        }
         tr.appendChild(td);
       });
       tb.appendChild(tr);
@@ -6252,7 +6357,11 @@ checkSession();
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
       <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-users" style="margin-right:5px;"></i>Agent SLA Breakdown</div>
-      <input type="text" id="slaSearch" onkeyup="renderCaseSLA()" placeholder="Search agent..." style="padding:5px 10px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;width:180px;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="slaSearch" onkeyup="renderCaseSLA()" placeholder="Search agent..." style="padding:5px 10px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;width:180px;">
+        <button onclick="exportSLAAgentTable('csv')" style="padding:5px 10px;font-size:11px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="ti ti-file-text"></i> CSV</button>
+        <button onclick="exportSLAAgentTable('xlsx')" style="padding:5px 10px;font-size:11px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+      </div>
     </div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
