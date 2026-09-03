@@ -674,6 +674,9 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <select id="quarterSelect" onchange="setQuarterPreset(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
       <option value="">📅 Quarter</option>
     </select>
+    <select id="monthSelect" onchange="setMonthPreset(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
+      <option value="">🗓️ Month</option>
+    </select>
     <button class="fpreset"        id="fp_custom"     onclick="setPreset('custom')"><i class="ti ti-calendar" style="font-size:11px;margin-right:3px;"></i>Custom Range</button>
     <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
       <select id="savedViewsSelect" onchange="applySavedView(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 10px;font-size:12px;outline:none;cursor:pointer;max-width:150px;">
@@ -1241,6 +1244,14 @@ function getPresetRange(preset){
         var qLast  = new Date(qYear, startMonth+3, 0); // last day of the quarter's 3rd month
         return {fr:localDateStr(qFirst), to:localDateStr(qLast)};
       }
+      // Month presets look like 'm7-2026' (July 2026)
+      var mMatch = /^m([1-9]|1[0-2])-(\d{4})$/.exec(preset);
+      if(mMatch){
+        var mNum = parseInt(mMatch[1],10), mYear = parseInt(mMatch[2],10);
+        var mFirst = new Date(mYear, mNum-1, 1);
+        var mLast  = new Date(mYear, mNum, 0); // last day of that month
+        return {fr:localDateStr(mFirst), to:localDateStr(mLast)};
+      }
       return null;
   }
 }
@@ -1271,6 +1282,36 @@ function populateQuarterDropdown(){
   if(prevValue) sel.value = prevValue;
 }
 
+function setMonthPreset(value){
+  if(!value) return; // placeholder option selected — do nothing
+  setPreset(value);
+}
+function populateMonthDropdown(){
+  var sel = document.getElementById('monthSelect');
+  if(!sel) return;
+  // Only list year+month combos that actually have data, newest first —
+  // falls back to the current year/month alone if data hasn't loaded yet.
+  var opts;
+  if(allDates && allDates.length){
+    var seen = new Set();
+    allDates.forEach(function(d){ seen.add(d.slice(0,4)+'-'+d.slice(5,7)); });
+    opts = [...seen].sort().reverse();
+  } else {
+    var now=new Date();
+    opts = [now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')];
+  }
+  var prevValue = sel.value;
+  sel.innerHTML = '<option value="">🗓️ Month</option>';
+  opts.forEach(function(ym){
+    var parts=ym.split('-'), yr=parts[0], mo=parseInt(parts[1],10);
+    var opt = document.createElement('option');
+    opt.value = 'm'+mo+'-'+yr;
+    opt.textContent = _MN[mo-1]+' '+yr;
+    sel.appendChild(opt);
+  });
+  if(prevValue) sel.value = prevValue;
+}
+
 function setPreset(preset){
   _activePreset = preset;
   // Update active button style
@@ -1278,12 +1319,17 @@ function setPreset(preset){
     var btn = document.getElementById('fp_'+p);
     if(btn) btn.className = 'fpreset'+(p===preset?' active':'');
   });
-  // If a fixed preset button was clicked (not a quarter), clear the
-  // quarter dropdown so it doesn't show a stale selection.
+  // If a fixed preset button was clicked (not a quarter or month), clear
+  // both dropdowns so they don't show a stale selection.
   var isQuarter = /^q[1-4]-\d{4}$/.test(preset);
+  var isMonth = /^m([1-9]|1[0-2])-\d{4}$/.test(preset);
   if(!isQuarter){
     var qSel = document.getElementById('quarterSelect');
     if(qSel) qSel.value = '';
+  }
+  if(!isMonth){
+    var mSel = document.getElementById('monthSelect');
+    if(mSel) mSel.value = '';
   }
   // Show/hide custom range row
   var cr = document.getElementById('customRangeRow');
@@ -1729,6 +1775,7 @@ function updateDataCompletenessBanner(dates){
 function render(dates){
   window._lastRenderedDates = dates;
   populateQuarterDropdown();
+  populateMonthDropdown();
   updatePeriodCard(dates);
   updateDataCompletenessBanner(dates);
   const a = agg(dates);
@@ -2719,14 +2766,16 @@ function parseWorkbook(wb){
   const rowsRaw=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
   const hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
   var ctIdx=hdr.indexOf('Call Time');
-  var col1Idx=hdr.indexOf('Column1'); // unnamed export column holding actual time-of-day when Call Time is date-only
-  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:col1Idx>=0?col1Idx:(ctIdx>=0?ctIdx:hdr.indexOf('Time')),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
+  var col1Idx=hdr.indexOf('Column1'); // unnamed export column holding actual time-of-day (XLSX split-column exports)
+  var timeColIdx=hdr.indexOf('Time'); // explicitly named time-of-day column (CSV split-column exports)
+  var separateTimeIdx = timeColIdx>=0 ? timeColIdx : col1Idx; // prefer an actual separate time column over self-referencing Call Time
+  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:separateTimeIdx>=0?separateTimeIdx:ctIdx,det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
     dir:hdr.indexOf('Direction'),status:hdr.indexOf('Status'),
     to:hdr.indexOf('To'),from:hdr.indexOf('From'),
     talk:hdr.indexOf('Talking'),ring:hdr.indexOf('Ringing')};
 
   const daily={};
-  const ensure=d=>{if(!daily[d])daily[d]={iq:[],agents:{},dropped:{}};return daily[d];};
+  const ensure=d=>{if(!daily[d])daily[d]={iq:[],agents:{},dropped:{},abandonedIds:new Set()};return daily[d];};
   const ensA=(v,n)=>{if(!v.agents[n])v.agents[n]={inbound:0,outbound:0,talk:0};return v.agents[n];};
 
   // DEBUG: collect all unique Direction+Status combinations seen in file
@@ -2756,8 +2805,14 @@ function parseWorkbook(wb){
 
     if(dir==='Inbound Queue'&&hour!==null){
       if(st==='Unanswered'){
-        // Abandoned: Inbound Queue + Unanswered + hour 8-21 only
-        if(hour>=8 && hour<=21){
+        // Abandoned: Inbound Queue + Unanswered + hour 8-21 only.
+        // Dedupe by Call ID — a call transferred through multiple queue
+        // destinations before the caller hangs up generates one Unanswered
+        // row per leg, which would otherwise count the same abandonment
+        // 2-3x (confirmed: 715 raw rows vs 626 unique Call IDs in one
+        // month of data — a ~12% overcount).
+        if(hour>=8 && hour<=21 && (!cid || !v.abandonedIds.has(cid))){
+          if(cid) v.abandonedIds.add(cid);
           if(!v.abandoned) v.abandoned=[];
           v.abandoned.push({hour:hour});
         }
