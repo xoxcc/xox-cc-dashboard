@@ -2425,7 +2425,7 @@ function processImport(){
       try{
         var wb;
         if(isCsv){setProgress(65,'Processing CSV...');var rows=parseCsvToRows(e.target.result);wb={SheetNames:['Data'],Sheets:{Data:XLSX.utils.aoa_to_sheet(rows)}};}
-        else{wb=XLSX.read(e.target.result,{type:'array',cellDates:true});setProgress(65,'Processing call data...');}
+        else{wb=XLSX.read(e.target.result,{type:'array'});setProgress(65,'Processing call data...');}
         setTimeout(function(){
           try{
             const nd=parseWorkbook(wb);
@@ -2593,7 +2593,20 @@ function parseTimeS(v){
   }
   const s=String(v).trim();
   if(!s||s==='-'||s==='N/A'||s==='0') return 0;
-  // HH:MM:SS
+  // HH:MM:SS with AM/PM (3CX exports Ringing/Talking on a 12-hour clock,
+  // e.g. "12:00:09 AM" — without this check, any "12:xx:xx" was read as
+  // literally 12 hours instead of the correct 0 hours, silently inflating
+  // every wait/talk time stat that touched a call at or near the top of
+  // the hour).
+  const hmsAP=s.match(/^(\d+):(\d+):(\d+)\s*(AM|PM)$/i);
+  if(hmsAP){
+    let h=parseInt(hmsAP[1]);
+    if(hmsAP[4].toUpperCase()==='PM'&&h<12) h+=12;
+    if(hmsAP[4].toUpperCase()==='AM'&&h===12) h=0;
+    var rAP=h*3600+parseInt(hmsAP[2])*60+parseInt(hmsAP[3]);
+    return isNaN(rAP)?0:rAP;
+  }
+  // HH:MM:SS, no AM/PM (already 24-hour, or from a source without a marker)
   const hms=s.match(/^(\d+):(\d+):(\d+)/);
   if(hms){
     var r=parseInt(hms[1])*3600+parseInt(hms[2])*60+parseInt(hms[3]);
@@ -2614,15 +2627,70 @@ function parseTimeS(v){
 }
 function parseHour(v){
   if(!v) return null;
-  const s=String(v).trim();
+  let s=String(v).trim();
+  if(!s) return null;
   if(/^\d{4}-\d{2}-\d{2}[T ]\d{2}/.test(s)) return parseInt(s.slice(11,13));
+  // Combined date+time strings (e.g. "7/1/26 8:26" from an M/D/YY export) —
+  // strip the date prefix and keep only the trailing time-of-day token.
+  if(s.indexOf('/')!==-1){
+    const sp=s.split(' ');
+    s=sp[sp.length-1];
+    if(s.indexOf('/')!==-1) return null; // no time component at all — pure date string, nothing to extract
+  }
   const ap=s.match(/^(\d+):(\d+)(?::\d+)?\s*(AM|PM)$/i);
   if(ap){let h=parseInt(ap[1]);if(ap[3].toUpperCase()==='PM'&&h<12)h+=12;if(ap[3].toUpperCase()==='AM'&&h===12)h=0;return h;}
-  const hm=s.match(/^(\d+):/);
-  if(hm) return parseInt(hm[1]);
-  const f=parseFloat(s);
-  if(!isNaN(f)) return Math.floor(f*24);
+  const hm=s.match(/^(\d+):(\d+)/);
+  if(hm){const h2=parseInt(hm[1]); return (h2>=0&&h2<=23)?h2:null;}
+  // Deliberately no numeric fallback here — a bare parseFloat on a mis-shaped
+  // string previously produced silent garbage (e.g. hour 24, 168) instead of
+  // failing loudly. Returning null causes the row to be skipped, which is safer.
   return null;
+}
+
+// Extract {dateStr, hour, minutes, seconds} directly from real JS Date objects
+// (available when the workbook was read with cellDates:true and the sheet was
+// converted with raw:true). This sidesteps all DD/MM vs MM/DD locale ambiguity
+// entirely, since SheetJS resolves the underlying Excel serial number for us.
+// IMPORTANT: always use the UTC getters — SheetJS builds these dates with no
+// timezone offset, so local getters would shift the hour by the browser's
+// timezone (e.g. +8h in Malaysia), silently corrupting every timestamp.
+// Convert a raw Excel date/time serial number into calendar components,
+// entirely independent of the browser's system timezone. Excel's day-count
+// epoch is 1899-12-30 (serial 0), including Excel's well-known phantom
+// "Feb 29, 1900" bug (kept for backward Lotus 1-2-3 compatibility) — the
+// 25569 offset below already accounts for it, matching how Excel itself
+// (and SheetJS's own SSF module) resolves serial numbers to dates.
+// We do this ourselves rather than trusting SheetJS's cellDates conversion:
+// that conversion builds its Date objects using LOCAL time-zone context for
+// combined datetime cells but NOT consistently for date-only cells, which
+// caused an 8-hour (and, crossing midnight, a full day) shift specifically
+// in UTC+8 (Malaysia). Building the Date purely from a UTC millisecond
+// offset — never from local (y,m,d,...) arguments — sidesteps that
+// inconsistency completely, regardless of what timezone the browser is in.
+function excelSerialToParts(serial){
+  if(typeof serial!=='number'||isNaN(serial)) return null;
+  const wholeDays=Math.floor(serial), frac=serial-wholeDays;
+  const utcMs=Math.round((wholeDays-25569)*86400000);
+  const d=new Date(utcMs);
+  const totalSeconds=Math.round(frac*86400);
+  const hour=Math.floor(totalSeconds/3600), minute=Math.floor((totalSeconds%3600)/60), second=totalSeconds%60;
+  return {year:d.getUTCFullYear(), month:d.getUTCMonth(), day:d.getUTCDate(), hour, minute, second};
+}
+
+function extractDateTimeFromCells(dateVal,timeVal){
+  const dp=excelSerialToParts(typeof dateVal==='number'?dateVal:NaN);
+  if(!dp) return null;
+  let hour=dp.hour, minute=dp.minute, second=dp.second;
+  // Split-column export: "Call Time" is date-only (midnight); the real
+  // time-of-day lives in a separate unlabeled "Column1" cell.
+  if(hour===0&&minute===0&&second===0&&typeof timeVal==='number'&&!isNaN(timeVal)){
+    const tp=excelSerialToParts(timeVal);
+    if(tp){ hour=tp.hour; minute=tp.minute; second=tp.second; }
+  }
+  return {
+    dateStr:dp.year+'-'+String(dp.month+1).padStart(2,'0')+'-'+String(dp.day).padStart(2,'0'),
+    hour, minutes:minute, seconds:second
+  };
 }
 
 function cleanName(name){
@@ -2644,9 +2712,15 @@ function parseWorkbook(wb){
   }
   if(!ws) throw new Error('No sheet with required columns found. Sheets: '+wb.SheetNames.join(', '));
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
+  // Parallel pass keeping raw numeric Excel serial values (only meaningful
+  // for XLSX imports — CSV-derived sheets have no cell typing, so this will
+  // just mirror the string rows and the extraction below safely falls back
+  // to the string parsers).
+  const rowsRaw=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
   const hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
   var ctIdx=hdr.indexOf('Call Time');
-  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:ctIdx>=0?ctIdx:hdr.indexOf('Time'),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
+  var col1Idx=hdr.indexOf('Column1'); // unnamed export column holding actual time-of-day when Call Time is date-only
+  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:col1Idx>=0?col1Idx:(ctIdx>=0?ctIdx:hdr.indexOf('Time')),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
     dir:hdr.indexOf('Direction'),status:hdr.indexOf('Status'),
     to:hdr.indexOf('To'),from:hdr.indexOf('From'),
     talk:hdr.indexOf('Talking'),ring:hdr.indexOf('Ringing')};
@@ -2660,12 +2734,20 @@ function parseWorkbook(wb){
 
   for(let i=1;i<rows.length;i++){
     const r=rows[i];
-    const ds=parseDateStr(r[ix.date]); if(!ds||isNaN(Date.parse(ds))) continue;
+    const rr=rowsRaw[i]||[];
+    // Prefer extracting from real Date objects (XLSX imports) — this is
+    // immune to DD/MM vs MM/DD locale ambiguity since SheetJS already
+    // resolved the underlying Excel serial number for us. Only fall back to
+    // regex string-parsing for CSV imports, which have no cell typing.
+    const dt=extractDateTimeFromCells(rr[ix.date], rr[ix.time]);
+    let ds, hour;
+    if(dt){ ds=dt.dateStr; hour=dt.hour; }
+    else { ds=parseDateStr(r[ix.date]); hour=parseHour(r[ix.time]); }
+    if(!ds||isNaN(Date.parse(ds))) continue;
     const cid=String(r[ix.cid]||'');
     const dir=r[ix.dir]||'', st=r[ix.status]||'';
     const toF=String(r[ix.to]||''), frF=String(r[ix.from]||'');
     const talkS=parseTimeS(r[ix.talk]), ringS=parseTimeS(r[ix.ring]);
-    const hour=parseHour(r[ix.time]);
     const v=ensure(ds);
 
     // Debug: track all dir+status combos
