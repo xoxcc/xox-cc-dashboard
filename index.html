@@ -1380,7 +1380,7 @@ function resetFilters(){
 function agg(dates){
   const r={total:0,answered:0,abandoned:0,ans30:0,talk:0,calls:0,wait:0,hourly:{},agents:{}};
   var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03'; // new 8AM-9PM policy takes effect from this date
-  var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 21; // inclusive, matches the 8AM-9PM window
+  var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 20; // inclusive — 8AM through 8:59PM; closing AT 9:00PM means the 9PM-9:59PM bucket itself is already after-hours
   dates.forEach(d=>{
     const v=allData[d]; if(!v) return;
     var enforceHours = d >= OPERATING_HOURS_CUTOFF_DATE;
