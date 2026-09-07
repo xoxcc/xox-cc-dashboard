@@ -187,7 +187,7 @@
 }
 
 /* Specific UI elements */
-[data-theme="light"] .merge-badge{ background:rgba(6,95,70,.1) !important; }
+[data-theme="light"] .merge-badge{ background:rgba(6,95,70,.1) !important; color:#166534 !important; }
 [data-theme="light"] #syncStatus{ color:#4a6280 !important; }
 [data-theme="light"] #subtitle{ color:#1e3a5f !important; }
 
@@ -272,6 +272,44 @@
 [data-theme="light"] [style*="background:#2d1f4a"]{ background:#ede9fe !important; }
 [data-theme="light"] [style*="background:#3a2800"],
 [data-theme="light"] [style*="background:#2d2000"]{ background:#fef9c3 !important; }
+
+/* ── Additional status-box color families (danger/success/warning/info) ── */
+/* Danger / red boxes */
+[data-theme="light"] [style*="color:#fca5a5"]{ color:#b91c1c !important; }
+[data-theme="light"] [style*="background:#7f1d1d"]{ background:#fee2e2 !important; }
+[data-theme="light"] [style*="background:#3f1d1d"]{ background:#fee2e2 !important; }
+[data-theme="light"] [style*="border-color:#7f1d1d"],
+[data-theme="light"] [style*="border:1px solid #7f1d1d"]{ border-color:#fca5a5 !important; }
+
+/* Success / green boxes */
+[data-theme="light"] [style*="color:#86efac"]{ color:#166534 !important; }
+[data-theme="light"] [style*="color:#4ade80"]{ color:#166534 !important; }
+[data-theme="light"] [style*="color:#bbf7d0"]{ color:#166534 !important; }
+[data-theme="light"] [style*="background:#14532d"]{ background:#dcfce7 !important; }
+[data-theme="light"] [style*="background:#166534"]{ background:#dcfce7 !important; }
+[data-theme="light"] [style*="background:#0d2218"]{ background:#dcfce7 !important; }
+[data-theme="light"] [style*="background:#0d2e1a"]{ background:#dcfce7 !important; }
+
+/* Warning / amber boxes — includes the data-completeness banner */
+[data-theme="light"] [style*="color:#fde68a"]{ color:#92400e !important; }
+[data-theme="light"] [style*="color:#fef08a"]{ color:#92400e !important; }
+[data-theme="light"] [style*="color:#fed7aa"]{ color:#9a3412 !important; }
+[data-theme="light"] [style*="background:#1e1a0d"]{ background:#fef3c7 !important; }
+[data-theme="light"] [style*="background:#2e1a0d"]{ background:#ffedd5 !important; }
+[data-theme="light"] [style*="background:#713f12"]{ background:#fef3c7 !important; }
+[data-theme="light"] [style*="border-color:#854d0e"],
+[data-theme="light"] [style*="border:1px solid #854d0e"]{ border-color:#fbbf24 !important; }
+
+/* Info / blue boxes */
+[data-theme="light"] [style*="color:#3b82f6"]{ color:#1d4ed8 !important; }
+[data-theme="light"] [style*="color:#93c5fd"]{ color:#1d4ed8 !important; }
+[data-theme="light"] [style*="color:#93b4f8"]{ color:#1d4ed8 !important; }
+[data-theme="light"] [style*="color:#a5b4fc"]{ color:#3730a3 !important; }
+[data-theme="light"] [style*="background:#0d1e2e"]{ background:#dbeafe !important; }
+[data-theme="light"] [style*="background:#1a1a2e"]{ background:#dbeafe !important; }
+
+/* Orange */
+[data-theme="light"] [style*="color:#fb923c"]{ color:#c2410c !important; }
 
 /* ── Reset & Base ── */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -674,9 +712,6 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <select id="quarterSelect" onchange="setQuarterPreset(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
       <option value="">📅 Quarter</option>
     </select>
-    <select id="monthSelect" onchange="setMonthPreset(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
-      <option value="">🗓️ Month</option>
-    </select>
     <button class="fpreset"        id="fp_custom"     onclick="setPreset('custom')"><i class="ti ti-calendar" style="font-size:11px;margin-right:3px;"></i>Custom Range</button>
     <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
       <select id="savedViewsSelect" onchange="applySavedView(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 10px;font-size:12px;outline:none;cursor:pointer;max-width:150px;">
@@ -719,7 +754,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
         <button onclick="openTargetsModal()" style="padding:4px 10px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;"><i class="ti ti-target-arrow"></i> Targets</button>
       </div>
       <div class="kpi-grid">
-        <div class="kpi"><div class="kpi-icon" style="color:#ffffff;"><i class="ti ti-phone-incoming"></i></div><div class="kpi-label">Total Incoming</div><div class="kpi-val" style="color:#ffffff;" id="kTotal">-</div><div class="kpi-sub" id="kTotalSub"></div><div class="kpi-delta" id="kTotalDelta"></div></div>
+        <div class="kpi"><div class="kpi-icon c-blue"><i class="ti ti-phone-incoming"></i></div><div class="kpi-label">Total Incoming</div><div class="kpi-val c-blue" id="kTotal">-</div><div class="kpi-sub" id="kTotalSub"></div><div class="kpi-delta" id="kTotalDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-phone-check"></i></div><div class="kpi-label">Answered</div><div class="kpi-val c-green" id="kAns">-</div><div class="kpi-sub" id="kAnsSub"></div><div class="kpi-delta" id="kAnsDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-red"><i class="ti ti-phone-x"></i></div><div class="kpi-label">Abandoned</div><div class="kpi-val c-red" id="kAb">-</div><div class="kpi-sub" id="kAbSub"></div><div class="kpi-delta" id="kAbDelta"></div><div id="kAbTarget"></div></div>
         <div class="kpi"><div class="kpi-icon c-amber"><i class="ti ti-clock-check"></i></div><div class="kpi-label">Ans &lt;=30s</div><div class="kpi-val c-amber" id="kA30">-</div><div class="kpi-sub" id="kA30Sub"></div><div class="kpi-delta" id="kA30Delta"></div></div>
@@ -1244,14 +1279,6 @@ function getPresetRange(preset){
         var qLast  = new Date(qYear, startMonth+3, 0); // last day of the quarter's 3rd month
         return {fr:localDateStr(qFirst), to:localDateStr(qLast)};
       }
-      // Month presets look like 'm7-2026' (July 2026)
-      var mMatch = /^m([1-9]|1[0-2])-(\d{4})$/.exec(preset);
-      if(mMatch){
-        var mNum = parseInt(mMatch[1],10), mYear = parseInt(mMatch[2],10);
-        var mFirst = new Date(mYear, mNum-1, 1);
-        var mLast  = new Date(mYear, mNum, 0); // last day of that month
-        return {fr:localDateStr(mFirst), to:localDateStr(mLast)};
-      }
       return null;
   }
 }
@@ -1282,36 +1309,6 @@ function populateQuarterDropdown(){
   if(prevValue) sel.value = prevValue;
 }
 
-function setMonthPreset(value){
-  if(!value) return; // placeholder option selected — do nothing
-  setPreset(value);
-}
-function populateMonthDropdown(){
-  var sel = document.getElementById('monthSelect');
-  if(!sel) return;
-  // Only list year+month combos that actually have data, newest first —
-  // falls back to the current year/month alone if data hasn't loaded yet.
-  var opts;
-  if(allDates && allDates.length){
-    var seen = new Set();
-    allDates.forEach(function(d){ seen.add(d.slice(0,4)+'-'+d.slice(5,7)); });
-    opts = [...seen].sort().reverse();
-  } else {
-    var now=new Date();
-    opts = [now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')];
-  }
-  var prevValue = sel.value;
-  sel.innerHTML = '<option value="">🗓️ Month</option>';
-  opts.forEach(function(ym){
-    var parts=ym.split('-'), yr=parts[0], mo=parseInt(parts[1],10);
-    var opt = document.createElement('option');
-    opt.value = 'm'+mo+'-'+yr;
-    opt.textContent = _MN[mo-1]+' '+yr;
-    sel.appendChild(opt);
-  });
-  if(prevValue) sel.value = prevValue;
-}
-
 function setPreset(preset){
   _activePreset = preset;
   // Update active button style
@@ -1319,17 +1316,12 @@ function setPreset(preset){
     var btn = document.getElementById('fp_'+p);
     if(btn) btn.className = 'fpreset'+(p===preset?' active':'');
   });
-  // If a fixed preset button was clicked (not a quarter or month), clear
-  // both dropdowns so they don't show a stale selection.
+  // If a fixed preset button was clicked (not a quarter), clear the
+  // quarter dropdown so it doesn't show a stale selection.
   var isQuarter = /^q[1-4]-\d{4}$/.test(preset);
-  var isMonth = /^m([1-9]|1[0-2])-\d{4}$/.test(preset);
   if(!isQuarter){
     var qSel = document.getElementById('quarterSelect');
     if(qSel) qSel.value = '';
-  }
-  if(!isMonth){
-    var mSel = document.getElementById('monthSelect');
-    if(mSel) mSel.value = '';
   }
   // Show/hide custom range row
   var cr = document.getElementById('customRangeRow');
@@ -1387,13 +1379,40 @@ function resetFilters(){
 
 function agg(dates){
   const r={total:0,answered:0,abandoned:0,ans30:0,talk:0,calls:0,wait:0,hourly:{},agents:{}};
+  var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03'; // new 8AM-9PM policy takes effect from this date
+  var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 21; // inclusive, matches the 8AM-9PM window
   dates.forEach(d=>{
     const v=allData[d]; if(!v) return;
-    r.total+=v.total; r.answered+=v.answered; r.abandoned+=v.abandoned; r.ans30+=v.ans30;
+    var enforceHours = d >= OPERATING_HOURS_CUTOFF_DATE;
+
+    if(enforceHours){
+      // Recompute this day's totals from ONLY the 8AM-9PM hourly entries, so
+      // KPI cards and the hourly chart always agree — rather than using the
+      // day's raw total (which may include calls from outside the new
+      // operating window, e.g. a stray call logged after 9PM). Dates before
+      // the cutoff are untouched — see the else branch below.
+      var dayTotal=0, dayAnswered=0, dayAbandoned=0, dayAns30=0;
+      Object.entries(v.hourly).forEach(([h,hv])=>{
+        var hNum = Number(h);
+        if(hNum < OPERATING_HOURS_MIN || hNum > OPERATING_HOURS_MAX) return; // outside new operating hours — excluded
+        dayTotal += hv.total||0;
+        dayAnswered += hv.answered||0;
+        dayAns30 += hv.ans30||0;
+      });
+      dayAbandoned = dayTotal - dayAnswered;
+      r.total+=dayTotal; r.answered+=dayAnswered; r.abandoned+=dayAbandoned; r.ans30+=dayAns30;
+    } else {
+      r.total+=v.total; r.answered+=v.answered; r.abandoned+=v.abandoned; r.ans30+=v.ans30;
+    }
+
     const ac=v.agents.reduce((s,a)=>s+a.inbound,0);
     r.talk+=v.avg_talk_s*ac; r.calls+=ac;
     r.wait+=(v.total_wait_s||v.avg_wait_s*v.answered||0);
     Object.entries(v.hourly).forEach(([h,hv])=>{
+      if(enforceHours){
+        var hNum2 = Number(h);
+        if(hNum2 < OPERATING_HOURS_MIN || hNum2 > OPERATING_HOURS_MAX) return; // exclude from hourly chart too, for consistency
+      }
       if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
       r.hourly[h].total+=hv.total||0;
       r.hourly[h].answered+=hv.answered||0;
@@ -1775,7 +1794,6 @@ function updateDataCompletenessBanner(dates){
 function render(dates){
   window._lastRenderedDates = dates;
   populateQuarterDropdown();
-  populateMonthDropdown();
   updatePeriodCard(dates);
   updateDataCompletenessBanner(dates);
   const a = agg(dates);
@@ -2472,7 +2490,7 @@ function processImport(){
       try{
         var wb;
         if(isCsv){setProgress(65,'Processing CSV...');var rows=parseCsvToRows(e.target.result);wb={SheetNames:['Data'],Sheets:{Data:XLSX.utils.aoa_to_sheet(rows)}};}
-        else{wb=XLSX.read(e.target.result,{type:'array'});setProgress(65,'Processing call data...');}
+        else{wb=XLSX.read(e.target.result,{type:'array',cellDates:true});setProgress(65,'Processing call data...');}
         setTimeout(function(){
           try{
             const nd=parseWorkbook(wb);
@@ -2640,20 +2658,7 @@ function parseTimeS(v){
   }
   const s=String(v).trim();
   if(!s||s==='-'||s==='N/A'||s==='0') return 0;
-  // HH:MM:SS with AM/PM (3CX exports Ringing/Talking on a 12-hour clock,
-  // e.g. "12:00:09 AM" — without this check, any "12:xx:xx" was read as
-  // literally 12 hours instead of the correct 0 hours, silently inflating
-  // every wait/talk time stat that touched a call at or near the top of
-  // the hour).
-  const hmsAP=s.match(/^(\d+):(\d+):(\d+)\s*(AM|PM)$/i);
-  if(hmsAP){
-    let h=parseInt(hmsAP[1]);
-    if(hmsAP[4].toUpperCase()==='PM'&&h<12) h+=12;
-    if(hmsAP[4].toUpperCase()==='AM'&&h===12) h=0;
-    var rAP=h*3600+parseInt(hmsAP[2])*60+parseInt(hmsAP[3]);
-    return isNaN(rAP)?0:rAP;
-  }
-  // HH:MM:SS, no AM/PM (already 24-hour, or from a source without a marker)
+  // HH:MM:SS
   const hms=s.match(/^(\d+):(\d+):(\d+)/);
   if(hms){
     var r=parseInt(hms[1])*3600+parseInt(hms[2])*60+parseInt(hms[3]);
@@ -2674,70 +2679,15 @@ function parseTimeS(v){
 }
 function parseHour(v){
   if(!v) return null;
-  let s=String(v).trim();
-  if(!s) return null;
+  const s=String(v).trim();
   if(/^\d{4}-\d{2}-\d{2}[T ]\d{2}/.test(s)) return parseInt(s.slice(11,13));
-  // Combined date+time strings (e.g. "7/1/26 8:26" from an M/D/YY export) —
-  // strip the date prefix and keep only the trailing time-of-day token.
-  if(s.indexOf('/')!==-1){
-    const sp=s.split(' ');
-    s=sp[sp.length-1];
-    if(s.indexOf('/')!==-1) return null; // no time component at all — pure date string, nothing to extract
-  }
   const ap=s.match(/^(\d+):(\d+)(?::\d+)?\s*(AM|PM)$/i);
   if(ap){let h=parseInt(ap[1]);if(ap[3].toUpperCase()==='PM'&&h<12)h+=12;if(ap[3].toUpperCase()==='AM'&&h===12)h=0;return h;}
-  const hm=s.match(/^(\d+):(\d+)/);
-  if(hm){const h2=parseInt(hm[1]); return (h2>=0&&h2<=23)?h2:null;}
-  // Deliberately no numeric fallback here — a bare parseFloat on a mis-shaped
-  // string previously produced silent garbage (e.g. hour 24, 168) instead of
-  // failing loudly. Returning null causes the row to be skipped, which is safer.
+  const hm=s.match(/^(\d+):/);
+  if(hm) return parseInt(hm[1]);
+  const f=parseFloat(s);
+  if(!isNaN(f)) return Math.floor(f*24);
   return null;
-}
-
-// Extract {dateStr, hour, minutes, seconds} directly from real JS Date objects
-// (available when the workbook was read with cellDates:true and the sheet was
-// converted with raw:true). This sidesteps all DD/MM vs MM/DD locale ambiguity
-// entirely, since SheetJS resolves the underlying Excel serial number for us.
-// IMPORTANT: always use the UTC getters — SheetJS builds these dates with no
-// timezone offset, so local getters would shift the hour by the browser's
-// timezone (e.g. +8h in Malaysia), silently corrupting every timestamp.
-// Convert a raw Excel date/time serial number into calendar components,
-// entirely independent of the browser's system timezone. Excel's day-count
-// epoch is 1899-12-30 (serial 0), including Excel's well-known phantom
-// "Feb 29, 1900" bug (kept for backward Lotus 1-2-3 compatibility) — the
-// 25569 offset below already accounts for it, matching how Excel itself
-// (and SheetJS's own SSF module) resolves serial numbers to dates.
-// We do this ourselves rather than trusting SheetJS's cellDates conversion:
-// that conversion builds its Date objects using LOCAL time-zone context for
-// combined datetime cells but NOT consistently for date-only cells, which
-// caused an 8-hour (and, crossing midnight, a full day) shift specifically
-// in UTC+8 (Malaysia). Building the Date purely from a UTC millisecond
-// offset — never from local (y,m,d,...) arguments — sidesteps that
-// inconsistency completely, regardless of what timezone the browser is in.
-function excelSerialToParts(serial){
-  if(typeof serial!=='number'||isNaN(serial)) return null;
-  const wholeDays=Math.floor(serial), frac=serial-wholeDays;
-  const utcMs=Math.round((wholeDays-25569)*86400000);
-  const d=new Date(utcMs);
-  const totalSeconds=Math.round(frac*86400);
-  const hour=Math.floor(totalSeconds/3600), minute=Math.floor((totalSeconds%3600)/60), second=totalSeconds%60;
-  return {year:d.getUTCFullYear(), month:d.getUTCMonth(), day:d.getUTCDate(), hour, minute, second};
-}
-
-function extractDateTimeFromCells(dateVal,timeVal){
-  const dp=excelSerialToParts(typeof dateVal==='number'?dateVal:NaN);
-  if(!dp) return null;
-  let hour=dp.hour, minute=dp.minute, second=dp.second;
-  // Split-column export: "Call Time" is date-only (midnight); the real
-  // time-of-day lives in a separate unlabeled "Column1" cell.
-  if(hour===0&&minute===0&&second===0&&typeof timeVal==='number'&&!isNaN(timeVal)){
-    const tp=excelSerialToParts(timeVal);
-    if(tp){ hour=tp.hour; minute=tp.minute; second=tp.second; }
-  }
-  return {
-    dateStr:dp.year+'-'+String(dp.month+1).padStart(2,'0')+'-'+String(dp.day).padStart(2,'0'),
-    hour, minutes:minute, seconds:second
-  };
 }
 
 function cleanName(name){
@@ -2759,23 +2709,15 @@ function parseWorkbook(wb){
   }
   if(!ws) throw new Error('No sheet with required columns found. Sheets: '+wb.SheetNames.join(', '));
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
-  // Parallel pass keeping raw numeric Excel serial values (only meaningful
-  // for XLSX imports — CSV-derived sheets have no cell typing, so this will
-  // just mirror the string rows and the extraction below safely falls back
-  // to the string parsers).
-  const rowsRaw=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
   const hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
   var ctIdx=hdr.indexOf('Call Time');
-  var col1Idx=hdr.indexOf('Column1'); // unnamed export column holding actual time-of-day (XLSX split-column exports)
-  var timeColIdx=hdr.indexOf('Time'); // explicitly named time-of-day column (CSV split-column exports)
-  var separateTimeIdx = timeColIdx>=0 ? timeColIdx : col1Idx; // prefer an actual separate time column over self-referencing Call Time
-  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:separateTimeIdx>=0?separateTimeIdx:ctIdx,det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
+  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:ctIdx>=0?ctIdx:hdr.indexOf('Time'),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
     dir:hdr.indexOf('Direction'),status:hdr.indexOf('Status'),
     to:hdr.indexOf('To'),from:hdr.indexOf('From'),
     talk:hdr.indexOf('Talking'),ring:hdr.indexOf('Ringing')};
 
   const daily={};
-  const ensure=d=>{if(!daily[d])daily[d]={iq:[],agents:{},dropped:{},abandonedIds:new Set()};return daily[d];};
+  const ensure=d=>{if(!daily[d])daily[d]={iq:[],agents:{},dropped:{}};return daily[d];};
   const ensA=(v,n)=>{if(!v.agents[n])v.agents[n]={inbound:0,outbound:0,talk:0};return v.agents[n];};
 
   // DEBUG: collect all unique Direction+Status combinations seen in file
@@ -2783,20 +2725,12 @@ function parseWorkbook(wb){
 
   for(let i=1;i<rows.length;i++){
     const r=rows[i];
-    const rr=rowsRaw[i]||[];
-    // Prefer extracting from real Date objects (XLSX imports) — this is
-    // immune to DD/MM vs MM/DD locale ambiguity since SheetJS already
-    // resolved the underlying Excel serial number for us. Only fall back to
-    // regex string-parsing for CSV imports, which have no cell typing.
-    const dt=extractDateTimeFromCells(rr[ix.date], rr[ix.time]);
-    let ds, hour;
-    if(dt){ ds=dt.dateStr; hour=dt.hour; }
-    else { ds=parseDateStr(r[ix.date]); hour=parseHour(r[ix.time]); }
-    if(!ds||isNaN(Date.parse(ds))) continue;
+    const ds=parseDateStr(r[ix.date]); if(!ds||isNaN(Date.parse(ds))) continue;
     const cid=String(r[ix.cid]||'');
     const dir=r[ix.dir]||'', st=r[ix.status]||'';
     const toF=String(r[ix.to]||''), frF=String(r[ix.from]||'');
     const talkS=parseTimeS(r[ix.talk]), ringS=parseTimeS(r[ix.ring]);
+    const hour=parseHour(r[ix.time]);
     const v=ensure(ds);
 
     // Debug: track all dir+status combos
@@ -2805,14 +2739,8 @@ function parseWorkbook(wb){
 
     if(dir==='Inbound Queue'&&hour!==null){
       if(st==='Unanswered'){
-        // Abandoned: Inbound Queue + Unanswered + hour 8-21 only.
-        // Dedupe by Call ID — a call transferred through multiple queue
-        // destinations before the caller hangs up generates one Unanswered
-        // row per leg, which would otherwise count the same abandonment
-        // 2-3x (confirmed: 715 raw rows vs 626 unique Call IDs in one
-        // month of data — a ~12% overcount).
-        if(hour>=8 && hour<=21 && (!cid || !v.abandonedIds.has(cid))){
-          if(cid) v.abandonedIds.add(cid);
+        // Abandoned: Inbound Queue + Unanswered + hour 8-21 only
+        if(hour>=8 && hour<=21){
           if(!v.abandoned) v.abandoned=[];
           v.abandoned.push({hour:hour});
         }
