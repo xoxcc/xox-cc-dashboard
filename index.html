@@ -3081,6 +3081,38 @@ function parseWorkbook(wb){
   // DEBUG: collect all unique Direction+Status combinations seen in file
   var _debugStats = {};
 
+  // ── Pass 1: for each Call ID, find its LATEST 'Unanswered' row (if any)
+  // and its 'Waiting' row (if any) — tracked SEPARATELY and counted
+  // INDEPENDENTLY. A call that escalates through multiple missed queue
+  // levels before finally being answered (e.g. Unanswered → Unanswered →
+  // Waiting) genuinely represents both: a real missed-SLA moment (counted
+  // once, using only the most recent miss — earlier misses in the same
+  // chain are redundant escalation logging, not separate events) AND a
+  // real successful answer. Both get counted; they are not mutually
+  // exclusive outcomes of the same call.
+  var iqLatestUnanswered = new Map(); // cid -> {row, _ct}
+  var iqWaitingRow = new Map();       // cid -> row
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    const dir=r[ix.dir]||'', st=r[ix.status]||'';
+    if(dir!=='Inbound Queue') continue;
+    const cid=String(r[ix.cid]||'');
+    if(st==='Unanswered'){
+      if(!cid){ iqLatestUnanswered.set(Symbol(), {row:r, _ct:''}); continue; } // no call ID — always its own event
+      const ct=String(r[ix.date]||'');
+      const existing=iqLatestUnanswered.get(cid);
+      if(!existing || ct>existing._ct) iqLatestUnanswered.set(cid, {row:r, _ct:ct});
+    } else if(st==='Waiting'){
+      if(!cid){ iqWaitingRow.set(Symbol(), r); continue; }
+      iqWaitingRow.set(cid, r); // a Call ID only ever has one Waiting row
+    }
+  }
+  var countableAbandonedRows = new Set();
+  iqLatestUnanswered.forEach(function(entry){ countableAbandonedRows.add(entry.row); });
+  var countableAnsweredRows = new Set();
+  iqWaitingRow.forEach(function(row){ countableAnsweredRows.add(row); });
+
+  // ── Pass 2: main row loop ──
   for(let i=1;i<rows.length;i++){
     const r=rows[i];
     const ds=parseDateStr(r[ix.date]); if(!ds||isNaN(Date.parse(ds))) continue;
@@ -3096,13 +3128,13 @@ function parseWorkbook(wb){
     _debugStats[key] = (_debugStats[key]||0)+1;
 
     if(dir==='Inbound Queue'&&hour!==null){
-      if(st==='Unanswered'){
+      if(st==='Unanswered' && countableAbandonedRows.has(r)){
         // Abandoned: Inbound Queue + Unanswered + hour 8-21 only
         if(hour>=8 && hour<=21){
           if(!v.abandoned) v.abandoned=[];
           v.abandoned.push({hour:hour});
         }
-      } else if(st==='Waiting'){
+      } else if(st==='Waiting' && countableAnsweredRows.has(r)){
         // Answered: Inbound Queue + Waiting (all hours)
         if(!v.answeredIQ) v.answeredIQ=[];
         v.answeredIQ.push({hour:hour, talk:talkS, wait:talkS});
