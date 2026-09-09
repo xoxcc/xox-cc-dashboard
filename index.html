@@ -2711,7 +2711,12 @@ function parseWorkbook(wb){
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
   const hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
   var ctIdx=hdr.indexOf('Call Time');
-  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:ctIdx>=0?ctIdx:hdr.indexOf('Time'),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
+  var timeColIdx=hdr.indexOf('Time');
+  // Some exports combine date+time into one "Call Time" column (no separate "Time" column).
+  // Others (like the "Removed duplicate" export) split them: "Call Time" = date only, "Time" = time only.
+  // Only reuse Call Time for the time-of-day value when there's no distinct Time column.
+  var timeIdx=(timeColIdx>=0 && timeColIdx!==ctIdx)?timeColIdx:(ctIdx>=0?ctIdx:timeColIdx);
+  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:timeIdx,det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
     dir:hdr.indexOf('Direction'),status:hdr.indexOf('Status'),
     to:hdr.indexOf('To'),from:hdr.indexOf('From'),
     talk:hdr.indexOf('Talking'),ring:hdr.indexOf('Ringing')};
