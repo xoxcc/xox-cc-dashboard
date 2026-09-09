@@ -709,6 +709,9 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <button class="fpreset"        id="fp_thisweek"   onclick="setPreset('thisweek')">This Week</button>
     <button class="fpreset"        id="fp_thismonth"  onclick="setPreset('thismonth')">This Month</button>
     <button class="fpreset"        id="fp_lastmonth"  onclick="setPreset('lastmonth')">Last Month</button>
+    <select id="monthSelect" onchange="setMonthPreset(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
+      <option value="">📅 Month</option>
+    </select>
     <select id="quarterSelect" onchange="setQuarterPreset(this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;cursor:pointer;">
       <option value="">📅 Quarter</option>
     </select>
@@ -793,9 +796,37 @@ ON CONFLICT (id) DO NOTHING;</code></div>
   <div class="dpanel resizable" id="dp_hourly" data-panel="hourly">
     <div class="dp-handle" title="Drag to reorder"><i class="ti ti-grip-horizontal"></i><span>Hourly Call Volume</span><div class="dp-handle-right"><button class="dp-toggle" onclick="togglePanel('dp_hourly')" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div>
     <div class="dp-body">
-      <div class="card-title" style="margin-bottom:10px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i><span id="hourlyCardTitle">Hourly Call Volume</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i><span id="hourlyCardTitle">Hourly Call Volume</span></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <select id="hourlyMonthFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
+            <option value="">All Months</option>
+          </select>
+          <select id="hourlyYearFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
+            <option value="">All Years</option>
+          </select>
+          <button onclick="document.getElementById('hourlyMonthFilter').value='';document.getElementById('hourlyYearFilter').value='';renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:4px 8px;font-size:11px;cursor:pointer;">✕ Clear</button>
+        </div>
+      </div>
       <div id="hourlyTable"></div>
       <div style="position:relative;height:280px;margin-top:12px;"><canvas id="hourlyChart"></canvas></div>
+    </div>
+    <div class="dp-resize-grip" title="Drag to resize"><i class="ti ti-grip-horizontal" style="font-size:10px;"></i></div>
+  </div>
+
+  <div class="dpanel resizable" id="dp_monthly" data-panel="monthly">
+    <div class="dp-handle" title="Drag to reorder"><i class="ti ti-grip-horizontal"></i><span>Monthly Performance</span><div class="dp-handle-right"><button class="dp-toggle" onclick="togglePanel('dp_monthly')" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div>
+    <div class="dp-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-calendar-stats" style="margin-right:5px;"></i>Monthly Performance <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:6px;">(all loaded data, independent of the date filter above)</span></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <select id="monthlyYearFilter" onchange="renderMonthlyPerformance()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
+            <option value="">All Years</option>
+          </select>
+        </div>
+      </div>
+      <div id="monthlyTable"></div>
+      <div style="position:relative;height:280px;margin-top:12px;"><canvas id="monthlyChart"></canvas></div>
     </div>
     <div class="dp-resize-grip" title="Drag to resize"><i class="ti ti-grip-horizontal" style="font-size:10px;"></i></div>
   </div>
@@ -1279,8 +1310,45 @@ function getPresetRange(preset){
         var qLast  = new Date(qYear, startMonth+3, 0); // last day of the quarter's 3rd month
         return {fr:localDateStr(qFirst), to:localDateStr(qLast)};
       }
+      // Month presets look like 'm2026-03' — a specific named month, distinct
+      // from the "This Month"/"Last Month" fixed buttons.
+      var mMatch = /^m(\d{4})-(\d{2})$/.exec(preset);
+      if(mMatch){
+        var mYear = parseInt(mMatch[1],10), mMonthNum = parseInt(mMatch[2],10);
+        var mFirst = new Date(mYear, mMonthNum-1, 1);
+        var mLast  = new Date(mYear, mMonthNum, 0);
+        return {fr:localDateStr(mFirst), to:localDateStr(mLast)};
+      }
       return null;
   }
+}
+
+function setMonthPreset(value){
+  if(!value) return; // placeholder option selected — do nothing
+  setPreset(value);
+}
+function populateMonthDropdown(){
+  var sel = document.getElementById('monthSelect');
+  if(!sel) return;
+  var years = allDates && allDates.length
+    ? [...new Set(allDates.map(function(d){return d.slice(0,4);}))].sort().reverse()
+    : [String(new Date().getFullYear())];
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  var prevValue = sel.value;
+  sel.innerHTML = '<option value="">📅 Month</option>';
+  years.forEach(function(yr){
+    // Only list months that actually have data for this year — a full
+    // 12-month list per year would get unwieldy fast across multiple years.
+    var monthsWithData = [...new Set(allDates.filter(function(d){return d.slice(0,4)===yr;}).map(function(d){return d.slice(5,7);}))].sort();
+    monthsWithData.forEach(function(mo){
+      var opt = document.createElement('option');
+      opt.value = 'm'+yr+'-'+mo;
+      opt.textContent = monthNames[parseInt(mo,10)-1]+' '+yr;
+      sel.appendChild(opt);
+    });
+  });
+  if(prevValue) sel.value = prevValue;
 }
 
 function setQuarterPreset(value){
@@ -1316,12 +1384,19 @@ function setPreset(preset){
     var btn = document.getElementById('fp_'+p);
     if(btn) btn.className = 'fpreset'+(p===preset?' active':'');
   });
-  // If a fixed preset button was clicked (not a quarter), clear the
-  // quarter dropdown so it doesn't show a stale selection.
+  // If a fixed preset button was clicked (not a quarter/month), clear both
+  // dropdowns so they don't show a stale selection. Also clear whichever
+  // one wasn't just picked, so Quarter and Month never both look "selected"
+  // at the same time.
   var isQuarter = /^q[1-4]-\d{4}$/.test(preset);
+  var isMonth = /^m\d{4}-\d{2}$/.test(preset);
   if(!isQuarter){
     var qSel = document.getElementById('quarterSelect');
     if(qSel) qSel.value = '';
+  }
+  if(!isMonth){
+    var mSel = document.getElementById('monthSelect');
+    if(mSel) mSel.value = '';
   }
   // Show/hide custom range row
   var cr = document.getElementById('customRangeRow');
@@ -1600,6 +1675,92 @@ function renderInsights(dates, a, pa, curSlaPct, curAbRate, targets){
     lines.push({icon:'🎯', text:'Abandon rate is at '+curAbRate.toFixed(1)+'%, above your target of '+targets.ab+'%.', level:'warn'});
   }
 
+  // ── SLA pacing: how many calls/day within 30s are needed to hit target ──
+  var slaTarget = (targets.sla!=null && !isNaN(targets.sla)) ? targets.sla : 85;
+
+  function paceInsight(rangeStart, rangeEnd, elapsedDates, label){
+    var today = new Date(); today.setHours(0,0,0,0);
+    var endDate = new Date(rangeEnd+'T00:00:00');
+
+    if(endDate <= today){
+      // Period already finished — report the actual result, not a pace target.
+      var finishedAgg = agg(elapsedDates);
+      if(!finishedAgg.total) return null;
+      var finalSla = (finishedAgg.ans30 / finishedAgg.total) * 100;
+      var passed = finalSla >= slaTarget;
+      return {
+        icon: passed ? '✅' : '❌',
+        text: label+' has ended: finished at '+finalSla.toFixed(1)+'% SLA 30s, '+(passed?'meeting':'missing')+' your '+slaTarget+'% target'+(passed?'':' by '+(slaTarget-finalSla).toFixed(1)+' points')+'.',
+        level: passed ? 'good' : 'warn'
+      };
+    }
+
+    var daysRemaining = Math.round((endDate - today) / 86400000);
+    if(daysRemaining <= 0) return null;
+
+    var elapsedAgg = agg(elapsedDates);
+    if(!elapsedAgg.total) return null;
+    var avgDailyVolume = elapsedAgg.total / elapsedDates.length;
+    var projectedRemainingVolume = avgDailyVolume * daysRemaining;
+    var projectedTotalVolume = elapsedAgg.total + projectedRemainingVolume;
+
+    var targetAns30Total = projectedTotalVolume * (slaTarget/100);
+    var remainingAns30Needed = targetAns30Total - elapsedAgg.ans30;
+    var bestCaseFinalSla = ((elapsedAgg.ans30 + projectedRemainingVolume) / projectedTotalVolume) * 100;
+
+    if(remainingAns30Needed <= 0){
+      return {icon:'✅', text:'On track for '+label+': at the current pace you\'re already projected to finish at or above your '+slaTarget+'% SLA target.', level:'good'};
+    }
+    var dailyAns30Needed = remainingAns30Needed / daysRemaining;
+    var dailySlaNeeded = (dailyAns30Needed / avgDailyVolume) * 100;
+
+    if(dailySlaNeeded > 100 || bestCaseFinalSla < slaTarget){
+      return {icon:'⚠️', text:label+': even at 100% SLA for the remaining '+daysRemaining+' day'+(daysRemaining!==1?'s':'')+', the best possible finish is ~'+bestCaseFinalSla.toFixed(1)+'% — hitting '+slaTarget+'% is no longer mathematically reachable at current volume.', level:'warn'};
+    }
+    return {icon:'🎯', text:'To hit '+slaTarget+'% SLA for '+label+', you need ~'+Math.round(dailyAns30Needed)+' calls/day answered within 30s over the remaining '+daysRemaining+' day'+(daysRemaining!==1?'s':'')+' (~'+dailySlaNeeded.toFixed(1)+'% daily SLA).', level: dailySlaNeeded > curSlaPct+5 ? 'warn' : 'info'};
+  }
+
+  // Insight for the current calendar quarter — reflects "today" against the
+  // real quarter, but only when the period actually being viewed is still
+  // current/ongoing. If the user has filtered to a clearly historical range
+  // (e.g. a past month via the Month dropdown), a forward-looking "hit your
+  // Q3 target" pace insight is irrelevant to what they're looking at.
+  (function(){
+    var today = new Date(); today.setHours(0,0,0,0);
+    var todayStr = today.toISOString().slice(0,10);
+    var viewingCurrentPeriod = dates.length && dates[dates.length-1] >= todayStr;
+    if(!viewingCurrentPeriod) return;
+
+    var qStartMonth = Math.floor(today.getMonth()/3)*3;
+    var qStart = new Date(today.getFullYear(), qStartMonth, 1);
+    var qEnd = new Date(today.getFullYear(), qStartMonth+3, 0);
+    var qStartStr = qStart.getFullYear()+'-'+String(qStart.getMonth()+1).padStart(2,'0')+'-'+String(qStart.getDate()).padStart(2,'0');
+    var qEndStr = qEnd.getFullYear()+'-'+String(qEnd.getMonth()+1).padStart(2,'0')+'-'+String(qEnd.getDate()).padStart(2,'0');
+    var qElapsedDates = allDates.filter(function(d){ return d>=qStartStr && d<=today.toISOString().slice(0,10) && d<=qEndStr; });
+    if(qElapsedDates.length >= 3){
+      var qNum = Math.floor(qStartMonth/3)+1;
+      var qInsight = paceInsight(qStartStr, qEndStr, qElapsedDates, 'Q'+qNum+' '+qStart.getFullYear());
+      if(qInsight) lines.push(qInsight);
+    }
+
+    // Monthly pacing — only shown in the 1st or 2nd month of the quarter.
+    // In the quarter's final month, the quarterly insight above is already
+    // the more urgent, relevant one — showing both would be redundant.
+    var monthPositionInQuarter = today.getMonth() - qStartMonth; // 0, 1, or 2
+    if(monthPositionInQuarter < 2){
+      var mStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      var mEnd = new Date(today.getFullYear(), today.getMonth()+1, 0);
+      var mStartStr = mStart.getFullYear()+'-'+String(mStart.getMonth()+1).padStart(2,'0')+'-'+String(mStart.getDate()).padStart(2,'0');
+      var mEndStr = mEnd.getFullYear()+'-'+String(mEnd.getMonth()+1).padStart(2,'0')+'-'+String(mEnd.getDate()).padStart(2,'0');
+      var mElapsedDates = allDates.filter(function(d){ return d>=mStartStr && d<=today.toISOString().slice(0,10) && d<=mEndStr; });
+      if(mElapsedDates.length >= 1){
+        var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var mInsight = paceInsight(mStartStr, mEndStr, mElapsedDates, monthNames[today.getMonth()]+' '+today.getFullYear());
+        if(mInsight) lines.push(mInsight);
+      }
+    }
+  })();
+
   // Busiest day/hour slot within the current range
   if(dates.length){
     var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1794,6 +1955,10 @@ function updateDataCompletenessBanner(dates){
 function render(dates){
   window._lastRenderedDates = dates;
   populateQuarterDropdown();
+  populateMonthDropdown();
+  populateHourlyMonthYearFilters();
+  populateMonthlyYearFilter();
+  renderMonthlyPerformance();
   updatePeriodCard(dates);
   updateDataCompletenessBanner(dates);
   const a = agg(dates);
@@ -1854,7 +2019,7 @@ function render(dates){
   setText('subtitle','Inbound Queue - '+label);
 
   renderSLA(a);
-  renderHourly(a, dates.length);
+  renderHourlyFiltered();
   renderHeatmap();
 
   // Trend: show exact filter dates if custom/week, show full month for month presets
@@ -1862,14 +2027,21 @@ function render(dates){
   var trendMonth = anchorDate.slice(0,7);
   var trendDates;
   var isMonthPreset = (_activePreset==='thismonth'||_activePreset==='lastmonth'||_activePreset==='yesterday');
-  if(isMonthPreset){
+  if(_activePreset==='today'){
+    // A single day isn't a "trend" — show the past 7 days for context, with
+    // today itself still highlighted via the selectedDates param below.
+    var sevenDaysAgo = new Date(anchorDate+'T00:00:00');
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate()-6);
+    var sevenDaysAgoStr = sevenDaysAgo.getFullYear()+'-'+String(sevenDaysAgo.getMonth()+1).padStart(2,'0')+'-'+String(sevenDaysAgo.getDate()).padStart(2,'0');
+    trendDates = allDates.filter(function(d){ return d>=sevenDaysAgoStr && d<=anchorDate; });
+  } else if(isMonthPreset){
     // Full calendar month
     trendDates = allDates.filter(function(d){ return d.startsWith(trendMonth); });
   } else {
     // Show exactly the filtered dates
     trendDates = dates.slice();
   }
-  if(trendDates.length) renderTrend(trendDates, dates, trendMonth);
+  if(trendDates.length) renderTrend(trendDates, dates, isMonthPreset ? trendMonth : null);
 
   renderAgents(a);
   renderDropTable(buildDropData({_dates:dates}));
@@ -1891,6 +2063,192 @@ function fmtHour(h){
   h=parseInt(h);
   if(h===0) return '12AM'; if(h<12) return h+'AM';
   if(h===12) return '12PM'; return (h-12)+'PM';
+}
+
+function populateHourlyMonthYearFilters(){
+  var monthSel = document.getElementById('hourlyMonthFilter');
+  var yearSel = document.getElementById('hourlyYearFilter');
+  if(!monthSel || !yearSel || !allDates.length) return;
+
+  var years = [...new Set(allDates.map(function(d){return d.slice(0,4);}))].sort().reverse();
+  var prevYear = yearSel.value;
+  yearSel.innerHTML = '<option value="">All Years</option>' + years.map(function(y){return '<option value="'+y+'">'+y+'</option>';}).join('');
+  if(years.includes(prevYear)) yearSel.value = prevYear;
+
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var prevMonth = monthSel.value;
+  if(monthSel.options.length <= 1){
+    monthSel.innerHTML = '<option value="">All Months</option>' + monthNames.map(function(m,i){
+      return '<option value="'+String(i+1).padStart(2,'0')+'">'+m+'</option>';
+    }).join('');
+  }
+  if(prevMonth) monthSel.value = prevMonth;
+}
+
+function populateMonthlyYearFilter(){
+  var yearSel = document.getElementById('monthlyYearFilter');
+  if(!yearSel || !allDates.length) return;
+  var years = [...new Set(allDates.map(function(d){return d.slice(0,4);}))].sort().reverse();
+  var prev = yearSel.value;
+  yearSel.innerHTML = '<option value="">All Years</option>' + years.map(function(y){return '<option value="'+y+'">'+y+'</option>';}).join('');
+  if(years.includes(prev)) yearSel.value = prev;
+}
+
+function renderMonthlyPerformance(){
+  var yearFilter = document.getElementById('monthlyYearFilter')?.value || '';
+  var relevantDates = yearFilter ? allDates.filter(function(d){return d.slice(0,4)===yearFilter;}) : allDates;
+
+  var monthGroups = {};
+  relevantDates.forEach(function(d){
+    var mk = d.slice(0,7);
+    if(!monthGroups[mk]) monthGroups[mk] = [];
+    monthGroups[mk].push(d);
+  });
+  var monthKeys = Object.keys(monthGroups).sort();
+  var monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Reuse the same agg() function everything else uses — guarantees this
+  // table's figures always match the KPI cards for the same date range,
+  // including the 8AM-9PM operating-hours enforcement from Sept 3 onward.
+  var perMonth = monthKeys.map(function(mk){
+    var dates = monthGroups[mk];
+    var a = agg(dates);
+    var yr = mk.slice(0,4), mo = parseInt(mk.slice(5,7),10);
+    return { key: mk, label: monthNames[mo]+' '+yr, days: dates.length, a: a };
+  });
+
+  var tbl = document.createElement('table');
+  tbl.className = 'htable';
+  var thead = document.createElement('thead');
+  var hr = document.createElement('tr');
+  var cols = [
+    ['Month',         '#64748b'],
+    ['Days',          '#64748b'],
+    ['Abandoned',     '#f87171'],
+    ['Answered',      '#60a5fa'],
+    ['Total Incoming','#94a3b8'],
+    ['Avg/Day',       '#6366f1'],
+    ['Ans ≤30s',      '#fbbf24'],
+    ['SLA 30s',       '#34d399'],
+    ['Avg Wait',      '#e879f9'],
+    ['Ans %',         '#a78bfa'],
+  ];
+  cols.forEach(function(c){ var th=document.createElement('th'); th.textContent=c[0]; th.style.color=c[1]; hr.appendChild(th); });
+  thead.appendChild(hr); tbl.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+  var totAb=0,totAn=0,totTo=0,totA30=0,totWaitSum=0,totDays=0;
+  perMonth.forEach(function(m){
+    var a=m.a;
+    var ab=a.total-a.answered;
+    var sla=a.total>0?(a.ans30/a.total*100).toFixed(2)+'%':'-';
+    var ap =a.total>0?(a.answered/a.total*100).toFixed(2)+'%':'-';
+    var sc =parseFloat(sla)>=95?'#34d399':parseFloat(sla)>=85?'#fbbf24':'#f87171';
+    var avgDay = m.days>0 ? (a.total/m.days).toFixed(1) : '0.0';
+    var avgWait = a.avgWait>0 ? fmtT(a.avgWait) : '-';
+    totAb+=ab; totAn+=a.answered; totTo+=a.total; totA30+=a.ans30; totDays+=m.days;
+    totWaitSum += (a.avgWait||0)*a.answered; // weighted for the overall total row
+
+    var row=document.createElement('tr');
+    [
+      [m.label,   '#e8ecf0', false],
+      [m.days,    '#64748b', false],
+      [ab||'-',   ab>0?'#f87171':'#374151', false],
+      [a.answered,'#60a5fa', false],
+      [a.total,   '#94a3b8', false],
+      [avgDay,    '#6366f1', false],
+      [a.ans30,   '#fbbf24', false],
+      [sla,       sc,        true],
+      [avgWait,   '#e879f9', false],
+      [ap,        '#a78bfa', false],
+    ].forEach(function(c){
+      var td=document.createElement('td'); td.textContent=c[0]; td.style.color=c[1];
+      if(c[2]) td.style.fontWeight='600';
+      row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+
+  var totSla=totTo>0?(totA30/totTo*100).toFixed(2)+'%':'-';
+  var totAp =totTo>0?(totAn/totTo*100).toFixed(2)+'%':'-';
+  var totSc =parseFloat(totSla)>=95?'#34d399':parseFloat(totSla)>=85?'#fbbf24':'#f87171';
+  var totAvgDay = totDays>0 ? (totTo/totDays).toFixed(1) : '0.0';
+  var totAvgWait = totAn>0 ? fmtT(Math.round(totWaitSum/totAn)) : '-';
+  var totRow=document.createElement('tr'); totRow.className='total-row';
+  [
+    ['Total',    '#60a5fa', true],
+    [totDays,    '#64748b', true],
+    [totAb,      '#f87171', true],
+    [totAn,      '#60a5fa', true],
+    [totTo,      '#e8ecf0', true],
+    [totAvgDay,  '#6366f1', true],
+    [totA30,     '#fbbf24', true],
+    [totSla,     totSc,     true],
+    [totAvgWait, '#e879f9', true],
+    [totAp,      '#a78bfa', true],
+  ].forEach(function(c){
+    var td=document.createElement('td'); td.textContent=c[0]; td.style.color=c[1]; td.style.fontWeight='700';
+    totRow.appendChild(td);
+  });
+  tbody.appendChild(totRow); tbl.appendChild(tbody);
+  var container=document.getElementById('monthlyTable');
+  if(container){ container.innerHTML=''; container.appendChild(tbl); }
+
+  // Chart — grouped bars Answered vs Abandoned per month
+  var chartLabels = perMonth.map(function(m){return m.label;});
+  var chartAnswered = perMonth.map(function(m){return m.a.answered;});
+  var chartAbandoned = perMonth.map(function(m){return m.a.total-m.a.answered;});
+
+  if(charts.monthly) charts.monthly.destroy();
+  var mCanvas = document.getElementById('monthlyChart');
+  if(mCanvas && chartLabels.length){
+    var TC = getComputedStyle(document.body).getPropertyValue('--text3').trim() || '#64748b';
+    var GC = getComputedStyle(document.body).getPropertyValue('--border').trim() || '#1e2d40';
+    charts.monthly = new Chart(mCanvas.getContext('2d'), {
+      type:'bar',
+      data:{
+        labels:chartLabels,
+        datasets:[
+          {label:'Answered', data:chartAnswered, backgroundColor:'#1e3a5f', hoverBackgroundColor:'#2563eb', borderRadius:3, barPercentage:0.7, categoryPercentage:0.8},
+          {label:'Abandoned', data:chartAbandoned, backgroundColor:'#dc2626', hoverBackgroundColor:'#ef4444', borderRadius:3, barPercentage:0.7, categoryPercentage:0.8},
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:TC,font:{size:10}}}},
+        scales:{
+          x:{ticks:{color:TC,font:{size:10}},grid:{color:GC}},
+          y:{ticks:{color:TC,font:{size:10}},grid:{color:GC},beginAtZero:true}
+        }
+      }
+    });
+  }
+}
+
+function renderHourlyFiltered(){
+  var month = document.getElementById('hourlyMonthFilter')?.value || '';
+  var year = document.getElementById('hourlyYearFilter')?.value || '';
+
+  if(!month && !year){
+    // No local override — fall back to whatever the main dashboard filter shows
+    var mainDates = window._lastRenderedDates || [];
+    renderHourly(agg(mainDates), mainDates.length);
+    return;
+  }
+
+  var filtered = allDates.filter(function(d){
+    if(year && d.slice(0,4) !== year) return false;
+    if(month && d.slice(5,7) !== month) return false;
+    return true;
+  });
+
+  if(!filtered.length){
+    var titleEl = document.getElementById('hourlyCardTitle');
+    if(titleEl) titleEl.textContent = 'Hourly Call Volume — no data for this selection';
+    document.getElementById('hourlyTable').innerHTML = '';
+    return;
+  }
+  renderHourly(agg(filtered), filtered.length);
 }
 
 function renderHourly(a, numDays){
@@ -2711,12 +3069,7 @@ function parseWorkbook(wb){
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
   const hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
   var ctIdx=hdr.indexOf('Call Time');
-  var timeColIdx=hdr.indexOf('Time');
-  // Some exports combine date+time into one "Call Time" column (no separate "Time" column).
-  // Others (like the "Removed duplicate" export) split them: "Call Time" = date only, "Time" = time only.
-  // Only reuse Call Time for the time-of-day value when there's no distinct Time column.
-  var timeIdx=(timeColIdx>=0 && timeColIdx!==ctIdx)?timeColIdx:(ctIdx>=0?ctIdx:timeColIdx);
-  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:timeIdx,det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
+  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:ctIdx>=0?ctIdx:hdr.indexOf('Time'),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
     dir:hdr.indexOf('Direction'),status:hdr.indexOf('Status'),
     to:hdr.indexOf('To'),from:hdr.indexOf('From'),
     talk:hdr.indexOf('Talking'),ring:hdr.indexOf('Ringing')};
