@@ -826,13 +826,13 @@ ON CONFLICT (id) DO NOTHING;</code></div>
         <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i><span id="hourlyCardTitle">Hourly Call Volume</span></div>
         <div style="display:flex;gap:6px;align-items:center;">
           <div style="position:relative;">
-            <button id="hourlyQueueFilterBtn" onclick="toggleQueueFilterPanel(event)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
+            <button id="hourlyQueueFilterBtn" onclick="toggleQueueFilterPanel('hourly',event)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
               <span id="hourlyQueueFilterLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All Extensions (To)</span><i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;"></i>
             </button>
             <div id="hourlyQueueFilterPanel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
               <div style="display:flex;gap:6px;margin-bottom:6px;">
-                <button onclick="setAllQueueFilter(true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
-                <button onclick="setAllQueueFilter(false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
+                <button onclick="setAllQueueFilter('hourly',true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
+                <button onclick="setAllQueueFilter('hourly',false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
               </div>
               <div id="hourlyQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
             </div>
@@ -843,7 +843,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
           <select id="hourlyYearFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="">All Years</option>
           </select>
-          <button onclick="setAllQueueFilter(true);document.getElementById('hourlyMonthFilter').value='';document.getElementById('hourlyYearFilter').value='';renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:4px 8px;font-size:11px;cursor:pointer;">✕ Clear</button>
+          <button onclick="setAllQueueFilter('hourly',true);document.getElementById('hourlyMonthFilter').value='';document.getElementById('hourlyYearFilter').value='';renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:4px 8px;font-size:11px;cursor:pointer;">✕ Clear</button>
         </div>
       </div>
       <div id="hourlyTable"></div>
