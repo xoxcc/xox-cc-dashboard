@@ -799,13 +799,25 @@ ON CONFLICT (id) DO NOTHING;</code></div>
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
         <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i><span id="hourlyCardTitle">Hourly Call Volume</span></div>
         <div style="display:flex;gap:6px;align-items:center;">
+          <div style="position:relative;">
+            <button id="hourlyQueueFilterBtn" onclick="toggleQueueFilterPanel(event)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
+              <span id="hourlyQueueFilterLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All Extensions (To)</span><i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;"></i>
+            </button>
+            <div id="hourlyQueueFilterPanel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
+              <div style="display:flex;gap:6px;margin-bottom:6px;">
+                <button onclick="setAllQueueFilter(true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
+                <button onclick="setAllQueueFilter(false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
+              </div>
+              <div id="hourlyQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+          </div>
           <select id="hourlyMonthFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="">All Months</option>
           </select>
           <select id="hourlyYearFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="">All Years</option>
           </select>
-          <button onclick="document.getElementById('hourlyMonthFilter').value='';document.getElementById('hourlyYearFilter').value='';renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:4px 8px;font-size:11px;cursor:pointer;">✕ Clear</button>
+          <button onclick="setAllQueueFilter(true);document.getElementById('hourlyMonthFilter').value='';document.getElementById('hourlyYearFilter').value='';renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:4px 8px;font-size:11px;cursor:pointer;">✕ Clear</button>
         </div>
       </div>
       <div id="hourlyTable"></div>
@@ -1104,6 +1116,13 @@ function updateChartColors(){
 }
 
 let allData = {}, allDates = [], charts = {}, dayIdx = 0, pendingFile = null;
+
+// Operating-hours change markers shown on the Daily Call Volume Trend chart.
+// Add/edit entries here (date format: 'YYYY-MM-DD') whenever operating hours change.
+var OPS_HOURS_MARKERS = [
+  {date:'2026-09-03', label:'Hours changed: 8AM–9PM'},
+  {date:'2026-09-10', label:'Hours changed: 8AM–8PM'}
+];
 
 function f2(n){return String(n).padStart(2,'0');}
 function fmtT(s){return Math.floor(s/60)+':'+f2(Math.round(s%60));}
@@ -2068,6 +2087,7 @@ function fmtHour(h){
 function populateHourlyMonthYearFilters(){
   var monthSel = document.getElementById('hourlyMonthFilter');
   var yearSel = document.getElementById('hourlyYearFilter');
+  var queueListEl = document.getElementById('hourlyQueueFilterList');
   if(!monthSel || !yearSel || !allDates.length) return;
 
   var years = [...new Set(allDates.map(function(d){return d.slice(0,4);}))].sort().reverse();
@@ -2083,6 +2103,86 @@ function populateHourlyMonthYearFilters(){
     }).join('');
   }
   if(prevMonth) monthSel.value = prevMonth;
+
+  if(queueListEl){
+    var qSet = new Set();
+    allDates.forEach(function(d){
+      var hbq = allData[d] && allData[d].hourlyByQueue;
+      if(!hbq) return;
+      Object.keys(hbq).forEach(function(h){
+        Object.keys(hbq[h]).forEach(function(q){ if(q) qSet.add(q); });
+      });
+    });
+    var queues = [...qSet].sort();
+    window._hourlyQueueAllList = queues;
+    if(!window._hourlyQueueExcluded) window._hourlyQueueExcluded = new Set();
+    // Drop excluded entries for queues that no longer exist in the data
+    window._hourlyQueueExcluded.forEach(function(q){ if(!qSet.has(q)) window._hourlyQueueExcluded.delete(q); });
+
+    queueListEl.innerHTML = queues.map(function(q){
+      var checked = window._hourlyQueueExcluded.has(q) ? '' : 'checked';
+      var safeQ = q.replace(/"/g,'&quot;');
+      return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);cursor:pointer;padding:2px 0;">'
+        + '<input type="checkbox" '+checked+' onchange="toggleQueueOption(\''+safeQ.replace(/'/g,"\\'")+'\')" style="cursor:pointer;">'
+        + '<span>'+q+'</span></label>';
+    }).join('') || '<div style="font-size:11px;color:var(--text3);">No extensions found — re-import data to enable this filter</div>';
+
+    updateQueueFilterLabel();
+  }
+}
+
+function toggleQueueFilterPanel(ev){
+  if(ev) ev.stopPropagation();
+  var panel = document.getElementById('hourlyQueueFilterPanel');
+  if(!panel) return;
+  panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+}
+document.addEventListener('click', function(e){
+  var panel = document.getElementById('hourlyQueueFilterPanel');
+  var btn = document.getElementById('hourlyQueueFilterBtn');
+  if(!panel || panel.style.display==='none') return;
+  if(panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+  panel.style.display = 'none';
+});
+
+function toggleQueueOption(q){
+  if(!window._hourlyQueueExcluded) window._hourlyQueueExcluded = new Set();
+  if(window._hourlyQueueExcluded.has(q)) window._hourlyQueueExcluded.delete(q);
+  else window._hourlyQueueExcluded.add(q);
+  updateQueueFilterLabel();
+  renderHourlyFiltered();
+}
+
+function setAllQueueFilter(selectAll){
+  window._hourlyQueueExcluded = new Set();
+  if(!selectAll && window._hourlyQueueAllList){
+    window._hourlyQueueAllList.forEach(function(q){ window._hourlyQueueExcluded.add(q); });
+  }
+  // Refresh checkbox states in the panel
+  var queueListEl = document.getElementById('hourlyQueueFilterList');
+  if(queueListEl){
+    queueListEl.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = selectAll; });
+  }
+  updateQueueFilterLabel();
+  renderHourlyFiltered();
+}
+
+function updateQueueFilterLabel(){
+  var labelEl = document.getElementById('hourlyQueueFilterLabel');
+  if(!labelEl) return;
+  var all = window._hourlyQueueAllList || [];
+  var excluded = window._hourlyQueueExcluded || new Set();
+  var selectedCount = all.length - excluded.size;
+  if(excluded.size === 0){
+    labelEl.textContent = 'All Extensions (To)';
+  } else if(selectedCount === 0){
+    labelEl.textContent = 'No Extensions Selected';
+  } else if(selectedCount === 1){
+    var only = all.find(function(q){ return !excluded.has(q); });
+    labelEl.textContent = 'To: '+only;
+  } else {
+    labelEl.textContent = selectedCount+' of '+all.length+' Extensions';
+  }
 }
 
 function populateMonthlyYearFilter(){
@@ -2225,33 +2325,79 @@ function renderMonthlyPerformance(){
   }
 }
 
+function aggHourlyByQueue(dates, selectedQueues){
+  // Mirrors agg()'s hourly aggregation + operating-hours enforcement, but
+  // sourced from each day's hourlyByQueue and restricted to the selected
+  // queues (To). selectedQueues is an array of queue names to INCLUDE.
+  var r={hourly:{}, avgWait:0};
+  var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03';
+  var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 20;
+  var qSet = new Set(selectedQueues);
+  var twait=0, tans=0;
+  dates.forEach(function(d){
+    var v=allData[d]; if(!v || !v.hourlyByQueue) return;
+    var enforceHours = d >= OPERATING_HOURS_CUTOFF_DATE;
+    Object.keys(v.hourlyByQueue).forEach(function(h){
+      if(enforceHours){
+        var hNum = Number(h);
+        if(hNum < OPERATING_HOURS_MIN || hNum > OPERATING_HOURS_MAX) return;
+      }
+      Object.keys(v.hourlyByQueue[h]).forEach(function(q){
+        if(!qSet.has(q)) return;
+        var qb = v.hourlyByQueue[h][q];
+        if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
+        r.hourly[h].total+=qb.total||0;
+        r.hourly[h].answered+=qb.answered||0;
+        r.hourly[h].ans30+=qb.ans30||0;
+        r.hourly[h].wait+=qb.wait||0;
+        twait+=qb.wait||0; tans+=qb.answered||0;
+      });
+    });
+  });
+  r.avgWait = tans>0 ? Math.round(twait/tans) : 0;
+  return r;
+}
+
 function renderHourlyFiltered(){
   var month = document.getElementById('hourlyMonthFilter')?.value || '';
   var year = document.getElementById('hourlyYearFilter')?.value || '';
+  var allQueues = window._hourlyQueueAllList || [];
+  var excluded = window._hourlyQueueExcluded || new Set();
+  var queueFilterActive = allQueues.length > 0 && excluded.size > 0;
+  var selectedQueues = allQueues.filter(function(q){ return !excluded.has(q); });
 
-  if(!month && !year){
-    // No local override — fall back to whatever the main dashboard filter shows
+  var baseDates = allDates;
+  if(month || year){
+    baseDates = allDates.filter(function(d){
+      if(year && d.slice(0,4) !== year) return false;
+      if(month && d.slice(5,7) !== month) return false;
+      return true;
+    });
+  } else if(!queueFilterActive){
+    // No local override at all — fall back to whatever the main dashboard filter shows
     var mainDates = window._lastRenderedDates || [];
     renderHourly(agg(mainDates), mainDates.length);
     return;
+  } else {
+    baseDates = window._lastRenderedDates && window._lastRenderedDates.length ? window._lastRenderedDates : allDates;
   }
 
-  var filtered = allDates.filter(function(d){
-    if(year && d.slice(0,4) !== year) return false;
-    if(month && d.slice(5,7) !== month) return false;
-    return true;
-  });
-
-  if(!filtered.length){
+  if(!baseDates.length || (queueFilterActive && selectedQueues.length===0)){
     var titleEl = document.getElementById('hourlyCardTitle');
     if(titleEl) titleEl.textContent = 'Hourly Call Volume — no data for this selection';
     document.getElementById('hourlyTable').innerHTML = '';
     return;
   }
-  renderHourly(agg(filtered), filtered.length);
+
+  if(queueFilterActive){
+    var label = selectedQueues.length===1 ? selectedQueues[0] : selectedQueues.length+' of '+allQueues.length+' extensions';
+    renderHourly(aggHourlyByQueue(baseDates, selectedQueues), baseDates.length, label);
+  } else {
+    renderHourly(agg(baseDates), baseDates.length);
+  }
 }
 
-function renderHourly(a, numDays){
+function renderHourly(a, numDays, extraLabel){
   const isMulti = numDays && numDays > 1;
   const divisor = isMulti ? numDays : 1;
   function avgF(n){ return isMulti ? (n/divisor).toFixed(1) : n; }   // 1-dp float for chart
@@ -2261,9 +2407,10 @@ function renderHourly(a, numDays){
 
   // Update card title
   var titleEl = document.getElementById('hourlyCardTitle');
-  if(titleEl) titleEl.textContent = isMulti
+  var suffix = extraLabel ? ' — To: '+extraLabel : '';
+  if(titleEl) titleEl.textContent = (isMulti
     ? 'Hourly Call Volume — Avg per day across '+numDays+' days'
-    : 'Hourly Call Volume';
+    : 'Hourly Call Volume') + suffix;
 
   // ── TABLE: always raw totals ──────────────────────────────────────────────
   // Columns: Hour | Abandoned | Answered | Total Incoming | Avg Incoming/day | Ans≤30s | SLA 30s | Ans %
@@ -2552,9 +2699,41 @@ function renderTrend(trendDates, selectedDates, trendMonth){
     }
   };
 
+  // Draws a dashed vertical line + label on the dates listed in OPS_HOURS_MARKERS
+  var opsHoursMarkerPlugin = {
+    id:'opsHoursMarker',
+    afterDatasetsDraw:function(chart){
+      var ctx = chart.ctx;
+      var xScale = chart.scales.x, yScale = chart.scales.y;
+      if(!xScale || !yScale) return;
+      var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      OPS_HOURS_MARKERS.forEach(function(m){
+        var idx = trendDates.indexOf(m.date);
+        if(idx === -1) return; // marker date not in current view — skip
+        var x = xScale.getPixelForValue(idx);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, yScale.top);
+        ctx.lineTo(x, yScale.bottom);
+        ctx.strokeStyle = isDark ? 'rgba(250,204,21,0.65)' : 'rgba(168,90,0,0.75)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5,4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.font = 'bold 10px Segoe UI,sans-serif';
+        ctx.fillStyle = isDark ? '#facc15' : '#a85a00';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(m.label, x, yScale.top - 4);
+        ctx.restore();
+      });
+    }
+  };
+
   charts.trend=new Chart(document.getElementById('trendChart'),{
     type:'line',
-    plugins:[trendInlinePlugin],
+    plugins:[trendInlinePlugin, opsHoursMarkerPlugin],
     data:{
       labels:trendDates.map(function(d){var p=d.split('-');var dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d).getDay()];return dn+' '+p[2]+' '+_MN[parseInt(p[1])-1];}),
       datasets:[
@@ -2571,11 +2750,16 @@ function renderTrend(trendDates, selectedDates, trendMonth){
     },
     options:{
       responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:24,bottom:8}},
+      layout:{padding:{top:38,bottom:8}},
       plugins:{
         legend:{display:true,position:'bottom',align:'start',labels:{color:TC,font:{size:11},boxWidth:10,padding:16,usePointStyle:true,pointStyle:'circle'}},
         tooltip:{mode:'index',intersect:false,callbacks:{
-          title:function(items){var d=trendDates[items[0].dataIndex];return fmtDate(d)+(selSet[d]?' ✦':'');}
+          title:function(items){var d=trendDates[items[0].dataIndex];return fmtDate(d)+(selSet[d]?' ✦':'');},
+          afterBody:function(items){
+            var d = trendDates[items[0].dataIndex];
+            var m = OPS_HOURS_MARKERS.filter(function(x){return x.date===d;});
+            return m.length ? ['─────────'].concat(m.map(function(x){return '⏰ '+x.label;})) : [];
+          }
         }},
         datalabels:{display:false}
       },
@@ -3132,12 +3316,12 @@ function parseWorkbook(wb){
         // Abandoned: Inbound Queue + Unanswered + hour 8-21 only
         if(hour>=8 && hour<=21){
           if(!v.abandoned) v.abandoned=[];
-          v.abandoned.push({hour:hour});
+          v.abandoned.push({hour:hour, queue:toF.trim()});
         }
       } else if(st==='Waiting' && countableAnsweredRows.has(r)){
         // Answered: Inbound Queue + Waiting (all hours)
         if(!v.answeredIQ) v.answeredIQ=[];
-        v.answeredIQ.push({hour:hour, talk:talkS, wait:talkS});
+        v.answeredIQ.push({hour:hour, talk:talkS, wait:talkS, queue:toF.trim()});
       }
     }
 
@@ -3167,11 +3351,19 @@ function parseWorkbook(wb){
     var abandonedList = v.abandoned || [];
     var answeredList  = v.answeredIQ || [];
 
+    var hourlyByQueue = {}; // hour -> queue(To) -> {total,answered,ans30,wait}
+    function ensQ(h,q){
+      if(!hourlyByQueue[h]) hourlyByQueue[h]={};
+      if(!hourlyByQueue[h][q]) hourlyByQueue[h][q]={total:0,answered:0,ans30:0,wait:0};
+      return hourlyByQueue[h][q];
+    }
+
     abandonedList.forEach(function(info){
       const h=String(info.hour);
       if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0};
       abandoned++; total++;
       hourly[h].total++;
+      var qb=ensQ(h, info.queue||'(Unknown)'); qb.total++;
     });
 
     answeredList.forEach(function(info){
@@ -3185,6 +3377,10 @@ function parseWorkbook(wb){
       twait += w;
       // Ans ≤30s: Inbound Queue + Waiting + talk time 0:00:00–0:00:30
       if((info.talk||0)<=30){ ans30++; hourly[h].ans30++; }
+
+      var qb=ensQ(h, info.queue||'(Unknown)');
+      qb.total++; qb.answered++; qb.wait+=w;
+      if((info.talk||0)<=30){ qb.ans30++; }
     });
     Object.values(v.agents).forEach(a=>{ttalk+=a.talk;tcalls+=a.inbound;});
     out[d]={
@@ -3193,6 +3389,7 @@ function parseWorkbook(wb){
       avg_wait_s:answered>0?Math.round(twait/answered):0,
       total_wait_s:twait,
       hourly,
+      hourlyByQueue,
       agents:Object.entries(v.agents).sort((a,b)=>b[1].inbound-a[1].inbound).map(([name,av])=>({
         name:cleanName(name),inbound:av.inbound,outbound:av.outbound,aht_s:av.inbound>0?Math.round(av.talk/av.inbound):0
       })),
