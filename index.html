@@ -765,6 +765,12 @@ ON CONFLICT (id) DO NOTHING;</code></div>
             <div id="kpiQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
           </div>
         </div>
+        <div style="display:flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;" title="Calls answered within this many seconds count toward SLA / Ans ≤Xs. Applies live to KPI Summary, Hourly Call Volume, Monthly Performance and Daily Call Volume Trend.">
+          <i class="ti ti-hourglass-low" style="font-size:11px;color:var(--text3);"></i>
+          <span style="font-size:11px;color:var(--text3);">SLA ≤</span>
+          <input type="number" min="1" class="slaThresholdInput" value="30" onchange="setSlaThreshold(this.value)" style="width:44px;background:transparent;border:none;color:var(--text);font-size:11px;outline:none;">
+          <span style="font-size:11px;color:var(--text3);">s</span>
+        </div>
         <button onclick="manualRefresh()" id="refreshBtn" style="padding:4px 10px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;"><i class="ti ti-refresh"></i> Refresh</button>
         <button onclick="openTargetsModal()" style="padding:4px 10px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;"><i class="ti ti-target-arrow"></i> Targets</button>
       </div>
@@ -772,8 +778,8 @@ ON CONFLICT (id) DO NOTHING;</code></div>
         <div class="kpi"><div class="kpi-icon c-blue"><i class="ti ti-phone-incoming"></i></div><div class="kpi-label">Total Incoming</div><div class="kpi-val c-blue" id="kTotal">-</div><div class="kpi-sub" id="kTotalSub"></div><div class="kpi-delta" id="kTotalDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-phone-check"></i></div><div class="kpi-label">Answered</div><div class="kpi-val c-green" id="kAns">-</div><div class="kpi-sub" id="kAnsSub"></div><div class="kpi-delta" id="kAnsDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-red"><i class="ti ti-phone-x"></i></div><div class="kpi-label">Abandoned</div><div class="kpi-val c-red" id="kAb">-</div><div class="kpi-sub" id="kAbSub"></div><div class="kpi-delta" id="kAbDelta"></div><div id="kAbTarget"></div></div>
-        <div class="kpi"><div class="kpi-icon c-amber"><i class="ti ti-clock-check"></i></div><div class="kpi-label">Ans &lt;=30s</div><div class="kpi-val c-amber" id="kA30">-</div><div class="kpi-sub" id="kA30Sub"></div><div class="kpi-delta" id="kA30Delta"></div></div>
-        <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-chart-line"></i></div><div class="kpi-label">SLA 30s</div><div class="kpi-val c-green" id="kSla">-</div><div class="kpi-sub">of total incoming</div><div class="kpi-delta" id="kSlaDelta"></div><div id="kSlaTarget"></div></div>
+        <div class="kpi"><div class="kpi-icon c-amber"><i class="ti ti-clock-check"></i></div><div class="kpi-label">Ans &lt;=<span class="slaThresholdLabel">30</span>s</div><div class="kpi-val c-amber" id="kA30">-</div><div class="kpi-sub" id="kA30Sub"></div><div class="kpi-delta" id="kA30Delta"></div></div>
+        <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-chart-line"></i></div><div class="kpi-label">SLA <span class="slaThresholdLabel">30</span>s</div><div class="kpi-val c-green" id="kSla">-</div><div class="kpi-sub">of total incoming</div><div class="kpi-delta" id="kSlaDelta"></div><div id="kSlaTarget"></div></div>
         <div class="kpi"><div class="kpi-icon c-teal"><i class="ti ti-clock"></i></div><div class="kpi-label">Avg Talktime</div><div class="kpi-val c-teal" id="kAht">-</div><div class="kpi-sub">per call</div><div class="kpi-delta" id="kAhtDelta"></div><div id="kAhtTarget"></div></div>
         <div class="kpi"><div class="kpi-icon c-purple"><i class="ti ti-hourglass"></i></div><div class="kpi-label">Avg Wait Time</div><div class="kpi-val c-purple" id="kAwt">-</div><div class="kpi-sub">per answered call</div><div class="kpi-delta" id="kAwtDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-purple"><i class="ti ti-users"></i></div><div class="kpi-label">Active Agents</div><div class="kpi-val c-purple" id="kAgents">-</div><div class="kpi-sub">with inbound calls</div></div>
@@ -1525,6 +1531,11 @@ function agg(dates){
   const r={total:0,answered:0,abandoned:0,ans30:0,talk:0,calls:0,wait:0,hourly:{},agents:{}};
   var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03'; // new 8AM-9PM policy takes effect from this date
   var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 20; // inclusive — 8AM through 8:59PM; closing AT 9:00PM means the 9PM-9:59PM bucket itself is already after-hours
+  var slaThreshold = getSlaThreshold();
+  function hourAns30(hv){
+    var c = histCountLE(hv.waitHist, slaThreshold);
+    return c===null ? (hv.ans30||0) : c; // pre-update data (no histogram) keeps its fixed-30s snapshot
+  }
   dates.forEach(d=>{
     const v=allData[d]; if(!v) return;
     var enforceHours = d >= OPERATING_HOURS_CUTOFF_DATE;
@@ -1541,12 +1552,12 @@ function agg(dates){
         if(hNum < OPERATING_HOURS_MIN || hNum > OPERATING_HOURS_MAX) return; // outside new operating hours — excluded
         dayTotal += hv.total||0;
         dayAnswered += hv.answered||0;
-        dayAns30 += hv.ans30||0;
+        dayAns30 += hourAns30(hv);
       });
       dayAbandoned = dayTotal - dayAnswered;
       r.total+=dayTotal; r.answered+=dayAnswered; r.abandoned+=dayAbandoned; r.ans30+=dayAns30;
     } else {
-      r.total+=v.total; r.answered+=v.answered; r.abandoned+=v.abandoned; r.ans30+=v.ans30;
+      r.total+=v.total; r.answered+=v.answered; r.abandoned+=v.abandoned; r.ans30+=getDayAns30(d);
     }
 
     const ac=v.agents.reduce((s,a)=>s+a.inbound,0);
@@ -1560,7 +1571,7 @@ function agg(dates){
       if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
       r.hourly[h].total+=hv.total||0;
       r.hourly[h].answered+=hv.answered||0;
-      r.hourly[h].ans30+=hv.ans30||0;
+      r.hourly[h].ans30+=hourAns30(hv);
       r.hourly[h].wait+=isNaN(hv.wait)?0:(hv.wait||0);
     });
     v.agents.forEach(a=>{
@@ -1939,7 +1950,7 @@ function compareStatsBlock(cur, other, dates){
   html += compareStatRow('Total Incoming', cur.total, other.total, function(v){return v.toLocaleString();}, undefined);
   html += compareStatRow('Answered', cur.answered, other.answered, function(v){return v.toLocaleString();}, true);
   html += compareStatRow('Abandoned', cur.abandoned, other.abandoned, function(v){return v.toLocaleString();}, false);
-  html += compareStatRow('SLA 30s', slaCur, slaOther, function(v){return v.toFixed(1)+'%';}, true);
+  html += compareStatRow('SLA '+getSlaThreshold()+'s', slaCur, slaOther, function(v){return v.toFixed(1)+'%';}, true);
   html += compareStatRow('Avg Talktime', cur.avgTalk, other.avgTalk, function(v){return fmtT(v);}, false);
   html += compareStatRow('Avg Wait Time', cur.avgWait, other.avgWait, function(v){return fmtT(v);}, false);
   return html;
@@ -2023,6 +2034,9 @@ function updateDataCompletenessBanner(dates){
 
 function render(dates){
   window._lastRenderedDates = dates;
+  var slaT = getSlaThreshold();
+  document.querySelectorAll('.slaThresholdInput').forEach(function(el){ if(document.activeElement!==el) el.value = slaT; });
+  document.querySelectorAll('.slaThresholdLabel').forEach(function(el){ el.textContent = slaT; });
   populateQuarterDropdown();
   populateMonthDropdown();
   populateHourlyMonthYearFilters();
@@ -2291,12 +2305,63 @@ function dispatchQueueFilterChange(stateKey){
 // answered, abandoned, ans30, wait, hourly. Talk time / agent counts come
 // from a separate call stream (CC agent extensions) and are NOT queue-
 // filterable, so callers should keep sourcing those from agg() as before.
+// ── SLA Threshold (Ans ≤Xs) — user-adjustable, defaults to 30s ────────────
+// Each hour/queue bucket stores a waitHist (wait-time → count) captured at
+// import time; the threshold below decides, at render time, how many of
+// those calls count as "answered within SLA" — no re-import needed when the
+// person changes it. Only data re-imported after this feature was added has
+// waitHist; older loaded dates fall back to the fixed 30s value baked in
+// at import time (see getDayAns30 below).
+function getSlaThreshold(){
+  if(window._slaThreshold) return window._slaThreshold;
+  try{
+    var saved = parseInt(localStorage.getItem('xox_sla_threshold'), 10);
+    if(!isNaN(saved) && saved>=1){ window._slaThreshold = saved; return saved; }
+  }catch(e){}
+  return 30;
+}
+
+function setSlaThreshold(val){
+  var n = parseInt(val, 10);
+  if(isNaN(n) || n < 1) n = 30;
+  window._slaThreshold = n;
+  try{ localStorage.setItem('xox_sla_threshold', String(n)); }catch(e){}
+  document.querySelectorAll('.slaThresholdInput').forEach(function(el){ el.value = n; });
+  document.querySelectorAll('.slaThresholdLabel').forEach(function(el){ el.textContent = n; });
+  if(window._lastRenderedDates) render(window._lastRenderedDates);
+}
+
+function histCountLE(histObj, threshold){
+  if(!histObj) return null; // signals "no histogram available" (pre-update data)
+  var sum=0;
+  Object.keys(histObj).forEach(function(k){ if(Number(k) <= threshold) sum += histObj[k]; });
+  return sum;
+}
+
+// Per-day "answered within SLA" count, honoring the live threshold when this
+// day's data has waitHist (re-imported after this feature shipped); falls
+// back to the fixed-30s snapshot captured at import time otherwise.
+function getDayAns30(d){
+  var v = allData[d];
+  if(!v) return 0;
+  if(!v.hourly) return v.ans30||0;
+  var threshold = getSlaThreshold();
+  var sum = 0, hadHist = false;
+  Object.keys(v.hourly).forEach(function(h){
+    var c = histCountLE(v.hourly[h].waitHist, threshold);
+    if(c===null){ sum += v.hourly[h].ans30||0; }
+    else { hadHist = true; sum += c; }
+  });
+  return sum;
+}
+
 function computeQueueFilteredAgg(dates, stateKey){
   var excluded = (window._queueExcluded && window._queueExcluded[stateKey]) || new Set();
   var allQ = window._queueAllList || [];
   if(!allQ.length || excluded.size===0) return null;
   var selected = allQ.filter(function(q){ return !excluded.has(q); });
   var qSet = new Set(selected);
+  var threshold = getSlaThreshold();
   var r = {total:0,answered:0,abandoned:0,ans30:0,wait:0,avgWait:0,hourly:{}};
   var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03';
   var OPERATING_HOURS_MIN=8, OPERATING_HOURS_MAX=20;
@@ -2313,14 +2378,16 @@ function computeQueueFilteredAgg(dates, stateKey){
       Object.keys(hb).forEach(function(q){
         if(!qSet.has(q)) return;
         var qb = hb[q];
+        var qAns30 = histCountLE(qb.waitHist, threshold);
+        if(qAns30===null) qAns30 = qb.ans30||0; // pre-update data — no histogram
         if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
         r.hourly[h].total+=qb.total||0;
         r.hourly[h].answered+=qb.answered||0;
-        r.hourly[h].ans30+=qb.ans30||0;
+        r.hourly[h].ans30+=qAns30;
         r.hourly[h].wait+=qb.wait||0;
         r.total+=qb.total||0;
         r.answered+=qb.answered||0;
-        r.ans30+=qb.ans30||0;
+        r.ans30+=qAns30;
         twait+=qb.wait||0; tans+=qb.answered||0;
       });
     });
@@ -2381,6 +2448,7 @@ function renderMonthlyPerformance(){
   tbl.className = 'htable';
   var thead = document.createElement('thead');
   var hr = document.createElement('tr');
+  var slaT1 = getSlaThreshold();
   var cols = [
     ['Month',         '#64748b'],
     ['Days',          '#64748b'],
@@ -2388,8 +2456,8 @@ function renderMonthlyPerformance(){
     ['Answered',      '#60a5fa'],
     ['Total Incoming','#94a3b8'],
     ['Avg/Day',       '#6366f1'],
-    ['Ans ≤30s',      '#fbbf24'],
-    ['SLA 30s',       '#34d399'],
+    ['Ans ≤'+slaT1+'s',  '#fbbf24'],
+    ['SLA '+slaT1+'s',   '#34d399'],
     ['Avg Wait',      '#e879f9'],
     ['Ans %',         '#a78bfa'],
   ];
@@ -2493,6 +2561,7 @@ function aggHourlyByQueue(dates, selectedQueues){
   var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03';
   var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 20;
   var qSet = new Set(selectedQueues);
+  var threshold = getSlaThreshold();
   var twait=0, tans=0;
   dates.forEach(function(d){
     var v=allData[d]; if(!v || !v.hourlyByQueue) return;
@@ -2505,10 +2574,12 @@ function aggHourlyByQueue(dates, selectedQueues){
       Object.keys(v.hourlyByQueue[h]).forEach(function(q){
         if(!qSet.has(q)) return;
         var qb = v.hourlyByQueue[h][q];
+        var qAns30 = histCountLE(qb.waitHist, threshold);
+        if(qAns30===null) qAns30 = qb.ans30||0;
         if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
         r.hourly[h].total+=qb.total||0;
         r.hourly[h].answered+=qb.answered||0;
-        r.hourly[h].ans30+=qb.ans30||0;
+        r.hourly[h].ans30+=qAns30;
         r.hourly[h].wait+=qb.wait||0;
         twait+=qb.wait||0; tans+=qb.answered||0;
       });
@@ -2578,14 +2649,15 @@ function renderHourly(a, numDays, extraLabel){
   tbl.className = 'htable';
   const thead = document.createElement('thead');
   const hr = document.createElement('tr');
+  var slaT2 = getSlaThreshold();
   var cols = [
     ['Hour',          '#64748b'],
     ['Abandoned',     '#f87171'],
     ['Answered',      '#60a5fa'],
     ['Total Incoming','#94a3b8'],
     ['Avg/Day',       '#6366f1'],
-    ['Ans ≤30s',      '#fbbf24'],
-    ['SLA 30s',       '#34d399'],
+    ['Ans ≤'+slaT2+'s',  '#fbbf24'],
+    ['SLA '+slaT2+'s',   '#34d399'],
     ['Avg Wait',      '#e879f9'],
     ['Ans %',         '#a78bfa'],
   ];
@@ -3438,7 +3510,14 @@ function parseWorkbook(wb){
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
   const hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
   var ctIdx=hdr.indexOf('Call Time');
-  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:ctIdx>=0?ctIdx:hdr.indexOf('Time'),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
+  var timeColIdx=hdr.indexOf('Time');
+  // Some exports have BOTH a 'Call Time' column (which may hold only the
+  // date, not a combined date+time) AND a separate 'Time' column with the
+  // actual clock time. Always prefer a genuine 'Time' column for hour
+  // extraction when one exists — falling back to 'Call Time' only when no
+  // dedicated 'Time' column is present (i.e. 'Call Time' really is the sole
+  // combined timestamp field, as in some other export formats).
+  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:timeColIdx>=0?timeColIdx:ctIdx,det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
     dir:hdr.indexOf('Direction'),status:hdr.indexOf('Status'),
     to:hdr.indexOf('To'),from:hdr.indexOf('From'),
     talk:hdr.indexOf('Talking'),ring:hdr.indexOf('Ringing')};
@@ -3536,16 +3615,20 @@ function parseWorkbook(wb){
     var abandonedList = v.abandoned || [];
     var answeredList  = v.answeredIQ || [];
 
-    var hourlyByQueue = {}; // hour -> queue(To) -> {total,answered,ans30,wait}
+    var hourlyByQueue = {}; // hour -> queue(To) -> {total,answered,ans30,wait,waitHist}
     function ensQ(h,q){
       if(!hourlyByQueue[h]) hourlyByQueue[h]={};
-      if(!hourlyByQueue[h][q]) hourlyByQueue[h][q]={total:0,answered:0,ans30:0,wait:0};
+      if(!hourlyByQueue[h][q]) hourlyByQueue[h][q]={total:0,answered:0,ans30:0,wait:0,waitHist:{}};
       return hourlyByQueue[h][q];
+    }
+    function addHist(histObj, sec){
+      var k = String(Math.max(0, Math.round(sec||0)));
+      histObj[k] = (histObj[k]||0)+1;
     }
 
     abandonedList.forEach(function(info){
       const h=String(info.hour);
-      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0};
+      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0,waitHist:{}};
       abandoned++; total++;
       hourly[h].total++;
       var qb=ensQ(h, info.queue||'(Unknown)'); qb.total++;
@@ -3553,7 +3636,7 @@ function parseWorkbook(wb){
 
     answeredList.forEach(function(info){
       const h=String(info.hour);
-      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0};
+      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0,waitHist:{}};
       answered++; total++;
       hourly[h].total++;
       hourly[h].answered++;
@@ -3561,11 +3644,15 @@ function parseWorkbook(wb){
       hourly[h].wait += w;
       twait += w;
       // Ans ≤30s: Inbound Queue + Waiting + talk time 0:00:00–0:00:30
+      // (kept as a fixed-30s snapshot for backward compatibility — the live
+      // SLA Threshold control recomputes this from waitHist instead)
       if((info.talk||0)<=30){ ans30++; hourly[h].ans30++; }
+      addHist(hourly[h].waitHist, info.talk);
 
       var qb=ensQ(h, info.queue||'(Unknown)');
       qb.total++; qb.answered++; qb.wait+=w;
       if((info.talk||0)<=30){ qb.ans30++; }
+      addHist(qb.waitHist, info.talk);
     });
     Object.values(v.agents).forEach(a=>{ttalk+=a.talk;tcalls+=a.inbound;});
     out[d]={
@@ -3830,11 +3917,13 @@ async function resetData(){
 }
 
 function exportCSV(){
-  const rows=[['Date','Total','Answered','Abandoned','Ans30s','SLA%','AvgTalkSec']];
+  var slaT = getSlaThreshold();
+  const rows=[['Date','Total','Answered','Abandoned','Ans'+slaT+'s','SLA%','AvgTalkSec']];
   allDates.forEach(d=>{
     const v=allData[d]; if(!v) return;
-    rows.push([d,v.total,v.answered,v.abandoned,v.ans30,
-      v.total>0?(v.ans30/v.total*100).toFixed(1):0,v.avg_talk_s]);
+    var a30 = getDayAns30(d);
+    rows.push([d,v.total,v.answered,v.abandoned,a30,
+      v.total>0?(a30/v.total*100).toFixed(1):0,v.avg_talk_s]);
   });
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));
@@ -4743,10 +4832,11 @@ function renderDailySummary(dates){
   var totAb=0,totAns=0,totTot=0,totA30=0;
   dates.forEach(function(d){
     var v=allData[d]; if(!v) return;
-    var sla=v.total>0?(v.ans30/v.total*100).toFixed(2)+'%':'-';
+    var a30=getDayAns30(d);
+    var sla=v.total>0?(a30/v.total*100).toFixed(2)+'%':'-';
     var ansPct=v.total>0?(v.answered/v.total*100).toFixed(2)+'%':'-';
     var slaCol=parseFloat(sla)>=95?'#34d399':parseFloat(sla)>=85?'#fbbf24':'#f87171';
-    totAb+=v.abandoned; totAns+=v.answered; totTot+=v.total; totA30+=v.ans30;
+    totAb+=v.abandoned; totAns+=v.answered; totTot+=v.total; totA30+=a30;
     var tr=document.createElement('tr');
     tr.style.borderBottom='1px solid #111827';
     tr.onmouseover=function(){this.style.background='#1a2133';};
@@ -5104,12 +5194,13 @@ function renderIncidents(){
   dates.forEach(function(d){
     var incList = incByDate[d]||[];
     var dv  = allData[d]||null;
+    var dvAns30 = dv ? getDayAns30(d) : 0;
 
     // Only count each date's call KPIs into the totals ONCE, regardless of
     // how many incidents happened that day.
-    if(dv){ totAbandoned+=dv.abandoned||0; totAnswered+=dv.answered||0; totAns30+=dv.ans30||0; totTotal+=dv.total||0; }
+    if(dv){ totAbandoned+=dv.abandoned||0; totAnswered+=dv.answered||0; totAns30+=dvAns30; totTotal+=dv.total||0; }
 
-    var sla    = dv&&dv.total>0?(dv.ans30/dv.total*100).toFixed(2)+'%':'-';
+    var sla    = dv&&dv.total>0?(dvAns30/dv.total*100).toFixed(2)+'%':'-';
     var ansPct = dv&&dv.total>0?(dv.answered/dv.total*100).toFixed(2)+'%':'-';
     var slaCol = parseFloat(sla)>=95?'#34d399':parseFloat(sla)>=85?'#fbbf24':'#f87171';
 
@@ -5146,7 +5237,7 @@ function renderIncidents(){
         tr.appendChild(mkTd(fmtDate(d)+(incList.length>1?' ('+incList.length+' incidents)':''),'var(--text)','left',true));
         tr.appendChild(mkTd(dv&&dv.abandoned>0?dv.abandoned:'-',dv&&dv.abandoned>0?'#f87171':'var(--text4)','right'));
         tr.appendChild(mkTd(dv?dv.answered.toLocaleString():'-','#60a5fa','right'));
-        tr.appendChild(mkTd(dv&&dv.ans30>0?dv.ans30.toLocaleString():'-','#fbbf24','right'));
+        tr.appendChild(mkTd(dvAns30>0?dvAns30.toLocaleString():'-','#fbbf24','right'));
         tr.appendChild(mkTd(dv?dv.total.toLocaleString():'-','var(--text2)','right'));
         tr.appendChild(mkTd(sla,slaCol,'right',true));
         tr.appendChild(mkTd(ansPct,'#a78bfa','right'));
@@ -7187,9 +7278,9 @@ checkSession();
           <th id="incDateSortHdr" onclick="_incDateDesc=!_incDateDesc;renderIncidents();" style="padding:10px 8px;text-align:left;color:#60a5fa;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;min-width:60px;cursor:pointer;user-select:none;" title="Click to sort">Date ↑</th>
           <th style="padding:10px 8px;text-align:right;color:#f87171;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Aband</th>
           <th style="padding:10px 8px;text-align:right;color:#60a5fa;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Answered</th>
-          <th style="padding:10px 8px;text-align:right;color:#fbbf24;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Ans≤30s</th>
+          <th style="padding:10px 8px;text-align:right;color:#fbbf24;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Ans≤<span class="slaThresholdLabel">30</span>s</th>
           <th style="padding:10px 8px;text-align:right;color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Total</th>
-          <th style="padding:10px 8px;text-align:right;color:#34d399;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">SLA 30s</th>
+          <th style="padding:10px 8px;text-align:right;color:#34d399;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">SLA <span class="slaThresholdLabel">30</span>s</th>
           <th style="padding:10px 8px;text-align:right;color:#a78bfa;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Ans %</th>
           <th style="padding:10px 8px;text-align:left;color:#fbbf24;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:180px;">Issue</th>
           <th style="padding:10px 8px;text-align:left;color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:220px;">Service Impacted &amp; Explanation</th>
