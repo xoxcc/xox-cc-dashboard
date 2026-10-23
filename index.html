@@ -722,24 +722,6 @@ ON CONFLICT (id) DO NOTHING;</code></div>
       </select>
       <button class="btn" onclick="saveCurrentView()" title="Save current filter as a view"><i class="ti ti-device-floppy"></i></button>
       <button class="btn" onclick="openCompareModal()"><i class="ti ti-arrows-left-right"></i> Compare</button>
-      <div style="position:relative;">
-        <button id="excludedDatesBtn" class="btn" onclick="toggleExcludedDatesPanel(event)" title="Exclude one or more dates from the whole dashboard">
-          <i class="ti ti-calendar-off"></i> Exclude Dates
-          <span id="excludedDatesBadge" style="display:none;margin-left:4px;background:#3f1d1d;color:#fca5a5;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;"></span>
-        </button>
-        <div id="excludedDatesPanel" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:60;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px;min-width:240px;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px;">Exclude a date</div>
-          <div style="display:flex;gap:6px;margin-bottom:10px;">
-            <input type="date" id="excludeDateInput" style="flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 6px;font-size:11px;outline:none;">
-            <button onclick="excludeDateFromInput()" style="background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);padding:4px 10px;font-size:11px;cursor:pointer;">Exclude</button>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);">Currently excluded</div>
-            <button onclick="restoreAllExcludedDates()" style="background:transparent;border:none;color:#34d399;font-size:10px;cursor:pointer;padding:0;">Restore all</button>
-          </div>
-          <div id="excludedDatesList" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;"></div>
-        </div>
-      </div>
       <button class="btn" onclick="resetFilters()"><i class="ti ti-refresh"></i> Reset</button>
     </div>
   </div>
@@ -771,24 +753,6 @@ ON CONFLICT (id) DO NOTHING;</code></div>
           <i class="ti ti-clock" style="margin-right:3px;"></i>Last updated: <span id="lastUpdatedText">—</span>
         </div>
         <span id="thresholdAlertBadge" style="display:none;font-size:11px;font-weight:700;color:#fca5a5;background:#3f1d1d;border:1px solid #7f1d1d;border-radius:6px;padding:4px 10px;"></span>
-        <div style="position:relative;">
-          <button id="kpiQueueFilterBtn" onclick="toggleQueueFilterPanel('kpi',event)" style="background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);padding:4px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
-            <i class="ti ti-filter" style="font-size:11px;"></i><span id="kpiQueueFilterLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All Extensions (To)</span><i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;"></i>
-          </button>
-          <div id="kpiQueueFilterPanel" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:50;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
-            <div style="display:flex;gap:6px;margin-bottom:6px;">
-              <button onclick="setAllQueueFilter('kpi',true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
-              <button onclick="setAllQueueFilter('kpi',false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
-            </div>
-            <div id="kpiQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;" title="Calls answered within this many seconds count toward SLA / Ans ≤Xs. Applies live to KPI Summary, Hourly Call Volume, Monthly Performance and Daily Call Volume Trend.">
-          <i class="ti ti-hourglass-low" style="font-size:11px;color:var(--text3);"></i>
-          <span style="font-size:11px;color:var(--text3);">SLA ≤</span>
-          <input type="number" min="1" class="slaThresholdInput" value="30" onchange="setSlaThreshold(this.value)" style="width:44px;background:transparent;border:none;color:var(--text);font-size:11px;outline:none;">
-          <span style="font-size:11px;color:var(--text3);">s</span>
-        </div>
         <button onclick="manualRefresh()" id="refreshBtn" style="padding:4px 10px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;"><i class="ti ti-refresh"></i> Refresh</button>
         <button onclick="openTargetsModal()" style="padding:4px 10px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;"><i class="ti ti-target-arrow"></i> Targets</button>
       </div>
@@ -796,8 +760,8 @@ ON CONFLICT (id) DO NOTHING;</code></div>
         <div class="kpi"><div class="kpi-icon c-blue"><i class="ti ti-phone-incoming"></i></div><div class="kpi-label">Total Incoming</div><div class="kpi-val c-blue" id="kTotal">-</div><div class="kpi-sub" id="kTotalSub"></div><div class="kpi-delta" id="kTotalDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-phone-check"></i></div><div class="kpi-label">Answered</div><div class="kpi-val c-green" id="kAns">-</div><div class="kpi-sub" id="kAnsSub"></div><div class="kpi-delta" id="kAnsDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-red"><i class="ti ti-phone-x"></i></div><div class="kpi-label">Abandoned</div><div class="kpi-val c-red" id="kAb">-</div><div class="kpi-sub" id="kAbSub"></div><div class="kpi-delta" id="kAbDelta"></div><div id="kAbTarget"></div></div>
-        <div class="kpi"><div class="kpi-icon c-amber"><i class="ti ti-clock-check"></i></div><div class="kpi-label">Ans &lt;=<span class="slaThresholdLabel">30</span>s</div><div class="kpi-val c-amber" id="kA30">-</div><div class="kpi-sub" id="kA30Sub"></div><div class="kpi-delta" id="kA30Delta"></div></div>
-        <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-chart-line"></i></div><div class="kpi-label">SLA <span class="slaThresholdLabel">30</span>s</div><div class="kpi-val c-green" id="kSla">-</div><div class="kpi-sub">of total incoming</div><div class="kpi-delta" id="kSlaDelta"></div><div id="kSlaTarget"></div></div>
+        <div class="kpi"><div class="kpi-icon c-amber"><i class="ti ti-clock-check"></i></div><div class="kpi-label">Ans &lt;=30s</div><div class="kpi-val c-amber" id="kA30">-</div><div class="kpi-sub" id="kA30Sub"></div><div class="kpi-delta" id="kA30Delta"></div></div>
+        <div class="kpi"><div class="kpi-icon c-green"><i class="ti ti-chart-line"></i></div><div class="kpi-label">SLA 30s</div><div class="kpi-val c-green" id="kSla">-</div><div class="kpi-sub">of total incoming</div><div class="kpi-delta" id="kSlaDelta"></div><div id="kSlaTarget"></div></div>
         <div class="kpi"><div class="kpi-icon c-teal"><i class="ti ti-clock"></i></div><div class="kpi-label">Avg Talktime</div><div class="kpi-val c-teal" id="kAht">-</div><div class="kpi-sub">per call</div><div class="kpi-delta" id="kAhtDelta"></div><div id="kAhtTarget"></div></div>
         <div class="kpi"><div class="kpi-icon c-purple"><i class="ti ti-hourglass"></i></div><div class="kpi-label">Avg Wait Time</div><div class="kpi-val c-purple" id="kAwt">-</div><div class="kpi-sub">per answered call</div><div class="kpi-delta" id="kAwtDelta"></div></div>
         <div class="kpi"><div class="kpi-icon c-purple"><i class="ti ti-users"></i></div><div class="kpi-label">Active Agents</div><div class="kpi-val c-purple" id="kAgents">-</div><div class="kpi-sub">with inbound calls</div></div>
@@ -817,21 +781,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <div class="dp-handle" title="Drag to reorder"><i class="ti ti-grip-horizontal"></i><span>Daily Call Volume Trend</span><div class="dp-handle-right"><button class="dp-toggle" onclick="togglePanel('dp_trend')" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div>
     <div class="dp-body">
       <div id="trendCard">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-line" style="margin-right:5px;"></i><span id="trendCardTitle">Daily Call Volume Trend</span></div>
-          <div style="position:relative;">
-            <button id="trendQueueFilterBtn" onclick="toggleQueueFilterPanel('trend',event)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
-              <i class="ti ti-filter" style="font-size:11px;"></i><span id="trendQueueFilterLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All Extensions (To)</span><i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;"></i>
-            </button>
-            <div id="trendQueueFilterPanel" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:50;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
-              <div style="display:flex;gap:6px;margin-bottom:6px;">
-                <button onclick="setAllQueueFilter('trend',true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
-                <button onclick="setAllQueueFilter('trend',false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
-              </div>
-              <div id="trendQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
-            </div>
-          </div>
-        </div>
+        <div class="card-title" style="margin-bottom:10px;"><i class="ti ti-chart-line" style="margin-right:5px;"></i><span id="trendCardTitle">Daily Call Volume Trend</span></div>
         <div style="position:relative;height:100%;min-height:240px;"><canvas id="trendChart"></canvas></div>
         <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:#64748b;">
           <span><span style="display:inline-block;width:8px;height:8px;background:#3b82f6;border-radius:2px;margin-right:4px;"></span>Total</span>
@@ -849,25 +799,13 @@ ON CONFLICT (id) DO NOTHING;</code></div>
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
         <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i><span id="hourlyCardTitle">Hourly Call Volume</span></div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <div style="position:relative;">
-            <button id="hourlyQueueFilterBtn" onclick="toggleQueueFilterPanel('hourly',event)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
-              <span id="hourlyQueueFilterLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All Extensions (To)</span><i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;"></i>
-            </button>
-            <div id="hourlyQueueFilterPanel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
-              <div style="display:flex;gap:6px;margin-bottom:6px;">
-                <button onclick="setAllQueueFilter('hourly',true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
-                <button onclick="setAllQueueFilter('hourly',false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
-              </div>
-              <div id="hourlyQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
-            </div>
-          </div>
           <select id="hourlyMonthFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="">All Months</option>
           </select>
           <select id="hourlyYearFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="">All Years</option>
           </select>
-          <button onclick="setAllQueueFilter('hourly',true);document.getElementById('hourlyMonthFilter').value='';document.getElementById('hourlyYearFilter').value='';renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:4px 8px;font-size:11px;cursor:pointer;">✕ Clear</button>
+          <button onclick="document.getElementById('hourlyMonthFilter').value='';document.getElementById('hourlyYearFilter').value='';renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:4px 8px;font-size:11px;cursor:pointer;">✕ Clear</button>
         </div>
       </div>
       <div id="hourlyTable"></div>
@@ -882,18 +820,6 @@ ON CONFLICT (id) DO NOTHING;</code></div>
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
         <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-calendar-stats" style="margin-right:5px;"></i>Monthly Performance <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:6px;">(all loaded data, independent of the date filter above)</span></div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <div style="position:relative;">
-            <button id="monthlyQueueFilterBtn" onclick="toggleQueueFilterPanel('monthly',event)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
-              <i class="ti ti-filter" style="font-size:11px;"></i><span id="monthlyQueueFilterLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All Extensions (To)</span><i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;"></i>
-            </button>
-            <div id="monthlyQueueFilterPanel" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:50;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
-              <div style="display:flex;gap:6px;margin-bottom:6px;">
-                <button onclick="setAllQueueFilter('monthly',true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
-                <button onclick="setAllQueueFilter('monthly',false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
-              </div>
-              <div id="monthlyQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
-            </div>
-          </div>
           <select id="monthlyYearFilter" onchange="renderMonthlyPerformance()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="">All Years</option>
           </select>
@@ -911,18 +837,6 @@ ON CONFLICT (id) DO NOTHING;</code></div>
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
         <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-grid-dots" style="margin-right:5px;"></i>Day of Week × Hour of Day <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:6px;">(currently filtered range)</span></div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <div style="position:relative;">
-            <button id="heatmapQueueFilterBtn" onclick="toggleQueueFilterPanel('heatmap',event)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;max-width:180px;">
-              <i class="ti ti-filter" style="font-size:11px;"></i><span id="heatmapQueueFilterLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All Extensions (To)</span><i class="ti ti-chevron-down" style="font-size:10px;flex-shrink:0;"></i>
-            </button>
-            <div id="heatmapQueueFilterPanel" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:50;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.45);">
-              <div style="display:flex;gap:6px;margin-bottom:6px;">
-                <button onclick="setAllQueueFilter('heatmap',true)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Select All</button>
-                <button onclick="setAllQueueFilter('heatmap',false)" style="flex:1;font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px;cursor:pointer;">Clear All</button>
-              </div>
-              <div id="heatmapQueueFilterList" style="display:flex;flex-direction:column;gap:4px;"></div>
-            </div>
-          </div>
           <span style="font-size:10px;color:var(--text3);">Metric:</span>
           <select id="heatmapMetric" onchange="renderHeatmap()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:3px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="total">Total Calls</option>
@@ -1281,11 +1195,10 @@ function showStatus(msg,color){
 async function init(){
   // Step 1: Always show embedded data immediately
   allData = Object.assign({}, DATA);
-  allDates = getActiveDates();
+  allDates = Object.keys(allData).sort();
   dayIdx = allDates.length-1;
   buildMonthFilter();
   updatePill();
-  populateExcludedDatesUI();
   refreshSavedViewsDropdown();
   loadLastUpdatedIndicator();
   setPreset('lastmonth'); // default to Last Month on load — most data is historical
@@ -1295,7 +1208,7 @@ async function init(){
     var sbData = await loadFromSupabase();
     if(sbData && Object.keys(sbData).length > 0){
       Object.assign(allData, sbData);
-      allDates = getActiveDates();
+      allDates = Object.keys(allData).sort();
       dayIdx = allDates.length-1;
       buildMonthFilter();
       updatePill();
@@ -1320,9 +1233,21 @@ async function init(){
       var fresh = await loadFromSupabase(sinceStr);
       if(fresh){
         Object.assign(allData, fresh);
-        allDates = getActiveDates();
+        allDates = Object.keys(allData).sort();
         buildMonthFilter(); updatePill(); applyFilters();
       }
+      // Keep Incident Reports fresh too, so an update saved by a teammate
+      // on another device/tab shows up here without a relogin.
+      try{
+        await loadIncidentsFromSupabase();
+        var incTab = document.getElementById('content-incidents');
+        var incForm = document.getElementById('incidentForm');
+        var formOpen = incForm && incForm.style.display==='block';
+        if(incTab && incTab.classList.contains('active') && !formOpen){
+          buildIncMonthFilter();
+          renderIncidents();
+        }
+      }catch(e){}
       updateLastUpdatedTimestamp();
     }catch(e){}
   }, 60000);
@@ -1550,11 +1475,6 @@ function agg(dates){
   const r={total:0,answered:0,abandoned:0,ans30:0,talk:0,calls:0,wait:0,hourly:{},agents:{}};
   var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03'; // new 8AM-9PM policy takes effect from this date
   var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 20; // inclusive — 8AM through 8:59PM; closing AT 9:00PM means the 9PM-9:59PM bucket itself is already after-hours
-  var slaThreshold = getSlaThreshold();
-  function hourAns30(hv){
-    var c = histCountLE(hv.waitHist, slaThreshold);
-    return c===null ? (hv.ans30||0) : c; // pre-update data (no histogram) keeps its fixed-30s snapshot
-  }
   dates.forEach(d=>{
     const v=allData[d]; if(!v) return;
     var enforceHours = d >= OPERATING_HOURS_CUTOFF_DATE;
@@ -1571,12 +1491,12 @@ function agg(dates){
         if(hNum < OPERATING_HOURS_MIN || hNum > OPERATING_HOURS_MAX) return; // outside new operating hours — excluded
         dayTotal += hv.total||0;
         dayAnswered += hv.answered||0;
-        dayAns30 += hourAns30(hv);
+        dayAns30 += hv.ans30||0;
       });
       dayAbandoned = dayTotal - dayAnswered;
       r.total+=dayTotal; r.answered+=dayAnswered; r.abandoned+=dayAbandoned; r.ans30+=dayAns30;
     } else {
-      r.total+=v.total; r.answered+=v.answered; r.abandoned+=v.abandoned; r.ans30+=getDayAns30(d);
+      r.total+=v.total; r.answered+=v.answered; r.abandoned+=v.abandoned; r.ans30+=v.ans30;
     }
 
     const ac=v.agents.reduce((s,a)=>s+a.inbound,0);
@@ -1590,7 +1510,7 @@ function agg(dates){
       if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
       r.hourly[h].total+=hv.total||0;
       r.hourly[h].answered+=hv.answered||0;
-      r.hourly[h].ans30+=hourAns30(hv);
+      r.hourly[h].ans30+=hv.ans30||0;
       r.hourly[h].wait+=isNaN(hv.wait)?0:(hv.wait||0);
     });
     v.agents.forEach(a=>{
@@ -1689,7 +1609,7 @@ async function manualRefresh(){
     var fresh = await loadFromSupabase();
     if(fresh){
       Object.assign(allData, fresh);
-      allDates = getActiveDates();
+      allDates = Object.keys(allData).sort();
       buildMonthFilter(); updatePill(); applyFilters();
     }
     updateLastUpdatedTimestamp();
@@ -1969,7 +1889,7 @@ function compareStatsBlock(cur, other, dates){
   html += compareStatRow('Total Incoming', cur.total, other.total, function(v){return v.toLocaleString();}, undefined);
   html += compareStatRow('Answered', cur.answered, other.answered, function(v){return v.toLocaleString();}, true);
   html += compareStatRow('Abandoned', cur.abandoned, other.abandoned, function(v){return v.toLocaleString();}, false);
-  html += compareStatRow('SLA '+getSlaThreshold()+'s', slaCur, slaOther, function(v){return v.toFixed(1)+'%';}, true);
+  html += compareStatRow('SLA 30s', slaCur, slaOther, function(v){return v.toFixed(1)+'%';}, true);
   html += compareStatRow('Avg Talktime', cur.avgTalk, other.avgTalk, function(v){return fmtT(v);}, false);
   html += compareStatRow('Avg Wait Time', cur.avgWait, other.avgWait, function(v){return fmtT(v);}, false);
   return html;
@@ -2053,26 +1973,14 @@ function updateDataCompletenessBanner(dates){
 
 function render(dates){
   window._lastRenderedDates = dates;
-  var slaT = getSlaThreshold();
-  document.querySelectorAll('.slaThresholdInput').forEach(function(el){ if(document.activeElement!==el) el.value = slaT; });
-  document.querySelectorAll('.slaThresholdLabel').forEach(function(el){ el.textContent = slaT; });
   populateQuarterDropdown();
   populateMonthDropdown();
   populateHourlyMonthYearFilters();
-  populateAllQueueFilterUIs();
   populateMonthlyYearFilter();
   renderMonthlyPerformance();
   updatePeriodCard(dates);
   updateDataCompletenessBanner(dates);
   const a = agg(dates);
-  // If a "To" extension filter is active (shared by KPI Summary, Daily Call
-  // Volume Trend and Heatmap), use the filtered totals for the queue-
-  // trackable KPIs (Total/Answered/Abandoned/Ans≤30s/SLA/Avg Wait). Talk
-  // time and Active Agents come from a separate call stream (CC agent
-  // extensions) that isn't tracked per queue, so those always use the
-  // unfiltered `a`.
-  var qf = computeQueueFilteredAgg(dates, 'global');
-  var kSrc = qf || a;
 
   // Set default date range in agent/drop filters
   if(dates.length){
@@ -2081,39 +1989,37 @@ function render(dates){
     ['agentDateTo','dropDateTo'].forEach(function(id){var el=document.getElementById(id);if(el&&!el.value)el.value=to;});
   }
   // KPIs
-  setText('kTotal', kSrc.total.toLocaleString());
+  setText('kTotal', a.total.toLocaleString());
   setText('kTotalSub', dates.length>1?'across '+dates.length+' days':'');
-  setText('kAns', kSrc.answered.toLocaleString());
-  setText('kAnsSub', fmtP(kSrc.answered,kSrc.total)+' answer rate');
-  setText('kAb', kSrc.abandoned.toLocaleString());
-  setText('kAbSub', fmtP(kSrc.abandoned,kSrc.total)+' abandon rate');
-  setText('kA30', kSrc.ans30.toLocaleString());
-  setText('kA30Sub', fmtP(kSrc.ans30,kSrc.total)+' of total incoming');
-  setText('kSla', fmtP(kSrc.ans30,kSrc.total));
+  setText('kAns', a.answered.toLocaleString());
+  setText('kAnsSub', fmtP(a.answered,a.total)+' answer rate');
+  setText('kAb', a.abandoned.toLocaleString());
+  setText('kAbSub', fmtP(a.abandoned,a.total)+' abandon rate');
+  setText('kA30', a.ans30.toLocaleString());
+  setText('kA30Sub', fmtP(a.ans30,a.total)+' of total incoming');
+  setText('kSla', fmtP(a.ans30,a.total));
   setText('kAht', fmtT(a.avgTalk));
-  setText('kAwt', fmtT(kSrc.avgWait));
+  setText('kAwt', fmtT(a.avgWait));
   setText('kAgents', Object.keys(a.agents).length);
   setText('kDays', dates.length);
   setText('kDaysSub', dates.length>1?dates[0]+' to '+dates[dates.length-1]:'Single day');
 
-  var curSlaPct = kSrc.total>0?(kSrc.ans30/kSrc.total*100):0;
-  var curAbRate = kSrc.total>0?(kSrc.abandoned/kSrc.total*100):0;
+  var curSlaPct = a.total>0?(a.ans30/a.total*100):0;
+  var curAbRate = a.total>0?(a.abandoned/a.total*100):0;
 
   // Delta badges vs the equivalent prior period (e.g. this week vs last week)
   var priorDates = getPriorPeriodDates(dates);
   var pa = null;
   if(priorDates.length){
     pa = agg(priorDates);
-    var pqf = computeQueueFilteredAgg(priorDates, 'global');
-    var paSrc = pqf || pa;
-    renderKpiDelta('kTotalDelta', kSrc.total, paSrc.total, 'neutral');
-    renderKpiDelta('kAnsDelta', kSrc.answered, paSrc.answered, 'good-up');
-    renderKpiDelta('kAbDelta', kSrc.abandoned, paSrc.abandoned, 'good-down');
-    renderKpiDelta('kA30Delta', kSrc.ans30, paSrc.ans30, 'good-up');
-    var priorSlaPct = paSrc.total>0?(paSrc.ans30/paSrc.total*100):0;
+    renderKpiDelta('kTotalDelta', a.total, pa.total, 'neutral');
+    renderKpiDelta('kAnsDelta', a.answered, pa.answered, 'good-up');
+    renderKpiDelta('kAbDelta', a.abandoned, pa.abandoned, 'good-down');
+    renderKpiDelta('kA30Delta', a.ans30, pa.ans30, 'good-up');
+    var priorSlaPct = pa.total>0?(pa.ans30/pa.total*100):0;
     renderKpiDelta('kSlaDelta', curSlaPct, priorSlaPct, 'good-up');
     renderKpiDelta('kAhtDelta', a.avgTalk, pa.avgTalk, 'good-down');
-    renderKpiDelta('kAwtDelta', kSrc.avgWait, paSrc.avgWait, 'good-down');
+    renderKpiDelta('kAwtDelta', a.avgWait, pa.avgWait, 'good-down');
   } else {
     ['kTotalDelta','kAnsDelta','kAbDelta','kA30Delta','kSlaDelta','kAhtDelta','kAwtDelta'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.textContent='';
@@ -2198,348 +2104,6 @@ function populateHourlyMonthYearFilters(){
   if(prevMonth) monthSel.value = prevMonth;
 }
 
-// ── "To" (queue extension) multi-select filter — shared across panels ──────
-// Several panels each get their own filter button (uiKey = DOM id prefix),
-// but some panels share one underlying selection (stateKey) so their numbers
-// stay consistent with each other:
-//   'hourly'  → Hourly Call Volume (own independent selection)
-//   'monthly' → Monthly Performance (own independent selection)
-//   'global'  → KPI Summary + Daily Call Volume Trend + Heatmap (shared —
-//               these three already all follow the same main date-range
-//               filter, so one shared extension selection keeps them in sync)
-var QUEUE_FILTER_MAP = { hourly:'hourly', monthly:'monthly', kpi:'global', trend:'global', heatmap:'global' };
-function queueStateKey(uiKey){ return QUEUE_FILTER_MAP[uiKey] || uiKey; }
-function queueUiKeysFor(stateKey){ return Object.keys(QUEUE_FILTER_MAP).filter(function(k){ return QUEUE_FILTER_MAP[k]===stateKey; }); }
-
-function refreshQueueMasterList(){
-  var qSet = new Set();
-  allDates.forEach(function(d){
-    var hbq = allData[d] && allData[d].hourlyByQueue;
-    if(!hbq) return;
-    Object.keys(hbq).forEach(function(h){
-      Object.keys(hbq[h]).forEach(function(q){ if(q) qSet.add(q); });
-    });
-  });
-  window._queueAllList = [...qSet].sort();
-  if(!window._queueExcluded) window._queueExcluded = {};
-  ['hourly','global','monthly'].forEach(function(sk){
-    if(!window._queueExcluded[sk]) window._queueExcluded[sk] = new Set();
-    Array.from(window._queueExcluded[sk]).forEach(function(q){ if(!qSet.has(q)) window._queueExcluded[sk].delete(q); });
-  });
-}
-
-function populateAllQueueFilterUIs(){
-  refreshQueueMasterList();
-  Object.keys(QUEUE_FILTER_MAP).forEach(function(uiKey){ populateQueueChecklist(uiKey); });
-}
-
-function populateQueueChecklist(uiKey){
-  var listEl = document.getElementById(uiKey+'QueueFilterList');
-  if(!listEl) return;
-  var stateKey = queueStateKey(uiKey);
-  var excluded = (window._queueExcluded && window._queueExcluded[stateKey]) || new Set();
-  var queues = window._queueAllList || [];
-  listEl.innerHTML = queues.map(function(q){
-    var checked = excluded.has(q) ? '' : 'checked';
-    var safeQ = q.replace(/"/g,'&quot;');
-    return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);cursor:pointer;padding:2px 0;">'
-      + '<input type="checkbox" '+checked+' onchange="toggleQueueOption(\''+uiKey+'\',\''+safeQ.replace(/'/g,"\\'")+'\')" style="cursor:pointer;">'
-      + '<span>'+q+'</span></label>';
-  }).join('') || '<div style="font-size:11px;color:var(--text3);">No extensions found — re-import data to enable this filter</div>';
-  updateQueueFilterLabel(uiKey);
-}
-
-function toggleQueueFilterPanel(uiKey, ev){
-  if(ev) ev.stopPropagation();
-  var panel = document.getElementById(uiKey+'QueueFilterPanel');
-  if(!panel) return;
-  var isOpen = panel.style.display === 'block';
-  Object.keys(QUEUE_FILTER_MAP).forEach(function(k){
-    var p = document.getElementById(k+'QueueFilterPanel');
-    if(p) p.style.display='none';
-  });
-  panel.style.display = isOpen ? 'none' : 'block';
-}
-document.addEventListener('click', function(e){
-  Object.keys(QUEUE_FILTER_MAP).forEach(function(uiKey){
-    var panel = document.getElementById(uiKey+'QueueFilterPanel');
-    var btn = document.getElementById(uiKey+'QueueFilterBtn');
-    if(!panel || panel.style.display==='none') return;
-    if(panel.contains(e.target) || (btn && btn.contains(e.target))) return;
-    panel.style.display = 'none';
-  });
-});
-
-function toggleQueueOption(uiKey, q){
-  var stateKey = queueStateKey(uiKey);
-  if(!window._queueExcluded) window._queueExcluded = {};
-  if(!window._queueExcluded[stateKey]) window._queueExcluded[stateKey] = new Set();
-  var set = window._queueExcluded[stateKey];
-  if(set.has(q)) set.delete(q); else set.add(q);
-  queueUiKeysFor(stateKey).forEach(function(k){ populateQueueChecklist(k); });
-  dispatchQueueFilterChange(stateKey);
-}
-
-function setAllQueueFilter(uiKey, selectAll){
-  var stateKey = queueStateKey(uiKey);
-  if(!window._queueExcluded) window._queueExcluded = {};
-  window._queueExcluded[stateKey] = new Set();
-  if(!selectAll && window._queueAllList){
-    window._queueAllList.forEach(function(q){ window._queueExcluded[stateKey].add(q); });
-  }
-  queueUiKeysFor(stateKey).forEach(function(k){ populateQueueChecklist(k); });
-  dispatchQueueFilterChange(stateKey);
-}
-
-function updateQueueFilterLabel(uiKey){
-  var labelEl = document.getElementById(uiKey+'QueueFilterLabel');
-  if(!labelEl) return;
-  var stateKey = queueStateKey(uiKey);
-  var all = window._queueAllList || [];
-  var excluded = (window._queueExcluded && window._queueExcluded[stateKey]) || new Set();
-  var selectedCount = all.length - excluded.size;
-  if(excluded.size === 0){
-    labelEl.textContent = 'All Extensions (To)';
-  } else if(selectedCount === 0){
-    labelEl.textContent = 'No Extensions Selected';
-  } else if(selectedCount === 1){
-    var only = all.find(function(q){ return !excluded.has(q); });
-    labelEl.textContent = 'To: '+only;
-  } else {
-    labelEl.textContent = selectedCount+' of '+all.length+' Extensions';
-  }
-}
-
-function dispatchQueueFilterChange(stateKey){
-  if(stateKey==='hourly'){ renderHourlyFiltered(); }
-  else if(stateKey==='monthly'){ renderMonthlyPerformance(); }
-  else if(stateKey==='global'){ if(window._lastRenderedDates) render(window._lastRenderedDates); }
-}
-
-// Returns the queue-filtered totals for `dates`, restricted to the queues
-// currently selected for `stateKey` ('global' | 'monthly' | 'hourly').
-// Returns null when that filter isn't active (nothing excluded) — callers
-// should fall back to the normal unfiltered agg()/allData values.
-// Only covers metrics tracked per-queue (Inbound Queue funnel): total,
-// answered, abandoned, ans30, wait, hourly. Talk time / agent counts come
-// from a separate call stream (CC agent extensions) and are NOT queue-
-// filterable, so callers should keep sourcing those from agg() as before.
-// ── SLA Threshold (Ans ≤Xs) — user-adjustable, defaults to 30s ────────────
-// Each hour/queue bucket stores a waitHist (wait-time → count) captured at
-// import time; the threshold below decides, at render time, how many of
-// those calls count as "answered within SLA" — no re-import needed when the
-// person changes it. Only data re-imported after this feature was added has
-// waitHist; older loaded dates fall back to the fixed 30s value baked in
-// at import time (see getDayAns30 below).
-// ── Excluded Dates — remove specific dates from the whole dashboard, with a
-// one-click way to bring them back. Non-destructive: the underlying data in
-// allData is never touched, so this survives Supabase auto-refresh/merge
-// (which would otherwise silently re-add a physically-deleted date). Every
-// place that rebuilds `allDates` from allData goes through getActiveDates()
-// instead, so KPI Summary, Trend, Heatmap, Hourly, Monthly Performance, the
-// date pickers, and everything else built on `allDates` automatically
-// excludes these dates without needing separate changes.
-function getExcludedDates(){
-  if(window._excludedDates) return window._excludedDates;
-  var set = new Set();
-  try{
-    var saved = JSON.parse(localStorage.getItem('xox_excluded_dates')||'[]');
-    saved.forEach(function(d){ set.add(d); });
-  }catch(e){}
-  window._excludedDates = set;
-  return set;
-}
-
-function saveExcludedDates(){
-  try{ localStorage.setItem('xox_excluded_dates', JSON.stringify([...getExcludedDates()])); }catch(e){}
-}
-
-function getActiveDates(){
-  var excluded = getExcludedDates();
-  var keys = Object.keys(allData);
-  if(excluded.size===0) return keys.sort();
-  return keys.filter(function(d){ return !excluded.has(d); }).sort();
-}
-
-function excludeDate(d){
-  if(!d || !allData[d]) return;
-  getExcludedDates().add(d);
-  saveExcludedDates();
-  allDates = getActiveDates();
-  populateExcludedDatesUI();
-  buildMonthFilter();
-  applyFilters();
-}
-
-function restoreDate(d){
-  getExcludedDates().delete(d);
-  saveExcludedDates();
-  allDates = getActiveDates();
-  populateExcludedDatesUI();
-  buildMonthFilter();
-  applyFilters();
-}
-
-function restoreAllExcludedDates(){
-  getExcludedDates().clear();
-  saveExcludedDates();
-  allDates = getActiveDates();
-  populateExcludedDatesUI();
-  buildMonthFilter();
-  applyFilters();
-}
-
-function excludeDateFromInput(){
-  var input = document.getElementById('excludeDateInput');
-  if(!input || !input.value) return;
-  var d = input.value; // yyyy-mm-dd from <input type="date">
-  if(!allData[d]){
-    alert('No data loaded for '+d+' — nothing to exclude.');
-    return;
-  }
-  excludeDate(d);
-  input.value = '';
-}
-
-function populateExcludedDatesUI(){
-  var listEl = document.getElementById('excludedDatesList');
-  var badgeEl = document.getElementById('excludedDatesBadge');
-  var excluded = [...getExcludedDates()].sort();
-  if(badgeEl){
-    if(excluded.length){
-      badgeEl.style.display = 'inline-flex';
-      badgeEl.textContent = excluded.length+' date'+(excluded.length!==1?'s':'')+' excluded';
-    } else {
-      badgeEl.style.display = 'none';
-    }
-  }
-  if(!listEl) return;
-  if(!excluded.length){
-    listEl.innerHTML = '<div style="font-size:11px;color:var(--text3);">No dates excluded.</div>';
-    return;
-  }
-  listEl.innerHTML = excluded.map(function(d){
-    var safeD = d.replace(/'/g,"\\'");
-    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;font-size:11px;color:var(--text);">'
-      + '<span>'+fmtDate(d)+'</span>'
-      + '<button onclick="restoreDate(\''+safeD+'\')" style="background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:#34d399;padding:2px 8px;font-size:10px;cursor:pointer;">↩ Restore</button>'
-      + '</div>';
-  }).join('');
-}
-
-function toggleExcludedDatesPanel(ev){
-  if(ev) ev.stopPropagation();
-  var panel = document.getElementById('excludedDatesPanel');
-  if(!panel) return;
-  var isOpen = panel.style.display === 'block';
-  panel.style.display = isOpen ? 'none' : 'block';
-  if(!isOpen) populateExcludedDatesUI();
-}
-document.addEventListener('click', function(e){
-  var panel = document.getElementById('excludedDatesPanel');
-  var btn = document.getElementById('excludedDatesBtn');
-  if(!panel || panel.style.display==='none') return;
-  if(panel.contains(e.target) || (btn && btn.contains(e.target))) return;
-  panel.style.display = 'none';
-});
-
-function getSlaThreshold(){
-  if(window._slaThreshold) return window._slaThreshold;
-  try{
-    var saved = parseInt(localStorage.getItem('xox_sla_threshold'), 10);
-    if(!isNaN(saved) && saved>=1){ window._slaThreshold = saved; return saved; }
-  }catch(e){}
-  return 30;
-}
-
-function setSlaThreshold(val){
-  var n = parseInt(val, 10);
-  if(isNaN(n) || n < 1) n = 30;
-  window._slaThreshold = n;
-  try{ localStorage.setItem('xox_sla_threshold', String(n)); }catch(e){}
-  document.querySelectorAll('.slaThresholdInput').forEach(function(el){ el.value = n; });
-  document.querySelectorAll('.slaThresholdLabel').forEach(function(el){ el.textContent = n; });
-  if(window._lastRenderedDates) render(window._lastRenderedDates);
-}
-
-function histCountLE(histObj, threshold){
-  if(!histObj) return null; // signals "no histogram available" (pre-update data)
-  var sum=0;
-  Object.keys(histObj).forEach(function(k){ if(Number(k) <= threshold) sum += histObj[k]; });
-  return sum;
-}
-
-// Per-day "answered within SLA" count, honoring the live threshold when this
-// day's data has waitHist (re-imported after this feature shipped); falls
-// back to the fixed-30s snapshot captured at import time otherwise.
-function getDayAns30(d){
-  var v = allData[d];
-  if(!v) return 0;
-  if(!v.hourly) return v.ans30||0;
-  var threshold = getSlaThreshold();
-  var sum = 0, hadHist = false;
-  Object.keys(v.hourly).forEach(function(h){
-    var c = histCountLE(v.hourly[h].waitHist, threshold);
-    if(c===null){ sum += v.hourly[h].ans30||0; }
-    else { hadHist = true; sum += c; }
-  });
-  return sum;
-}
-
-function computeQueueFilteredAgg(dates, stateKey){
-  var excluded = (window._queueExcluded && window._queueExcluded[stateKey]) || new Set();
-  var allQ = window._queueAllList || [];
-  if(!allQ.length || excluded.size===0) return null;
-  var selected = allQ.filter(function(q){ return !excluded.has(q); });
-  var qSet = new Set(selected);
-  var threshold = getSlaThreshold();
-  var r = {total:0,answered:0,abandoned:0,ans30:0,wait:0,avgWait:0,hourly:{}};
-  var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03';
-  var OPERATING_HOURS_MIN=8, OPERATING_HOURS_MAX=20;
-  var twait=0, tans=0;
-  dates.forEach(function(d){
-    var v=allData[d]; if(!v || !v.hourlyByQueue) return;
-    var enforceHours = d >= OPERATING_HOURS_CUTOFF_DATE;
-    Object.keys(v.hourlyByQueue).forEach(function(h){
-      if(enforceHours){
-        var hNum = Number(h);
-        if(hNum < OPERATING_HOURS_MIN || hNum > OPERATING_HOURS_MAX) return;
-      }
-      var hb = v.hourlyByQueue[h];
-      Object.keys(hb).forEach(function(q){
-        if(!qSet.has(q)) return;
-        var qb = hb[q];
-        var qAns30 = histCountLE(qb.waitHist, threshold);
-        if(qAns30===null) qAns30 = qb.ans30||0; // pre-update data — no histogram
-        if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
-        r.hourly[h].total+=qb.total||0;
-        r.hourly[h].answered+=qb.answered||0;
-        r.hourly[h].ans30+=qAns30;
-        r.hourly[h].wait+=qb.wait||0;
-        r.total+=qb.total||0;
-        r.answered+=qb.answered||0;
-        r.ans30+=qAns30;
-        twait+=qb.wait||0; tans+=qb.answered||0;
-      });
-    });
-  });
-  r.abandoned = r.total - r.answered;
-  r.wait = twait;
-  r.avgWait = tans>0 ? Math.round(twait/tans) : 0;
-  return r;
-}
-
-// Per-day metric for one date, honoring the 'global' queue filter if active.
-// metric ∈ 'total' | 'answered' | 'abandoned'
-function trendDayValue(d, metric){
-  var qf = computeQueueFilteredAgg([d], 'global');
-  if(qf) return qf[metric] || 0;
-  var v = allData[d];
-  if(!v) return 0;
-  if(metric==='abandoned') return (v.total||0)-(v.answered||0);
-  return v[metric] || 0;
-}
-
 function populateMonthlyYearFilter(){
   var yearSel = document.getElementById('monthlyYearFilter');
   if(!yearSel || !allDates.length) return;
@@ -2565,12 +2129,9 @@ function renderMonthlyPerformance(){
   // Reuse the same agg() function everything else uses — guarantees this
   // table's figures always match the KPI cards for the same date range,
   // including the 8AM-9PM operating-hours enforcement from Sept 3 onward.
-  // (Unless this panel's own "To" extension filter is active, in which case
-  // use the filtered per-queue totals instead — same shape as agg()'s output
-  // for the fields this table needs.)
   var perMonth = monthKeys.map(function(mk){
     var dates = monthGroups[mk];
-    var a = computeQueueFilteredAgg(dates, 'monthly') || agg(dates);
+    var a = agg(dates);
     var yr = mk.slice(0,4), mo = parseInt(mk.slice(5,7),10);
     return { key: mk, label: monthNames[mo]+' '+yr, days: dates.length, a: a };
   });
@@ -2579,7 +2140,6 @@ function renderMonthlyPerformance(){
   tbl.className = 'htable';
   var thead = document.createElement('thead');
   var hr = document.createElement('tr');
-  var slaT1 = getSlaThreshold();
   var cols = [
     ['Month',         '#64748b'],
     ['Days',          '#64748b'],
@@ -2587,8 +2147,8 @@ function renderMonthlyPerformance(){
     ['Answered',      '#60a5fa'],
     ['Total Incoming','#94a3b8'],
     ['Avg/Day',       '#6366f1'],
-    ['Ans ≤'+slaT1+'s',  '#fbbf24'],
-    ['SLA '+slaT1+'s',   '#34d399'],
+    ['Ans ≤30s',      '#fbbf24'],
+    ['SLA 30s',       '#34d399'],
     ['Avg Wait',      '#e879f9'],
     ['Ans %',         '#a78bfa'],
   ];
@@ -2684,82 +2244,33 @@ function renderMonthlyPerformance(){
   }
 }
 
-function aggHourlyByQueue(dates, selectedQueues){
-  // Mirrors agg()'s hourly aggregation + operating-hours enforcement, but
-  // sourced from each day's hourlyByQueue and restricted to the selected
-  // queues (To). selectedQueues is an array of queue names to INCLUDE.
-  var r={hourly:{}, avgWait:0};
-  var OPERATING_HOURS_CUTOFF_DATE = '2026-09-03';
-  var OPERATING_HOURS_MIN = 8, OPERATING_HOURS_MAX = 20;
-  var qSet = new Set(selectedQueues);
-  var threshold = getSlaThreshold();
-  var twait=0, tans=0;
-  dates.forEach(function(d){
-    var v=allData[d]; if(!v || !v.hourlyByQueue) return;
-    var enforceHours = d >= OPERATING_HOURS_CUTOFF_DATE;
-    Object.keys(v.hourlyByQueue).forEach(function(h){
-      if(enforceHours){
-        var hNum = Number(h);
-        if(hNum < OPERATING_HOURS_MIN || hNum > OPERATING_HOURS_MAX) return;
-      }
-      Object.keys(v.hourlyByQueue[h]).forEach(function(q){
-        if(!qSet.has(q)) return;
-        var qb = v.hourlyByQueue[h][q];
-        var qAns30 = histCountLE(qb.waitHist, threshold);
-        if(qAns30===null) qAns30 = qb.ans30||0;
-        if(!r.hourly[h]) r.hourly[h]={total:0,answered:0,ans30:0,wait:0};
-        r.hourly[h].total+=qb.total||0;
-        r.hourly[h].answered+=qb.answered||0;
-        r.hourly[h].ans30+=qAns30;
-        r.hourly[h].wait+=qb.wait||0;
-        twait+=qb.wait||0; tans+=qb.answered||0;
-      });
-    });
-  });
-  r.avgWait = tans>0 ? Math.round(twait/tans) : 0;
-  return r;
-}
-
 function renderHourlyFiltered(){
   var month = document.getElementById('hourlyMonthFilter')?.value || '';
   var year = document.getElementById('hourlyYearFilter')?.value || '';
-  var allQueues = window._queueAllList || [];
-  var excluded = (window._queueExcluded && window._queueExcluded.hourly) || new Set();
-  var queueFilterActive = allQueues.length > 0 && excluded.size > 0;
-  var selectedQueues = allQueues.filter(function(q){ return !excluded.has(q); });
 
-  var baseDates = allDates;
-  if(month || year){
-    baseDates = allDates.filter(function(d){
-      if(year && d.slice(0,4) !== year) return false;
-      if(month && d.slice(5,7) !== month) return false;
-      return true;
-    });
-  } else if(!queueFilterActive){
-    // No local override at all — fall back to whatever the main dashboard filter shows
+  if(!month && !year){
+    // No local override — fall back to whatever the main dashboard filter shows
     var mainDates = window._lastRenderedDates || [];
     renderHourly(agg(mainDates), mainDates.length);
     return;
-  } else {
-    baseDates = window._lastRenderedDates && window._lastRenderedDates.length ? window._lastRenderedDates : allDates;
   }
 
-  if(!baseDates.length || (queueFilterActive && selectedQueues.length===0)){
+  var filtered = allDates.filter(function(d){
+    if(year && d.slice(0,4) !== year) return false;
+    if(month && d.slice(5,7) !== month) return false;
+    return true;
+  });
+
+  if(!filtered.length){
     var titleEl = document.getElementById('hourlyCardTitle');
     if(titleEl) titleEl.textContent = 'Hourly Call Volume — no data for this selection';
     document.getElementById('hourlyTable').innerHTML = '';
     return;
   }
-
-  if(queueFilterActive){
-    var label = selectedQueues.length===1 ? selectedQueues[0] : selectedQueues.length+' of '+allQueues.length+' extensions';
-    renderHourly(aggHourlyByQueue(baseDates, selectedQueues), baseDates.length, label);
-  } else {
-    renderHourly(agg(baseDates), baseDates.length);
-  }
+  renderHourly(agg(filtered), filtered.length);
 }
 
-function renderHourly(a, numDays, extraLabel){
+function renderHourly(a, numDays){
   const isMulti = numDays && numDays > 1;
   const divisor = isMulti ? numDays : 1;
   function avgF(n){ return isMulti ? (n/divisor).toFixed(1) : n; }   // 1-dp float for chart
@@ -2769,10 +2280,9 @@ function renderHourly(a, numDays, extraLabel){
 
   // Update card title
   var titleEl = document.getElementById('hourlyCardTitle');
-  var suffix = extraLabel ? ' — To: '+extraLabel : '';
-  if(titleEl) titleEl.textContent = (isMulti
+  if(titleEl) titleEl.textContent = isMulti
     ? 'Hourly Call Volume — Avg per day across '+numDays+' days'
-    : 'Hourly Call Volume') + suffix;
+    : 'Hourly Call Volume';
 
   // ── TABLE: always raw totals ──────────────────────────────────────────────
   // Columns: Hour | Abandoned | Answered | Total Incoming | Avg Incoming/day | Ans≤30s | SLA 30s | Ans %
@@ -2780,15 +2290,14 @@ function renderHourly(a, numDays, extraLabel){
   tbl.className = 'htable';
   const thead = document.createElement('thead');
   const hr = document.createElement('tr');
-  var slaT2 = getSlaThreshold();
   var cols = [
     ['Hour',          '#64748b'],
     ['Abandoned',     '#f87171'],
     ['Answered',      '#60a5fa'],
     ['Total Incoming','#94a3b8'],
     ['Avg/Day',       '#6366f1'],
-    ['Ans ≤'+slaT2+'s',  '#fbbf24'],
-    ['SLA '+slaT2+'s',   '#34d399'],
+    ['Ans ≤30s',      '#fbbf24'],
+    ['SLA 30s',       '#34d399'],
     ['Avg Wait',      '#e879f9'],
     ['Ans %',         '#a78bfa'],
   ];
@@ -2968,13 +2477,6 @@ function renderTrend(trendDates, selectedDates, trendMonth){
         titleEl.textContent = 'Daily Call Volume — '+parseInt(fp[2])+' '+monthNames[parseInt(fp[1])-1]+' to '+parseInt(tp[2])+' '+monthNames[parseInt(tp[1])-1]+' '+tp[0];
       }
     }
-    var gExcluded = (window._queueExcluded && window._queueExcluded.global) || new Set();
-    var gAll = window._queueAllList || [];
-    if(gAll.length && gExcluded.size>0){
-      var gSelected = gAll.filter(function(q){ return !gExcluded.has(q); });
-      var gLabel = gSelected.length===1 ? gSelected[0] : gSelected.length+' of '+gAll.length+' extensions';
-      titleEl.textContent += ' — To: '+gLabel;
-    }
   }
 
   // Point colors: selected=yellow for total, bright green for answered
@@ -3107,13 +2609,13 @@ function renderTrend(trendDates, selectedDates, trendMonth){
     data:{
       labels:trendDates.map(function(d){var p=d.split('-');var dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d).getDay()];return dn+' '+p[2]+' '+_MN[parseInt(p[1])-1];}),
       datasets:[
-        {label:'Total',data:trendDates.map(function(d){return trendDayValue(d,'total');}),
+        {label:'Total',data:trendDates.map(function(d){return allData[d]?allData[d].total:0;}),
           borderColor:'rgba(255,255,255,0.7)',backgroundColor:'rgba(255,255,255,.04)',fill:true,tension:.3,
           pointRadius:pointRadii,pointBackgroundColor:totalColors,borderWidth:2},
-        {label:'Answered',data:trendDates.map(function(d){return trendDayValue(d,'answered');}),
+        {label:'Answered',data:trendDates.map(function(d){return allData[d]?allData[d].answered:0;}),
           borderColor:'#00cc66',fill:false,tension:.3,
           pointRadius:pointRadii,pointBackgroundColor:answeredColors,borderWidth:2},
-        {label:'Abandoned',data:trendDates.map(function(d){return trendDayValue(d,'abandoned');}),
+        {label:'Abandoned',data:trendDates.map(function(d){return allData[d]?allData[d].abandoned:0;}),
           borderColor:'#f87171',fill:false,tension:.3,
           pointRadius:pointRadii,pointBackgroundColor:abandonColors,borderWidth:1.5,borderDash:[4,3]},
       ]
@@ -3136,7 +2638,7 @@ function renderTrend(trendDates, selectedDates, trendMonth){
       scales:{
         x:{ticks:{color:TC,font:{size:10},autoSkip:true,maxTicksLimit:31},grid:{color:GC}},
         y:{ticks:{color:TC},grid:{color:GC},beginAtZero:true,
-           suggestedMax:Math.max.apply(null,trendDates.map(function(d){return trendDayValue(d,'total');}))*1.18}
+           suggestedMax:Math.max.apply(null,trendDates.map(function(d){return allData[d]?allData[d].total:0;}))*1.18}
       }
     }
   });
@@ -3205,11 +2707,6 @@ function renderHeatmap(){
   var metric = (document.getElementById('heatmapMetric')||{}).value || 'total';
   var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  var gExcluded = (window._queueExcluded && window._queueExcluded.global) || new Set();
-  var gAll = window._queueAllList || [];
-  var gActive = gAll.length>0 && gExcluded.size>0;
-  var gSelected = new Set(gAll.filter(function(q){ return !gExcluded.has(q); }));
-
   // grid[day][hour] = accumulated value; dayCount[day] = how many of that
   // weekday fall within the current range (used to average, not sum, so a
   // month with 5 Mondays isn't just "busier" than one with 4)
@@ -3221,24 +2718,11 @@ function renderHeatmap(){
     var day = new Date(d+'T00:00:00').getDay();
     dayCount[day]++;
     for(var h=0; h<24; h++){
-      var val;
-      if(gActive){
-        var hb = rec.hourlyByQueue && rec.hourlyByQueue[String(h)];
-        var t=0, ans=0;
-        if(hb){
-          Object.keys(hb).forEach(function(q){
-            if(!gSelected.has(q)) return;
-            t += hb[q].total||0; ans += hb[q].answered||0;
-          });
-        }
-        val = metric==='total' ? t : metric==='answered' ? ans : Math.max(0,t-ans);
-      } else {
-        var hv = rec.hourly[String(h)];
-        if(!hv) continue;
-        val = metric==='total' ? (hv.total||0)
+      var hv = rec.hourly[String(h)];
+      if(!hv) continue;
+      var val = metric==='total' ? (hv.total||0)
               : metric==='answered' ? (hv.answered||0)
               : Math.max(0,(hv.total||0)-(hv.answered||0)); // abandoned
-      }
       grid[day][h] += val;
     }
   });
@@ -3540,7 +3024,7 @@ function confirmImportMerge(){
     // Audit trail
     writeAuditLog('Call Report imported: '+ndKeys.length.toLocaleString()+' date(s)'+(added.length?' ('+added.length+' new)':''));
   });
-  allDates = getActiveDates();
+  allDates=Object.keys(allData).sort();
   dayIdx=allDates.length-1;
   buildMonthFilter();
   buildIncMonthFilter();
@@ -3641,14 +3125,7 @@ function parseWorkbook(wb){
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
   const hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
   var ctIdx=hdr.indexOf('Call Time');
-  var timeColIdx=hdr.indexOf('Time');
-  // Some exports have BOTH a 'Call Time' column (which may hold only the
-  // date, not a combined date+time) AND a separate 'Time' column with the
-  // actual clock time. Always prefer a genuine 'Time' column for hour
-  // extraction when one exists — falling back to 'Call Time' only when no
-  // dedicated 'Time' column is present (i.e. 'Call Time' really is the sole
-  // combined timestamp field, as in some other export formats).
-  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:timeColIdx>=0?timeColIdx:ctIdx,det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
+  const ix={date:ctIdx>=0?ctIdx:hdr.indexOf('Date'),time:ctIdx>=0?ctIdx:hdr.indexOf('Time'),det:hdr.indexOf('Call Activity Details'),cid:hdr.indexOf('Call ID'),
     dir:hdr.indexOf('Direction'),status:hdr.indexOf('Status'),
     to:hdr.indexOf('To'),from:hdr.indexOf('From'),
     talk:hdr.indexOf('Talking'),ring:hdr.indexOf('Ringing')};
@@ -3711,12 +3188,12 @@ function parseWorkbook(wb){
         // Abandoned: Inbound Queue + Unanswered + hour 8-21 only
         if(hour>=8 && hour<=21){
           if(!v.abandoned) v.abandoned=[];
-          v.abandoned.push({hour:hour, queue:toF.trim()});
+          v.abandoned.push({hour:hour});
         }
       } else if(st==='Waiting' && countableAnsweredRows.has(r)){
         // Answered: Inbound Queue + Waiting (all hours)
         if(!v.answeredIQ) v.answeredIQ=[];
-        v.answeredIQ.push({hour:hour, talk:talkS, wait:talkS, queue:toF.trim()});
+        v.answeredIQ.push({hour:hour, talk:talkS, wait:talkS});
       }
     }
 
@@ -3746,28 +3223,16 @@ function parseWorkbook(wb){
     var abandonedList = v.abandoned || [];
     var answeredList  = v.answeredIQ || [];
 
-    var hourlyByQueue = {}; // hour -> queue(To) -> {total,answered,ans30,wait,waitHist}
-    function ensQ(h,q){
-      if(!hourlyByQueue[h]) hourlyByQueue[h]={};
-      if(!hourlyByQueue[h][q]) hourlyByQueue[h][q]={total:0,answered:0,ans30:0,wait:0,waitHist:{}};
-      return hourlyByQueue[h][q];
-    }
-    function addHist(histObj, sec){
-      var k = String(Math.max(0, Math.round(sec||0)));
-      histObj[k] = (histObj[k]||0)+1;
-    }
-
     abandonedList.forEach(function(info){
       const h=String(info.hour);
-      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0,waitHist:{}};
+      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0};
       abandoned++; total++;
       hourly[h].total++;
-      var qb=ensQ(h, info.queue||'(Unknown)'); qb.total++;
     });
 
     answeredList.forEach(function(info){
       const h=String(info.hour);
-      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0,waitHist:{}};
+      if(!hourly[h]) hourly[h]={total:0,answered:0,ans30:0,wait:0};
       answered++; total++;
       hourly[h].total++;
       hourly[h].answered++;
@@ -3775,15 +3240,7 @@ function parseWorkbook(wb){
       hourly[h].wait += w;
       twait += w;
       // Ans ≤30s: Inbound Queue + Waiting + talk time 0:00:00–0:00:30
-      // (kept as a fixed-30s snapshot for backward compatibility — the live
-      // SLA Threshold control recomputes this from waitHist instead)
       if((info.talk||0)<=30){ ans30++; hourly[h].ans30++; }
-      addHist(hourly[h].waitHist, info.talk);
-
-      var qb=ensQ(h, info.queue||'(Unknown)');
-      qb.total++; qb.answered++; qb.wait+=w;
-      if((info.talk||0)<=30){ qb.ans30++; }
-      addHist(qb.waitHist, info.talk);
     });
     Object.values(v.agents).forEach(a=>{ttalk+=a.talk;tcalls+=a.inbound;});
     out[d]={
@@ -3792,7 +3249,6 @@ function parseWorkbook(wb){
       avg_wait_s:answered>0?Math.round(twait/answered):0,
       total_wait_s:twait,
       hourly,
-      hourlyByQueue,
       agents:Object.entries(v.agents).sort((a,b)=>b[1].inbound-a[1].inbound).map(([name,av])=>({
         name:cleanName(name),inbound:av.inbound,outbound:av.outbound,aht_s:av.inbound>0?Math.round(av.talk/av.inbound):0
       })),
@@ -4035,7 +3491,7 @@ async function resetData(){
     setTimeout(function(){ showStatus('',''); },3000);
   }catch(e){ console.warn('Supabase clear failed',e); }
   allData=Object.assign({},DATA);
-  allDates = getActiveDates();
+  allDates=Object.keys(allData).sort();
   dayIdx=allDates.length-1;
   buildMonthFilter();
   document.getElementById('dateFrom').value=allDates[0]||'';
@@ -4048,13 +3504,11 @@ async function resetData(){
 }
 
 function exportCSV(){
-  var slaT = getSlaThreshold();
-  const rows=[['Date','Total','Answered','Abandoned','Ans'+slaT+'s','SLA%','AvgTalkSec']];
+  const rows=[['Date','Total','Answered','Abandoned','Ans30s','SLA%','AvgTalkSec']];
   allDates.forEach(d=>{
     const v=allData[d]; if(!v) return;
-    var a30 = getDayAns30(d);
-    rows.push([d,v.total,v.answered,v.abandoned,a30,
-      v.total>0?(a30/v.total*100).toFixed(1):0,v.avg_talk_s]);
+    rows.push([d,v.total,v.answered,v.abandoned,v.ans30,
+      v.total>0?(v.ans30/v.total*100).toFixed(1):0,v.avg_talk_s]);
   });
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));
@@ -4105,7 +3559,7 @@ function showDashboard(token,user){
     document.getElementById('signOutBtn').style.display='inline-flex';
     if(isAdmin) document.getElementById('userMgmtBtn').style.display='inline-flex';
     allData = Object.assign({}, DATA);
-    allDates = getActiveDates();
+    allDates = Object.keys(allData).sort();
 
     // Look up cc_users — auto-register on first login if not found
     fetch(SUPABASE_URL+'/rest/v1/cc_users?id=eq.'+user.id+'&select=*',{
@@ -4963,11 +4417,10 @@ function renderDailySummary(dates){
   var totAb=0,totAns=0,totTot=0,totA30=0;
   dates.forEach(function(d){
     var v=allData[d]; if(!v) return;
-    var a30=getDayAns30(d);
-    var sla=v.total>0?(a30/v.total*100).toFixed(2)+'%':'-';
+    var sla=v.total>0?(v.ans30/v.total*100).toFixed(2)+'%':'-';
     var ansPct=v.total>0?(v.answered/v.total*100).toFixed(2)+'%':'-';
     var slaCol=parseFloat(sla)>=95?'#34d399':parseFloat(sla)>=85?'#fbbf24':'#f87171';
-    totAb+=v.abandoned; totAns+=v.answered; totTot+=v.total; totA30+=a30;
+    totAb+=v.abandoned; totAns+=v.answered; totTot+=v.total; totA30+=v.ans30;
     var tr=document.createElement('tr');
     tr.style.borderBottom='1px solid #111827';
     tr.onmouseover=function(){this.style.background='#1a2133';};
@@ -5039,9 +4492,15 @@ function switchTab(tab){
     if(btn) btn.style.display='flex';
   });
   if(tab==='incidents'){
-    window._dsLastDates = window._dsLastDates || getActiveDates().slice().reverse();
+    window._dsLastDates = window._dsLastDates || Object.keys(allData).sort().reverse();
     buildIncMonthFilter();
     renderIncidents();
+    // Pull the latest shared incidents every time this tab is opened, so a
+    // teammate's update shows up here without needing a full relogin.
+    loadIncidentsFromSupabase().then(function(){
+      buildIncMonthFilter();
+      renderIncidents();
+    });
     setTimeout(function(){
       var el = document.getElementById('incTableWrap');
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
@@ -5100,20 +4559,31 @@ function loadIncidents(){
   if(added>0){ incidents.sort(function(a,b){return b.date.localeCompare(a.date);}); saveIncidents(); }
 }
 function saveIncidents(){
+  // Always keep a local copy first, so nothing is lost even if the sync below fails.
   try{ localStorage.setItem('xox_incidents', JSON.stringify(incidents)); }catch(e){}
-  // Also save to Supabase for cross-device sync
-  if(currentUser){
-    fetch(SUPABASE_URL+'/rest/v1/cc_incidents?select=id',{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
-    }).then(function(){ 
-      // Upsert all incidents
-      return fetch(SUPABASE_URL+'/rest/v1/cc_incidents',{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
-        body:JSON.stringify(incidents.map(function(i){ return {id:i.id, data:i}; }))
-      });
-    }).catch(function(){});
+  // Also save to Supabase for cross-device sync. Returns a promise that
+  // resolves to {ok:true} on success or {ok:false, error:'...'} on failure,
+  // so callers can tell the user when their update did NOT reach the
+  // shared database (instead of silently swallowing the failure).
+  if(!currentUser){
+    return Promise.resolve({ok:false, error:'You are not signed in, so this change was saved only on this device.'});
   }
+  return fetch(SUPABASE_URL+'/rest/v1/cc_incidents',{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+    body:JSON.stringify(incidents.map(function(i){ return {id:i.id, data:i}; }))
+  }).then(function(r){
+    if(!r.ok){
+      return r.text().then(function(t){
+        return {ok:false, error:'Server rejected the save ('+r.status+'): '+(t||'unknown error')};
+      },function(){
+        return {ok:false, error:'Server rejected the save (HTTP '+r.status+').'};
+      });
+    }
+    return {ok:true};
+  }).catch(function(e){
+    return {ok:false, error:'Could not reach the server ('+((e&&e.message)||'network error')+').'};
+  });
 }
 
 async function loadIncidentsFromSupabase(){
@@ -5200,16 +4670,35 @@ function saveIncident(){
   } else {
     incidents.unshift(inc);
   }
-  saveIncidents();
   cancelIncidentForm();
   renderIncidents();
+  saveIncidents().then(function(res){
+    if(!res.ok){
+      alert('This incident was saved on YOUR device only.\n\nIt did NOT sync to the shared server, so your teammates will not see it:\n'+res.error+'\n\nPlease check your connection/login and try saving again.');
+    }
+  });
 }
 
 function deleteIncident(id){
   if(!confirm('Delete this incident report?')) return;
   incidents = incidents.filter(function(i){return i.id!==id;});
-  saveIncidents();
   renderIncidents();
+  if(currentUser){
+    // Delete from the shared table too, so it doesn't silently come back
+    // on the next sync (an upsert alone never removes rows).
+    fetch(SUPABASE_URL+'/rest/v1/cc_incidents?id=eq.'+encodeURIComponent(id),{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
+    }).then(function(r){
+      try{ localStorage.setItem('xox_incidents', JSON.stringify(incidents)); }catch(e){}
+      if(!r.ok){ alert('Deleted on this device, but could not delete it from the shared server. It may reappear after the next sync.'); }
+    }).catch(function(){
+      try{ localStorage.setItem('xox_incidents', JSON.stringify(incidents)); }catch(e){}
+      alert('Deleted on this device, but could not reach the shared server. It may reappear after the next sync.');
+    });
+  } else {
+    try{ localStorage.setItem('xox_incidents', JSON.stringify(incidents)); }catch(e){}
+  }
 }
 
 function calcDuration(start, end){
@@ -5325,13 +4814,12 @@ function renderIncidents(){
   dates.forEach(function(d){
     var incList = incByDate[d]||[];
     var dv  = allData[d]||null;
-    var dvAns30 = dv ? getDayAns30(d) : 0;
 
     // Only count each date's call KPIs into the totals ONCE, regardless of
     // how many incidents happened that day.
-    if(dv){ totAbandoned+=dv.abandoned||0; totAnswered+=dv.answered||0; totAns30+=dvAns30; totTotal+=dv.total||0; }
+    if(dv){ totAbandoned+=dv.abandoned||0; totAnswered+=dv.answered||0; totAns30+=dv.ans30||0; totTotal+=dv.total||0; }
 
-    var sla    = dv&&dv.total>0?(dvAns30/dv.total*100).toFixed(2)+'%':'-';
+    var sla    = dv&&dv.total>0?(dv.ans30/dv.total*100).toFixed(2)+'%':'-';
     var ansPct = dv&&dv.total>0?(dv.answered/dv.total*100).toFixed(2)+'%':'-';
     var slaCol = parseFloat(sla)>=95?'#34d399':parseFloat(sla)>=85?'#fbbf24':'#f87171';
 
@@ -5368,7 +4856,7 @@ function renderIncidents(){
         tr.appendChild(mkTd(fmtDate(d)+(incList.length>1?' ('+incList.length+' incidents)':''),'var(--text)','left',true));
         tr.appendChild(mkTd(dv&&dv.abandoned>0?dv.abandoned:'-',dv&&dv.abandoned>0?'#f87171':'var(--text4)','right'));
         tr.appendChild(mkTd(dv?dv.answered.toLocaleString():'-','#60a5fa','right'));
-        tr.appendChild(mkTd(dvAns30>0?dvAns30.toLocaleString():'-','#fbbf24','right'));
+        tr.appendChild(mkTd(dv&&dv.ans30>0?dv.ans30.toLocaleString():'-','#fbbf24','right'));
         tr.appendChild(mkTd(dv?dv.total.toLocaleString():'-','var(--text2)','right'));
         tr.appendChild(mkTd(sla,slaCol,'right',true));
         tr.appendChild(mkTd(ansPct,'#a78bfa','right'));
@@ -5464,8 +4952,12 @@ function resolveNow(id){
   if(!inc) return;
   inc.end = new Date().toISOString().slice(0,16);
   inc.status = 'resolved';
-  saveIncidents();
   renderIncidents();
+  saveIncidents().then(function(res){
+    if(!res.ok){
+      alert('Marked resolved on YOUR device only — it did NOT sync to the shared server:\n'+res.error+'\n\nTeammates will not see this update until it syncs.');
+    }
+  });
 }
 
 
@@ -5664,7 +5156,7 @@ async function confirmRemoveData(){
     try{ delete DATA[d]; }catch(e){}
   });
 
-  allDates = getActiveDates();
+  allDates = Object.keys(allData).sort();
   dayIdx = Math.max(0, allDates.length-1);
   buildMonthFilter();
   buildIncMonthFilter();
@@ -7409,9 +6901,9 @@ checkSession();
           <th id="incDateSortHdr" onclick="_incDateDesc=!_incDateDesc;renderIncidents();" style="padding:10px 8px;text-align:left;color:#60a5fa;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;min-width:60px;cursor:pointer;user-select:none;" title="Click to sort">Date ↑</th>
           <th style="padding:10px 8px;text-align:right;color:#f87171;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Aband</th>
           <th style="padding:10px 8px;text-align:right;color:#60a5fa;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Answered</th>
-          <th style="padding:10px 8px;text-align:right;color:#fbbf24;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Ans≤<span class="slaThresholdLabel">30</span>s</th>
+          <th style="padding:10px 8px;text-align:right;color:#fbbf24;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Ans≤30s</th>
           <th style="padding:10px 8px;text-align:right;color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Total</th>
-          <th style="padding:10px 8px;text-align:right;color:#34d399;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">SLA <span class="slaThresholdLabel">30</span>s</th>
+          <th style="padding:10px 8px;text-align:right;color:#34d399;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">SLA 30s</th>
           <th style="padding:10px 8px;text-align:right;color:#a78bfa;font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Ans %</th>
           <th style="padding:10px 8px;text-align:left;color:#fbbf24;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:180px;">Issue</th>
           <th style="padding:10px 8px;text-align:left;color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.5px;min-width:220px;">Service Impacted &amp; Explanation</th>
