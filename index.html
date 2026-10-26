@@ -3197,8 +3197,13 @@ function parseWorkbook(wb){
       }
     }
 
-    if(dir==='Inbound'&&toF.includes('CC ')&&st==='Answered'){
-      var agName=cleanName(toF.trim());
+    // Agent extensions are normally named "CC Name (ext)" (space), but at
+    // least one extension is configured as "CC-Name (ext)" (hyphen) — match
+    // both so an agent isn't silently dropped just because of how their
+    // extension's display name was set up in the phone system, and
+    // normalize to the "CC " form so grouping/display stays consistent.
+    if(dir==='Inbound'&&/^CC[\s-]/.test(toF)&&st==='Answered'){
+      var agName=cleanName(toF.trim()).replace(/^CC-/,'CC ');
       ensA(v,agName).inbound++; ensA(v,agName).talk+=talkS;
       var det=String(r[ix.det]||'');
       if(det.indexOf('Ended by CC')===0){
@@ -3209,8 +3214,8 @@ function parseWorkbook(wb){
         }
       }
     }
-    if(dir==='Outbound'&&frF.includes('CC ')&&st==='Answered'){
-      ensA(v,cleanName(frF.trim())).outbound++;
+    if(dir==='Outbound'&&/^CC[\s-]/.test(frF)&&st==='Answered'){
+      ensA(v,cleanName(frF.trim()).replace(/^CC-/,'CC ')).outbound++;
     }
   }
 
