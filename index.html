@@ -613,6 +613,8 @@ ON CONFLICT (id) DO NOTHING;</code></div>
   <button class="tab-btn" onclick="switchTab('incidents')" id="tab-incidents"><i class="ti ti-alert-triangle" style="margin-right:5px;"></i>Incident Reports</button>
   <button class="tab-btn" onclick="switchTab('casesla')" id="tab-casesla"><i class="ti ti-clipboard-check" style="margin-right:5px;"></i>Issue SLA</button>
   <button class="tab-btn" onclick="switchTab('casedetail')" id="tab-casedetail"><i class="ti ti-phone-call" style="margin-right:5px;"></i>Case Detail</button>
+  <button class="tab-btn" onclick="switchTab('attendance')" id="tab-attendance"><i class="ti ti-clock-hour-4" style="margin-right:5px;"></i>Attendance</button>
+  <button class="tab-btn" onclick="switchTab('livechat')" id="tab-livechat"><i class="ti ti-message-circle" style="margin-right:5px;"></i>Livechat</button>
 </div>
 </div>
 
@@ -876,7 +878,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
         <span id="agentFilterLabel" style="font-size:11px;color:var(--text3);margin-left:4px;"></span>
       </div>
       <div class="agents-grid" id="agentsGrid"></div>
-      <div id="agentTableWrap"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-table" style="margin-right:5px;"></i>Agent Detail <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:8px;">(click column to sort)</span></div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="agentDetailTable"><thead><tr style="border-bottom:2px solid #1e2d40;"><th onclick="sortAgentTable(0)" id="ath0" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;cursor:pointer;">Staff Name</th><th onclick="sortAgentTable(1)" id="ath1" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound</th><th onclick="sortAgentTable(2)" id="ath2" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound</th><th onclick="sortAgentTable(3)" id="ath3" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Sum of Talking</th><th onclick="sortAgentTable(4)" id="ath4" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Avg Talk</th></tr></thead><tbody id="agentDetailBody"></tbody><tfoot><tr style="border-top:2px solid #2d3748;background:#1a2133;"><td style="padding:7px 10px;font-weight:700;color:#60a5fa;">Grand Total</td><td id="agentFootIn" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOut" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td></td></tr></tfoot></table></div></div>
+      <div id="agentTableWrap"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-table" style="margin-right:5px;"></i>Agent Detail <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:8px;">(click column to sort)</span></div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="agentDetailTable"><thead><tr style="border-bottom:2px solid #1e2d40;"><th onclick="sortAgentTable(0)" id="ath0" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;cursor:pointer;">Staff Name</th><th onclick="sortAgentTable(1)" id="ath1" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound</th><th onclick="sortAgentTable(2)" id="ath2" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound</th><th onclick="sortAgentTable(3)" id="ath3" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound Talk</th><th onclick="sortAgentTable(4)" id="ath4" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound Talk</th><th onclick="sortAgentTable(5)" id="ath5" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Avg Talk</th></tr></thead><tbody id="agentDetailBody"></tbody><tfoot><tr style="border-top:2px solid #2d3748;background:#1a2133;"><td style="padding:7px 10px;font-weight:700;color:#60a5fa;">Grand Total</td><td id="agentFootIn" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOut" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOutTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td></td></tr></tfoot></table></div></div>
       <div id="agentShowMoreWrap" style="text-align:center;padding:6px 0 10px;position:relative;z-index:2;"></div>
     </div>
     <div class="dp-resize-grip" title="Drag to resize"><i class="ti ti-grip-horizontal" style="font-size:10px;"></i></div>
@@ -1248,6 +1250,16 @@ async function init(){
           renderIncidents();
         }
       }catch(e){}
+      try{
+        await loadAttendanceFromSupabase();
+        var attTab = document.getElementById('content-attendance');
+        if(attTab && attTab.classList.contains('active')){
+          buildAttendanceDayFilter();
+          var attAgentView=document.getElementById('attAgentView');
+          if(attAgentView && attAgentView.style.display!=='none'){ buildAttendanceAgentFilter(); renderAttendanceAgentView(); }
+          else { renderAttendance(); }
+        }
+      }catch(e){}
       updateLastUpdatedTimestamp();
     }catch(e){}
   }, 60000);
@@ -1514,9 +1526,10 @@ function agg(dates){
       r.hourly[h].wait+=isNaN(hv.wait)?0:(hv.wait||0);
     });
     v.agents.forEach(a=>{
-      if(!r.agents[a.name]) r.agents[a.name]={inbound:0,outbound:0,talk:0};
+      if(!r.agents[a.name]) r.agents[a.name]={inbound:0,outbound:0,talk:0,outTalk:0};
       r.agents[a.name].inbound+=a.inbound; r.agents[a.name].outbound+=a.outbound;
       r.agents[a.name].talk+=a.aht_s*a.inbound;
+      r.agents[a.name].outTalk+=a.outbound_talk_s||0;
     });
   });
   r.avgTalk = r.calls>0?Math.round(r.talk/r.calls):0;
@@ -2826,7 +2839,8 @@ function renderAgents(a){
       inbound: st.inbound,
       outbound: st.outbound,
       totalTalk: st.inbound>0 ? st.talk : 0,
-      aht: st.inbound>0 ? Math.round(st.talk/st.inbound) : 0
+      aht: st.inbound>0 ? Math.round(st.talk/st.inbound) : 0,
+      outboundTalk: st.outTalk||0
     };
   });
   renderAgentTable(agentTableData);
@@ -3132,7 +3146,7 @@ function parseWorkbook(wb){
 
   const daily={};
   const ensure=d=>{if(!daily[d])daily[d]={iq:[],agents:{},dropped:{}};return daily[d];};
-  const ensA=(v,n)=>{if(!v.agents[n])v.agents[n]={inbound:0,outbound:0,talk:0};return v.agents[n];};
+  const ensA=(v,n)=>{if(!v.agents[n])v.agents[n]={inbound:0,outbound:0,talk:0,outTalk:0};return v.agents[n];};
 
   // DEBUG: collect all unique Direction+Status combinations seen in file
   var _debugStats = {};
@@ -3215,7 +3229,8 @@ function parseWorkbook(wb){
       }
     }
     if(dir==='Outbound'&&/^CC[\s-]/.test(frF)&&st==='Answered'){
-      ensA(v,cleanName(frF.trim()).replace(/^CC-/,'CC ')).outbound++;
+      var outAgent=ensA(v,cleanName(frF.trim()).replace(/^CC-/,'CC '));
+      outAgent.outbound++; outAgent.outTalk+=talkS;
     }
   }
 
@@ -3255,7 +3270,7 @@ function parseWorkbook(wb){
       total_wait_s:twait,
       hourly,
       agents:Object.entries(v.agents).sort((a,b)=>b[1].inbound-a[1].inbound).map(([name,av])=>({
-        name:cleanName(name),inbound:av.inbound,outbound:av.outbound,aht_s:av.inbound>0?Math.round(av.talk/av.inbound):0
+        name:cleanName(name),inbound:av.inbound,outbound:av.outbound,aht_s:av.inbound>0?Math.round(av.talk/av.inbound):0,outbound_talk_s:av.outTalk||0
       })),
       dropped:v.dropped,
       drop30:v.drop30||{}
@@ -3302,8 +3317,8 @@ function sortAgentTable(col){
 function renderAgentTable(entries){
   if(!entries) return;
   window._lastAgentData = entries;
-  var labels=['Staff Name','Inbound','Outbound','Sum of Talking','Avg Talk'];
-  [0,1,2,3,4].forEach(function(i){
+  var labels=['Staff Name','Inbound','Outbound','Outbound Talk','Inbound Talk','Avg Talk'];
+  [0,1,2,3,4,5].forEach(function(i){
     var th=document.getElementById('ath'+i);
     if(!th) return;
     th.textContent = labels[i]+(agSortCol===i?(agSortDir===1?' ↑':' ↓'):' ⇅');
@@ -3312,7 +3327,7 @@ function renderAgentTable(entries){
 
   var sorted=entries.slice().sort(function(a,b){
     if(agSortCol===0) return agSortDir*(a.name<b.name?-1:a.name>b.name?1:0);
-    var keys=['name','inbound','outbound','totalTalk','aht'];
+    var keys=['name','inbound','outbound','outboundTalk','totalTalk','aht'];
     return agSortDir*(a[keys[agSortCol]]-b[keys[agSortCol]]);
   });
 
@@ -3352,7 +3367,12 @@ function renderAgentTable(entries){
     tdO.textContent=row.outbound;
     tdO.style.cssText='padding:6px 10px;text-align:right;color:'+(row.outbound>0?'#34d399':'#374151')+';font-weight:'+(row.outbound>0?'600':'400')+';';
 
-    // Sum of Talking
+    // Outbound Talk
+    var tdOT=document.createElement('td');
+    tdOT.textContent=row.outboundTalk>0?fmtTT(row.outboundTalk):'-';
+    tdOT.style.cssText='padding:6px 10px;text-align:right;color:'+(row.outboundTalk>0?'#34d399':'#374151')+';';
+
+    // Inbound Talk (Sum of Talking)
     var tdT=document.createElement('td');
     tdT.textContent=fmtTT(row.totalTalk);
     tdT.style.cssText='padding:6px 10px;text-align:right;color:#a78bfa;';
@@ -3362,16 +3382,18 @@ function renderAgentTable(entries){
     tdA.textContent=fmtTT(row.aht);
     tdA.style.cssText='padding:6px 10px;text-align:right;color:#2dd4bf;';
 
-    [tdN,tdI,tdO,tdT,tdA].forEach(function(td){tr.appendChild(td);});
+    [tdN,tdI,tdO,tdOT,tdT,tdA].forEach(function(td){tr.appendChild(td);});
     tbody.appendChild(tr);
   });
 
   // Footer totals
   var totIn=entries.reduce(function(s,r){return s+r.inbound;},0);
   var totOut=entries.reduce(function(s,r){return s+r.outbound;},0);
+  var totOutTalk=entries.reduce(function(s,r){return s+(r.outboundTalk||0);},0);
   var totTalk=entries.reduce(function(s,r){return s+r.totalTalk;},0);
   var fi=document.getElementById('agentFootIn');   if(fi) fi.textContent=totIn.toLocaleString();
   var fo=document.getElementById('agentFootOut');  if(fo) fo.textContent=totOut.toLocaleString();
+  var fot=document.getElementById('agentFootOutTalk'); if(fot) fot.textContent=fmtTT(totOutTalk);
   var ft=document.getElementById('agentFootTalk'); if(ft) ft.textContent=fmtTT(totTalk);
 }
 
@@ -3556,6 +3578,8 @@ function showDashboard(token,user){
     // them earlier (before login finishes) would silently return nothing.
     loadSLAFromSupabase();
     loadCDFromSupabase();
+    loadAttendanceFromSupabase();
+    loadLivechatFromSupabase();
     document.getElementById('loginScreen').style.display='none';
     var bar=document.getElementById('userBar');
     if(bar){bar.style.display='inline';bar.textContent='Signed in as '+name+' ('+role+')';}
@@ -4525,6 +4549,39 @@ function switchTab(tab){
   if(tab==='casedetail'){
     setTimeout(function(){
       var el = document.getElementById('content-casedetail');
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+  if(tab==='attendance'){
+    buildAttendanceDayFilter();
+    buildAttendanceAgentFilter();
+    renderAttendance();
+    // Refresh from the shared server each time this tab is opened, so a
+    // file someone else imported shows up here too.
+    loadAttendanceFromSupabase().then(function(){
+      buildAttendanceDayFilter();
+      buildAttendanceAgentFilter();
+      var attAgentView=document.getElementById('attAgentView');
+      if(attAgentView && attAgentView.style.display!=='none') renderAttendanceAgentView(); else renderAttendance();
+    });
+    setTimeout(function(){
+      var el = document.getElementById('content-attendance');
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+  if(tab==='livechat'){
+    buildLivechatDayFilter();
+    buildLivechatChannelFilter();
+    renderLivechat();
+    // Refresh from the shared server each time this tab is opened, so a
+    // file someone else imported shows up here too.
+    loadLivechatFromSupabase().then(function(){
+      buildLivechatDayFilter();
+      buildLivechatChannelFilter();
+      renderLivechat();
+    });
+    setTimeout(function(){
+      var el = document.getElementById('content-livechat');
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
     }, 100);
   }
@@ -6817,6 +6874,965 @@ async function loadCDFromSupabase(){
   }catch(e){ console.warn('CD load failed:',e.message); }
 }
 
+/* ── Attendance (Login/Logout) ─────────────────────────────────────────── */
+var attendanceData = {}; // day -> array of {id,ext,name,day,loginAt,logoutAt,durationS,talkS}
+
+function parseHMS(s){
+  if(!s) return 0;
+  var p=String(s).split(':').map(Number);
+  if(p.length!==3||p.some(isNaN)) return 0;
+  return p[0]*3600+p[1]*60+p[2];
+}
+function fmtHMS(totalS){
+  totalS=Math.max(0,Math.round(totalS||0));
+  var h=Math.floor(totalS/3600), m=Math.floor((totalS%3600)/60), s=totalS%60;
+  if(h>0) return h+'h '+m+'m '+s+'s';
+  if(m>0) return m+'m '+s+'s';
+  return s+'s';
+}
+function fmtAttTime(iso){
+  if(!iso) return '-';
+  var m=String(iso).match(/T(\d{2}:\d{2}:\d{2})/);
+  return m?m[1]:iso;
+}
+/* ── Shift assignment ──
+   Shifts are 9h each: 8AM–5PM, 9AM–6PM, 10AM–7PM, 11AM–8PM. A staff member
+   is assigned to whichever shift's start time their first login is closest
+   to. Logging in late pushes the required logout back by the same amount
+   (login 8:05AM on the 8AM shift → must stay until 5:05PM). */
+var ATT_SHIFTS=[{startH:8,label:'8AM–5PM'},{startH:9,label:'9AM–6PM'},{startH:10,label:'10AM–7PM'},{startH:11,label:'11AM–8PM'}];
+function isoTimeSec(iso){
+  var m=String(iso||'').match(/T(\d{2}):(\d{2}):(\d{2})/);
+  if(!m) return null;
+  return (+m[1])*3600+(+m[2])*60+(+m[3]);
+}
+function secToHMS(sec){
+  sec=((Math.round(sec)%86400)+86400)%86400;
+  var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function assignShift(firstLoginIso){
+  var loginSec=isoTimeSec(firstLoginIso);
+  if(loginSec==null) return null;
+  var best=ATT_SHIFTS[0], bestDiff=Infinity;
+  ATT_SHIFTS.forEach(function(sh){
+    var diff=Math.abs(loginSec-sh.startH*3600);
+    if(diff<bestDiff){ bestDiff=diff; best=sh; }
+  });
+  var startSec=best.startH*3600;
+  var endSec=startSec+9*3600;
+  var lateSec=Math.max(0, loginSec-startSec);
+  var requiredLogoutSec=endSec+lateSec;
+  return {label:best.label, startSec:startSec, endSec:endSec, lateSec:lateSec, requiredLogoutSec:requiredLogoutSec};
+}
+function parseAgentField(raw){
+  // e.g. '1012 CC Nur Syafiqa Mohd Ismail' -> {ext:'1012', name:'Nur Syafiqa Mohd Ismail'}
+  var s=String(raw||'').trim();
+  var m=s.match(/^(\d+)\s+(?:CC[\s-]+)?(.+)$/i);
+  if(m) return {ext:m[1], name:m[2].trim()};
+  return {ext:'', name:s};
+}
+
+function handleAttendanceImport(input){
+  var file=input.files[0];
+  if(!file) return;
+  var statusEl=document.getElementById('attImportStatus');
+  if(statusEl) statusEl.textContent='Reading file...';
+  var isCSV=/\.csv$/i.test(file.name);
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb = isCSV ? XLSX.read(e.target.result,{type:'binary',raw:true}) : XLSX.read(e.target.result,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+      if(!rows.length){ if(statusEl) statusEl.textContent='Empty file.'; return; }
+      var hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
+      var iDay=hdr.indexOf('Day'), iAgent=hdr.indexOf('Agent'), iIn=hdr.indexOf('Logged In'), iOut=hdr.indexOf('Logged Out'), iTotal=hdr.indexOf('Total Logged In per day'), iTalk=hdr.indexOf('Total Talking');
+      if(iDay<0||iAgent<0||iIn<0){ alert('Could not find Day / Agent / Logged In columns in this file.'); if(statusEl) statusEl.textContent=''; return; }
+      var daysTouched={}, added=0;
+      for(var i=1;i<rows.length;i++){
+        var r=rows[i];
+        // The "Day" column's format varies by export locale (e.g. "10/26/26"),
+        // so derive the actual day from the ISO "Logged In" timestamp instead
+        // — this also naturally skips the trailing "Totals" row and blanks.
+        var loginAt=String(r[iIn]||'').trim();
+        if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(loginAt)) continue;
+        var day=loginAt.slice(0,10);
+        var agentRaw=String(r[iAgent]||'').trim();
+        if(!agentRaw) continue;
+        var ag=parseAgentField(agentRaw);
+        var logoutAt=String(r[iOut]||'').trim();
+        // Compute this session's duration straight from the Logged In →
+        // Logged Out timestamps rather than trusting the file's "Total
+        // Logged In per day" column, which isn't reliably a per-session
+        // figure — summing it across sessions was inflating totals.
+        var durS;
+        var loginDt=new Date(loginAt), logoutDt=logoutAt?new Date(logoutAt):null;
+        if(logoutDt && !isNaN(logoutDt) && !isNaN(loginDt) && logoutDt>=loginDt){
+          durS=(logoutDt-loginDt)/1000;
+        } else {
+          durS = iTotal>=0 ? parseHMS(r[iTotal]) : 0;
+        }
+        var talkS = iTalk>=0 ? parseHMS(r[iTalk]) : 0;
+        if(!attendanceData[day]) attendanceData[day]=[];
+        var id = ag.ext+'_'+loginAt;
+        var sessObj = {id:id, ext:ag.ext, name:ag.name, day:day, loginAt:loginAt, logoutAt:logoutAt, durationS:durS, talkS:talkS};
+        var idx = attendanceData[day].findIndex(function(s){return s.id===id;});
+        if(idx<0){
+          attendanceData[day].push(sessObj);
+          added++;
+        } else {
+          // Same session seen again (e.g. a later, more-complete export of
+          // the same day) — refresh it, since an earlier import may only
+          // have captured it "still logged in" with a truncated end time.
+          attendanceData[day][idx]=sessObj;
+        }
+        daysTouched[day]=true;
+      }
+      var days=Object.keys(daysTouched);
+      if(!days.length){ if(statusEl) statusEl.textContent='No valid rows found — expected columns Day, Agent, Logged In, Logged Out.'; return; }
+      days.forEach(function(d){ attendanceData[d].sort(function(a,b){return a.loginAt.localeCompare(b.loginAt);}); });
+      buildAttendanceDayFilter();
+      buildAttendanceAgentFilter();
+      var sel=document.getElementById('attDaySel');
+      if(sel) sel.value=days.sort().slice(-1)[0];
+      var attAgentView=document.getElementById('attAgentView');
+      if(attAgentView && attAgentView.style.display!=='none') renderAttendanceAgentView(); else renderAttendance();
+      if(statusEl) statusEl.textContent='✓ '+added+' session(s) imported across '+days.length+' day(s).';
+      saveAttendanceToSupabase(days).then(function(res){
+        if(!res.ok && statusEl) statusEl.textContent+=' — did NOT sync to the shared server ('+res.error+'); only visible on this device.';
+      });
+    }catch(err){
+      console.error('Attendance import error:', err);
+      if(statusEl) statusEl.textContent='Error: '+err.message;
+    }
+    input.value='';
+  };
+  if(isCSV) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+}
+
+async function saveAttendanceToSupabase(onlyDays){
+  var days = onlyDays && onlyDays.length ? onlyDays : Object.keys(attendanceData);
+  var rows = days.filter(function(d){return attendanceData[d];}).map(function(d){ return {day:d, data:attendanceData[d]}; });
+  if(!rows.length) return {ok:false, error:'nothing to save'};
+  if(!currentUser) return {ok:false, error:'not signed in'};
+  try{
+    var r = await fetch(SUPABASE_URL+'/rest/v1/cc_attendance',{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(rows)
+    });
+    if(!r.ok){
+      var t=await r.text().catch(function(){return '';});
+      return {ok:false, error:'HTTP '+r.status+(t?': '+t:'')};
+    }
+    return {ok:true};
+  }catch(e){
+    return {ok:false, error:(e&&e.message)||'network error'};
+  }
+}
+
+async function loadAttendanceFromSupabase(){
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/cc_attendance?select=day,data&order=day.asc',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
+    });
+    if(!r.ok) return;
+    var rows=await r.json();
+    if(!Array.isArray(rows)||!rows.length) return;
+    rows.forEach(function(row){ if(Array.isArray(row.data)) attendanceData[row.day]=row.data; });
+    buildAttendanceDayFilter();
+    buildAttendanceAgentFilter();
+    var sel=document.getElementById('attDaySel');
+    if(sel && !sel.value){
+      var days=Object.keys(attendanceData).sort();
+      if(days.length) sel.value=days[days.length-1];
+    }
+    var attTab=document.getElementById('content-attendance');
+    if(attTab && attTab.classList.contains('active')) renderAttendance();
+  }catch(e){ console.warn('Attendance load failed:', e.message); }
+}
+
+function buildAttendanceDayFilter(){
+  var sel=document.getElementById('attDaySel');
+  if(!sel) return;
+  var cur=sel.value;
+  var days=Object.keys(attendanceData).sort().reverse();
+  sel.innerHTML='';
+  if(!days.length){ sel.innerHTML='<option value="">No data yet</option>'; return; }
+  days.forEach(function(d){ var o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o); });
+  if(cur && days.indexOf(cur)>=0) sel.value=cur; else sel.value=days[0];
+}
+
+function switchAttView(mode){
+  var dayView=document.getElementById('attDayView'), agentView=document.getElementById('attAgentView');
+  var btnDay=document.getElementById('attViewBtnDay'), btnAgent=document.getElementById('attViewBtnAgent');
+  if(mode==='agent'){
+    if(dayView) dayView.style.display='none';
+    if(agentView) agentView.style.display='block';
+    if(btnDay) btnDay.classList.remove('active');
+    if(btnAgent) btnAgent.classList.add('active');
+    buildAttendanceAgentFilter();
+    renderAttendanceAgentView();
+  } else {
+    if(dayView) dayView.style.display='block';
+    if(agentView) agentView.style.display='none';
+    if(btnDay) btnDay.classList.add('active');
+    if(btnAgent) btnAgent.classList.remove('active');
+  }
+}
+
+function buildAttendanceAgentFilter(){
+  var sel=document.getElementById('attAgentSel');
+  if(!sel) return;
+  var cur=sel.value;
+  var byKey={};
+  Object.keys(attendanceData).forEach(function(day){
+    (attendanceData[day]||[]).forEach(function(s){
+      var key=s.ext||s.name;
+      if(!byKey[key]) byKey[key]={ext:s.ext,name:s.name};
+    });
+  });
+  var list=Object.keys(byKey).map(function(k){return byKey[k];}).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  sel.innerHTML='';
+  if(!list.length){ sel.innerHTML='<option value="">No data yet</option>'; return; }
+  list.forEach(function(a){
+    var o=document.createElement('option');
+    o.value=a.ext||a.name;
+    o.textContent=a.name+(a.ext?' ('+a.ext+')':'');
+    sel.appendChild(o);
+  });
+  if(cur && list.some(function(a){return (a.ext||a.name)===cur;})) sel.value=cur; else sel.value=list[0].ext||list[0].name;
+}
+
+function renderAttendanceAgentView(){
+  var sel=document.getElementById('attAgentSel');
+  var key=sel?sel.value:'';
+  var tbody=document.getElementById('attAgentBody');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  var kD=document.getElementById('attAgKpiDays'), kSe=document.getElementById('attAgKpiSessions'), kT=document.getElementById('attAgKpiTotal'), kG=document.getElementById('attAgKpiGap'), kSh=document.getElementById('attAgKpiShortfall'), nameLbl=document.getElementById('attAgentNameLabel');
+  if(!key){
+    tbody.innerHTML='<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--text3);">No attendance data imported yet. Use "Import Login History" above.</td></tr>';
+    [kD,kSe,kT,kG,kSh].forEach(function(el){ if(el) el.textContent='—'; });
+    if(nameLbl) nameLbl.textContent='';
+    return;
+  }
+  var days=Object.keys(attendanceData).sort(); // oldest first, so history reads top-to-bottom chronologically
+  var rows=[];
+  days.forEach(function(day){
+    var summary=computeAttendanceSummary(day);
+    var match=summary.find(function(s){return (s.ext||s.name)===key;});
+    if(match) rows.push(Object.assign({day:day}, match));
+  });
+
+  if(nameLbl) nameLbl.textContent = rows.length ? ('— '+rows[0].name+(rows[0].ext?' ('+rows[0].ext+')':'')) : '';
+
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--text3);">No records found for this staff member.</td></tr>';
+    [kD,kSe,kT,kG,kSh].forEach(function(el){ if(el) el.textContent='0'; });
+    return;
+  }
+
+  var totalSessions=0, totalLogged=0, totalGap=0, shortfallDays=0;
+  rows.forEach(function(r){ totalSessions+=r.sessionCount; totalLogged+=r.totalS; totalGap+=r.totalGapS; if(r.coverage&&r.coverage.status==='early') shortfallDays++; });
+  if(kD) kD.textContent=rows.length;
+  if(kSe) kSe.textContent=totalSessions;
+  if(kT) kT.textContent=fmtHMS(totalLogged);
+  if(kG) kG.textContent=fmtHMS(totalGap);
+  if(kSh) kSh.textContent=shortfallDays;
+
+  rows.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.style.cssText='border-bottom:1px solid var(--border);';
+    function td(val,align,color){var d=document.createElement('td');d.textContent=val;d.style.cssText='padding:7px 10px;text-align:'+(align||'left')+';'+(color?'color:'+color+';':'');return d;}
+    tr.appendChild(td(r.day,'left','var(--text)'));
+    var shiftTd=document.createElement('td'); shiftTd.style.cssText='padding:7px 10px;text-align:left;';
+    shiftTd.innerHTML = r.shift ? (r.shift.label+(r.shift.lateSec>0?' <span style="color:#fbbf24;">(late '+fmtHMS(r.shift.lateSec)+')</span>':'')) : '<span style="color:var(--text3);">— n/a</span>';
+    tr.appendChild(shiftTd);
+    tr.appendChild(td(fmtAttTime(r.firstLogin),'left'));
+    tr.appendChild(td(r.live?'Still logged in':fmtAttTime(r.lastEnd),'left',r.live?'#4ade80':''));
+    tr.appendChild(td(r.shift?secToHMS(r.shift.requiredLogoutSec):'-','left','var(--text2)'));
+    var covTd=document.createElement('td'); covTd.style.cssText='padding:7px 10px;text-align:left;';
+    if(!r.shift || !r.coverage){ covTd.innerHTML='<span style="color:var(--text3);">—</span>'; }
+    else if(r.coverage.status==='live'){ covTd.innerHTML='<span style="color:#4ade80;">Still covering shift</span>'; }
+    else if(r.coverage.status==='early'){ covTd.innerHTML='<span style="color:#f87171;font-weight:600;">⚠ Left '+fmtHMS(r.coverage.shortfallSec)+' early</span>'; }
+    else { covTd.innerHTML='<span style="color:#4ade80;">✓ Covered'+(r.coverage.overSec>60?' (+'+fmtHMS(r.coverage.overSec)+')':'')+'</span>'; }
+    tr.appendChild(covTd);
+    tr.appendChild(td(r.sessionCount,'right'));
+    tr.appendChild(td(fmtHMS(r.totalS),'right','#60a5fa'));
+    tr.appendChild(td(r.totalGapS>0?fmtHMS(r.totalGapS):'-','right','#fb923c'));
+    var statusTd=document.createElement('td'); statusTd.style.cssText='padding:7px 10px;text-align:center;';
+    statusTd.innerHTML = r.live
+      ? '<span style="background:#0d2218;color:#4ade80;border:1px solid #166534;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:600;">● Logged In</span>'
+      : '<span style="background:var(--bg3);color:var(--text3);border:1px solid var(--border2);border-radius:12px;padding:2px 10px;font-size:10px;font-weight:600;">Logged Out</span>';
+    tr.appendChild(statusTd);
+    tbody.appendChild(tr);
+  });
+
+  var fSe=document.getElementById('attAgFootSessions'), fT=document.getElementById('attAgFootTotal'), fG=document.getElementById('attAgFootGap');
+  if(fSe) fSe.textContent=totalSessions;
+  if(fT) fT.textContent=fmtHMS(totalLogged);
+  if(fG) fG.textContent=fmtHMS(totalGap);
+}
+
+function computeAttendanceSummary(day){
+  var sessions=(attendanceData[day]||[]).slice().sort(function(a,b){return a.loginAt.localeCompare(b.loginAt);});
+  var byStaff={};
+  sessions.forEach(function(s){
+    var key=s.ext||s.name;
+    if(!byStaff[key]) byStaff[key]={ext:s.ext,name:s.name,sessions:[]};
+    byStaff[key].sessions.push(s);
+  });
+  var maxLogout='';
+  sessions.forEach(function(s){ if(s.logoutAt && s.logoutAt>maxLogout) maxLogout=s.logoutAt; });
+  var isToday = day===localDateStr(new Date());
+  var out=[];
+  Object.keys(byStaff).forEach(function(key){
+    var ss=byStaff[key].sessions;
+    var totalS=0; ss.forEach(function(s){ totalS+=s.durationS||0; });
+    var gaps=[];
+    for(var i=1;i<ss.length;i++){
+      var prevEnd=ss[i-1].logoutAt, curStart=ss[i].loginAt;
+      if(prevEnd && curStart){
+        var gapS=(new Date(curStart)-new Date(prevEnd))/1000;
+        if(gapS>0) gaps.push({from:prevEnd,to:curStart,seconds:gapS});
+      }
+    }
+    var totalGapS=gaps.reduce(function(a,g){return a+g.seconds;},0);
+    var firstLogin=ss[0].loginAt;
+    var lastEnd=ss[ss.length-1].logoutAt;
+    var live = isToday && lastEnd && lastEnd===maxLogout;
+
+    // Shift + coverage. A first login of exactly 00:00:00 is almost always a
+    // stuck/system session rather than a real shift start, so skip it.
+    var shift=null, coverage=null;
+    var loginSec=isoTimeSec(firstLogin);
+    if(loginSec!=null && loginSec!==0){
+      shift=assignShift(firstLogin);
+      if(live){
+        coverage={status:'live', shortfallSec:0, overSec:0};
+      } else if(lastEnd){
+        var logoutSec=isoTimeSec(lastEnd);
+        if(logoutSec!=null){
+          if(logoutSec<shift.requiredLogoutSec){
+            coverage={status:'early', shortfallSec:shift.requiredLogoutSec-logoutSec, overSec:0};
+          } else {
+            coverage={status:'ok', shortfallSec:0, overSec:logoutSec-shift.requiredLogoutSec};
+          }
+        }
+      }
+    }
+
+    out.push({ext:byStaff[key].ext,name:byStaff[key].name,sessions:ss,sessionCount:ss.length,firstLogin:firstLogin,lastEnd:lastEnd,totalS:totalS,gaps:gaps,totalGapS:totalGapS,live:live,shift:shift,coverage:coverage});
+  });
+  out.sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+  return out;
+}
+
+function toggleAttDetail(rowId){
+  var el=document.getElementById(rowId);
+  if(el) el.style.display = el.style.display==='none' ? 'table-row' : 'none';
+}
+
+function renderAttendance(){
+  var sel=document.getElementById('attDaySel');
+  var day=sel?sel.value:'';
+  var tbody=document.getElementById('attBody');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  var kS=document.getElementById('attKpiStaff'), kL=document.getElementById('attKpiLive'), kSe=document.getElementById('attKpiSessions'), kG=document.getElementById('attKpiGap'), kSh=document.getElementById('attKpiShortfall'), per=document.getElementById('attPeriod');
+  if(!day || !attendanceData[day]){
+    tbody.innerHTML='<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--text3);">No attendance data imported for this day yet. Use "Import Login History" above.</td></tr>';
+    if(kS) kS.textContent='—'; if(kL) kL.textContent='—'; if(kSe) kSe.textContent='—'; if(kG) kG.textContent='—'; if(kSh) kSh.textContent='—';
+    if(per) per.textContent='';
+    return;
+  }
+  var summary=computeAttendanceSummary(day);
+  var qEl=document.getElementById('attSearch');
+  var q=qEl?(qEl.value||'').toLowerCase():'';
+  if(q) summary=summary.filter(function(s){return (s.name||'').toLowerCase().indexOf(q)>=0 || (s.ext||'').indexOf(q)>=0;});
+
+  var totalSessions=0, totalGap=0, liveCount=0, shortfallCount=0;
+  summary.forEach(function(s){ totalSessions+=s.sessionCount; totalGap+=s.totalGapS; if(s.live) liveCount++; if(s.coverage&&s.coverage.status==='early') shortfallCount++; });
+  if(kS) kS.textContent=summary.length;
+  if(kL) kL.textContent=liveCount;
+  if(kSe) kSe.textContent=totalSessions;
+  if(kG) kG.textContent=fmtHMS(totalGap);
+  if(kSh) kSh.textContent=shortfallCount;
+  if(per) per.textContent=day;
+
+  if(!summary.length){
+    tbody.innerHTML='<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--text3);">No staff match your search.</td></tr>';
+    return;
+  }
+
+  summary.forEach(function(s,idx){
+    var rowId='attdet_'+idx;
+    var tr=document.createElement('tr');
+    tr.style.cssText='border-bottom:1px solid var(--border);cursor:pointer;';
+    tr.onclick=(function(id){return function(){ toggleAttDetail(id); };})(rowId);
+    function td(val,align,color){var d=document.createElement('td');d.textContent=val;d.style.cssText='padding:7px 10px;text-align:'+(align||'left')+';'+(color?'color:'+color+';':'');return d;}
+    var nameTd=td(s.name+(s.ext?' ('+s.ext+')':''),'left');
+    nameTd.innerHTML='<i class="ti ti-chevron-right" style="font-size:10px;margin-right:5px;color:var(--text3);"></i>'+nameTd.textContent;
+    tr.appendChild(nameTd);
+
+    // Shift (+ how late, if any)
+    var shiftTd=document.createElement('td'); shiftTd.style.cssText='padding:7px 10px;text-align:left;';
+    if(s.shift){
+      shiftTd.innerHTML = s.shift.label + (s.shift.lateSec>0 ? '<div style="font-size:10px;color:#fbbf24;margin-top:2px;">late by '+fmtHMS(s.shift.lateSec)+'</div>' : '<div style="font-size:10px;color:#86efac;margin-top:2px;">on time</div>');
+    } else {
+      shiftTd.innerHTML = '<span style="color:var(--text3);">— n/a</span>';
+    }
+    tr.appendChild(shiftTd);
+
+    tr.appendChild(td(fmtAttTime(s.firstLogin),'left'));
+    tr.appendChild(td(s.live?'Still logged in':fmtAttTime(s.lastEnd),'left',s.live?'#4ade80':''));
+    tr.appendChild(td(s.shift?secToHMS(s.shift.requiredLogoutSec):'-','left','var(--text2)'));
+
+    // Coverage
+    var covTd=document.createElement('td'); covTd.style.cssText='padding:7px 10px;text-align:left;';
+    if(!s.shift || !s.coverage){
+      covTd.innerHTML='<span style="color:var(--text3);">—</span>';
+    } else if(s.coverage.status==='live'){
+      covTd.innerHTML='<span style="color:#4ade80;">Still covering shift</span>';
+    } else if(s.coverage.status==='early'){
+      covTd.innerHTML='<span style="color:#f87171;font-weight:600;">⚠ Left '+fmtHMS(s.coverage.shortfallSec)+' early</span>';
+    } else {
+      covTd.innerHTML='<span style="color:#4ade80;">✓ Covered'+(s.coverage.overSec>60?' (+'+fmtHMS(s.coverage.overSec)+')':'')+'</span>';
+    }
+    tr.appendChild(covTd);
+
+    tr.appendChild(td(fmtHMS(s.totalS),'right','#60a5fa'));
+    tr.appendChild(td(s.totalGapS>0?fmtHMS(s.totalGapS):'-','right','#fb923c'));
+    var statusTd=document.createElement('td');
+    statusTd.style.cssText='padding:7px 10px;text-align:center;';
+    statusTd.innerHTML = s.live
+      ? '<span style="background:#0d2218;color:#4ade80;border:1px solid #166534;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:600;">● Logged In</span>'
+      : '<span style="background:var(--bg3);color:var(--text3);border:1px solid var(--border2);border-radius:12px;padding:2px 10px;font-size:10px;font-weight:600;">Logged Out</span>';
+    tr.appendChild(statusTd);
+    tbody.appendChild(tr);
+
+    var detTr=document.createElement('tr');
+    detTr.id=rowId;
+    detTr.style.display='none';
+    var detTd=document.createElement('td');
+    detTd.colSpan=9;
+    detTd.style.cssText='padding:10px 10px 14px 30px;background:var(--bg3);';
+    var html='<div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Sessions</div><table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">';
+    s.sessions.forEach(function(sess,i){
+      html+='<tr><td style="padding:3px 8px;color:var(--text2);">#'+(i+1)+'</td><td style="padding:3px 8px;color:var(--text2);">'+fmtAttTime(sess.loginAt)+' → '+fmtAttTime(sess.logoutAt)+'</td><td style="padding:3px 8px;text-align:right;color:#60a5fa;">'+fmtHMS(sess.durationS)+'</td></tr>';
+      if(s.gaps[i]){
+        html+='<tr><td></td><td style="padding:3px 8px;color:#fb923c;font-style:italic;">gap: '+fmtAttTime(s.gaps[i].from)+' → '+fmtAttTime(s.gaps[i].to)+'</td><td style="padding:3px 8px;text-align:right;color:#fb923c;">'+fmtHMS(s.gaps[i].seconds)+'</td></tr>';
+      }
+    });
+    html+='</table>';
+    detTd.innerHTML=html;
+    detTr.appendChild(detTd);
+    tbody.appendChild(detTr);
+  });
+}
+
+/* ── Livechat ───────────────────────────────────────────────────────────
+   Imports the Livechat conversation export ("Data" sheet). Keyed by day
+   (derived from "Created at"), each day holding an array of conversation
+   records. Re-imports upsert by Conversation ID (NOT skip-if-seen), because
+   a conversation's Status/Resolution type/message counts change across the
+   day as it progresses (open -> closed) — the same stale-data risk fixed
+   for Attendance applies here. */
+var livechatData = {}; // day -> array of conversation records
+
+function parseLCDuration(s){
+  // Livechat duration cells look like "1m 56s", "2m 13.800000000000011s",
+  // "11m 11s", "1h 9m 42.409999999999854s" (long-running AHT values roll
+  // over into hours), "0s", or "-" for not-applicable. Returns seconds
+  // (float) or null.
+  if(s==null) return null;
+  if(typeof s === 'number') return isNaN(s)?null:s;
+  var str=String(s).trim();
+  if(!str || str==='-') return null;
+  var mH=str.match(/([\d.]+)\s*h/i), mM=str.match(/([\d.]+)\s*m/i), mS=str.match(/([\d.]+)\s*s/i);
+  if(!mH && !mM && !mS) return null;
+  var hrs = mH ? parseFloat(mH[1]) : 0;
+  var mins = mM ? parseFloat(mM[1]) : 0;
+  var secs = mS ? parseFloat(mS[1]) : 0;
+  if(isNaN(hrs)) hrs=0;
+  if(isNaN(mins)) mins=0;
+  if(isNaN(secs)) secs=0;
+  return hrs*3600+mins*60+secs;
+}
+function fmtLCDuration(totalS){
+  if(totalS==null || isNaN(totalS)) return '—';
+  totalS=Math.max(0,Math.round(totalS));
+  var h=Math.floor(totalS/3600), m=Math.floor((totalS%3600)/60), s=totalS%60;
+  if(h>0) return h+'h '+m+'m '+s+'s';
+  if(m>0) return m+'m '+s+'s';
+  return s+'s';
+}
+function lcMedian(arr){
+  var vals=arr.filter(function(v){return v!=null && !isNaN(v);}).sort(function(a,b){return a-b;});
+  if(!vals.length) return null;
+  var mid=Math.floor(vals.length/2);
+  return vals.length%2 ? vals[mid] : (vals[mid-1]+vals[mid])/2;
+}
+function lcDayFromDate(dt){
+  if(!dt || isNaN(dt)) return '';
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+
+function handleLivechatImport(input){
+  var file=input.files[0];
+  if(!file) return;
+  var statusEl=document.getElementById('lcImportStatus');
+  if(statusEl) statusEl.textContent='Reading file...';
+  var isCSV=/\.csv$/i.test(file.name);
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      // cellDates:true converts Excel date/datetime cells into JS Date
+      // objects directly — avoids re-deriving the Excel serial-number math
+      // by hand (and any timezone drift from it) for the "Created at" column.
+      var wb = isCSV ? XLSX.read(e.target.result,{type:'binary',raw:true}) : XLSX.read(e.target.result,{type:'array',cellDates:true});
+      var sheetName = wb.SheetNames.indexOf('Data')>=0 ? 'Data' : wb.SheetNames[0];
+      var ws=wb.Sheets[sheetName];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+      if(!rows.length){ if(statusEl) statusEl.textContent='Empty file.'; return; }
+      var hdr=rows[0].map(function(h){var s=String(h).trim();return s.charCodeAt(0)===0xFEFF?s.slice(1):s;});
+      var iId=hdr.indexOf('Conversation ID'), iDisp=hdr.indexOf('Display ID'), iChan=hdr.indexOf('Channel'),
+          iStatus=hdr.indexOf('Status'), iRes=hdr.indexOf('Resolution type'), iCreated=hdr.indexOf('Created at'),
+          iCustId=hdr.indexOf('Customer ID'), iCustName=hdr.indexOf('Customer name'), iAgent=hdr.indexOf('Assigned agent'),
+          iTeam=hdr.indexOf('Team'), iLabels=hdr.indexOf('Labels'), iIssueCat=hdr.indexOf('Issue category'), iFRT=hdr.indexOf('FRT (hms)'),
+          iAHT=hdr.indexOf('AHT (hms)'), iDur=hdr.indexOf('Conversation duration (hms)'), iCustMsg=hdr.indexOf('Customer messages'),
+          iAgMsg=hdr.indexOf('Agent messages'), iAiMsg=hdr.indexOf('AI Agent messages'), iTotMsg=hdr.indexOf('Total messages');
+      if(iId<0 || iCreated<0 || iStatus<0){ alert('Could not find Conversation ID / Created at / Status columns in this file.'); if(statusEl) statusEl.textContent=''; return; }
+      var daysTouched={}, added=0, skippedNoDate=0;
+      for(var i=1;i<rows.length;i++){
+        var r=rows[i];
+        if(!r || !r[iId]) continue;
+        var createdRaw=r[iCreated];
+        var createdDt = createdRaw instanceof Date ? createdRaw : (typeof createdRaw==='number' ? new Date(Date.UTC(1899,11,30)+createdRaw*86400000) : new Date(createdRaw));
+        if(isNaN(createdDt)){ skippedNoDate++; continue; }
+        var day=lcDayFromDate(createdDt);
+        if(!day){ skippedNoDate++; continue; }
+        var custMsg=Number(r[iCustMsg])||0, agMsg=Number(r[iAgMsg])||0, aiMsg=Number(r[iAiMsg])||0;
+        var totMsg = iTotMsg>=0 ? (Number(r[iTotMsg])||0) : custMsg+agMsg+aiMsg;
+        var rec={
+          id: String(r[iId]),
+          displayId: iDisp>=0 ? String(r[iDisp]||'') : '',
+          channel: iChan>=0 ? String(r[iChan]||'').trim() : '',
+          status: String(r[iStatus]||'').trim().toLowerCase(),
+          resolutionType: iRes>=0 ? String(r[iRes]||'').trim().toLowerCase() : '',
+          createdAt: createdDt.toISOString(),
+          hour: createdDt.getHours(),
+          customerId: iCustId>=0 ? String(r[iCustId]||'') : '',
+          customerName: iCustName>=0 ? String(r[iCustName]||'').trim() : '',
+          agent: iAgent>=0 ? String(r[iAgent]||'').trim() : '',
+          team: iTeam>=0 ? String(r[iTeam]||'').trim() : '',
+          labels: iLabels>=0 ? String(r[iLabels]||'').trim().toLowerCase() : '',
+          issueCategory: iIssueCat>=0 ? String(r[iIssueCat]||'').trim() : '',
+          frtS: iFRT>=0 ? parseLCDuration(r[iFRT]) : null,
+          ahtS: iAHT>=0 ? parseLCDuration(r[iAHT]) : null,
+          durationS: iDur>=0 ? parseLCDuration(r[iDur]) : null,
+          customerMessages: custMsg,
+          agentMessages: agMsg,
+          aiMessages: aiMsg,
+          totalMessages: totMsg
+        };
+        if(!livechatData[day]) livechatData[day]=[];
+        var idx=livechatData[day].findIndex(function(c){return c.id===rec.id;});
+        if(idx<0){
+          livechatData[day].push(rec);
+          added++;
+        } else {
+          // Same Conversation ID seen again — e.g. a later export of the
+          // same day where this chat has since moved open -> closed, or
+          // picked up a resolution/agent. Overwrite rather than skip, same
+          // fix as the Attendance stale-data bug.
+          livechatData[day][idx]=rec;
+        }
+        daysTouched[day]=true;
+      }
+      var days=Object.keys(daysTouched);
+      if(!days.length){ if(statusEl) statusEl.textContent='No valid rows found — expected columns Conversation ID, Created at, Status.'; return; }
+      days.forEach(function(d){ livechatData[d].sort(function(a,b){return a.createdAt.localeCompare(b.createdAt);}); });
+      buildLivechatDayFilter();
+      buildLivechatChannelFilter();
+      var sel=document.getElementById('lcDaySel');
+      if(sel) sel.value=days.sort().slice(-1)[0];
+      renderLivechat();
+      if(statusEl) statusEl.textContent='✓ '+added+' conversation(s) imported across '+days.length+' day(s).'+(skippedNoDate?(' ('+skippedNoDate+' row(s) skipped — no valid date.)'):'');
+      saveLivechatToSupabase(days).then(function(res){
+        if(!res.ok && statusEl) statusEl.textContent+=' — did NOT sync to the shared server ('+res.error+'); only visible on this device.';
+      });
+    }catch(err){
+      console.error('Livechat import error:', err);
+      if(statusEl) statusEl.textContent='Error: '+err.message;
+    }
+    input.value='';
+  };
+  if(isCSV) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+}
+
+async function saveLivechatToSupabase(onlyDays){
+  var days = onlyDays && onlyDays.length ? onlyDays : Object.keys(livechatData);
+  var rows = days.filter(function(d){return livechatData[d];}).map(function(d){ return {day:d, data:livechatData[d]}; });
+  if(!rows.length) return {ok:false, error:'nothing to save'};
+  if(!currentUser) return {ok:false, error:'not signed in'};
+  try{
+    var r = await fetch(SUPABASE_URL+'/rest/v1/cc_livechat',{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(rows)
+    });
+    if(!r.ok){
+      var t=await r.text().catch(function(){return '';});
+      return {ok:false, error:'HTTP '+r.status+(t?': '+t:'')};
+    }
+    return {ok:true};
+  }catch(e){
+    return {ok:false, error:(e&&e.message)||'network error'};
+  }
+}
+
+async function loadLivechatFromSupabase(){
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/cc_livechat?select=day,data&order=day.asc',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_AUTH_TOKEN}
+    });
+    if(!r.ok) return {ok:false};
+    var rows=await r.json();
+    if(!Array.isArray(rows)||!rows.length) return {ok:true};
+    rows.forEach(function(row){ if(Array.isArray(row.data)) livechatData[row.day]=row.data; });
+    buildLivechatDayFilter();
+    buildLivechatChannelFilter();
+    var sel=document.getElementById('lcDaySel');
+    if(sel && !sel.value){
+      var days=Object.keys(livechatData).sort();
+      if(days.length) sel.value=days[days.length-1];
+    }
+    var lcTab=document.getElementById('content-livechat');
+    if(lcTab && lcTab.classList.contains('active')) renderLivechat();
+    return {ok:true};
+  }catch(e){ console.warn('Livechat load failed:', e.message); return {ok:false, error:(e&&e.message)||'network error'}; }
+}
+
+function buildLivechatDayFilter(){
+  var sel=document.getElementById('lcDaySel');
+  if(!sel) return;
+  var cur=sel.value;
+  var days=Object.keys(livechatData).sort().reverse();
+  sel.innerHTML='';
+  if(!days.length){ sel.innerHTML='<option value="">No data yet</option>'; return; }
+  days.forEach(function(d){ var o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o); });
+  if(cur && days.indexOf(cur)>=0) sel.value=cur; else sel.value=days[0];
+}
+
+function buildLivechatChannelFilter(){
+  var sel=document.getElementById('lcChannelFilter');
+  if(!sel) return;
+  var cur=sel.value;
+  var day=document.getElementById('lcDaySel')?document.getElementById('lcDaySel').value:'';
+  var chans={};
+  (livechatData[day]||[]).forEach(function(c){ if(c.channel) chans[c.channel]=true; });
+  // If no day selected yet, gather channels across all days so the filter
+  // isn't empty before a day is picked.
+  if(!day){ Object.keys(livechatData).forEach(function(d){ (livechatData[d]||[]).forEach(function(c){ if(c.channel) chans[c.channel]=true; }); }); }
+  var list=Object.keys(chans).sort();
+  sel.innerHTML='<option value="">All Channels</option>';
+  list.forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  if(cur && list.indexOf(cur)>=0) sel.value=cur;
+}
+
+function computeLivechatSummary(day){
+  var all=livechatData[day]||[];
+  var chan=document.getElementById('lcChannelFilter')?document.getElementById('lcChannelFilter').value:'';
+  var search=document.getElementById('lcSearch')?document.getElementById('lcSearch').value.trim().toLowerCase():'';
+  var convos=all.filter(function(c){
+    if(chan && c.channel!==chan) return false;
+    if(search && !(c.agent||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  var total=convos.length;
+  var open=convos.filter(function(c){return c.status==='open';}).length;
+  var closed=total-open;
+  var empty=convos.filter(function(c){return c.totalMessages===0;}).length;
+  var aiOnly=convos.filter(function(c){return c.resolutionType==='ai';}).length;
+  var custMsgTotal=convos.reduce(function(s,c){return s+(c.customerMessages||0);},0);
+  var agMsgTotal=convos.reduce(function(s,c){return s+(c.agentMessages||0);},0);
+  var aiMsgTotal=convos.reduce(function(s,c){return s+(c.aiMessages||0);},0);
+  var medFRT=lcMedian(convos.map(function(c){return c.frtS;}));
+  var medAHT=lcMedian(convos.map(function(c){return c.ahtS;}));
+
+  function groupStats(list){
+    return {
+      count:list.length,
+      open:list.filter(function(c){return c.status==='open';}).length,
+      // The export tags every empty (0-message) chat as 'human', but nobody handled
+      // it — count those under Empty only, so Human + Collab + AI + Unresolved + Empty = Conversations.
+      human:list.filter(function(c){return c.resolutionType==='human' && c.totalMessages>0;}).length,
+      collab:list.filter(function(c){return c.resolutionType==='collab';}).length,
+      ai:list.filter(function(c){return c.resolutionType==='ai';}).length,
+      unresolved:list.filter(function(c){return c.resolutionType==='unresolved';}).length,
+      empty:list.filter(function(c){return c.totalMessages===0;}).length,
+      medFRT:lcMedian(list.map(function(c){return c.frtS;})),
+      medAHT:lcMedian(list.map(function(c){return c.ahtS;}))
+    };
+  }
+
+  var byChannel={};
+  convos.forEach(function(c){ var k=c.channel||'(none)'; if(!byChannel[k]) byChannel[k]=[]; byChannel[k].push(c); });
+  var channelRows=Object.keys(byChannel).sort().map(function(k){
+    var st=groupStats(byChannel[k]);
+    st.name=k; st.share= total? (st.count/total*100):0;
+    return st;
+  });
+
+  var byAgent={};
+  convos.forEach(function(c){ var k=c.agent||'(Unassigned)'; if(!byAgent[k]) byAgent[k]=[]; byAgent[k].push(c); });
+  var agentRows=Object.keys(byAgent).map(function(k){
+    var st=groupStats(byAgent[k]);
+    st.name=k; st.share= total? (st.count/total*100):0;
+    return st;
+  }).sort(function(a,b){return b.count-a.count;});
+
+  var byHour={};
+  convos.forEach(function(c){ var h=c.hour; byHour[h]=(byHour[h]||0)+1; });
+  var hourRows=[];
+  for(var h=0;h<24;h++){ hourRows.push({hour:h, count:byHour[h]||0, share: total?((byHour[h]||0)/total*100):0}); }
+
+  var slowMin = parseFloat((document.getElementById('lcSlowMin')||{}).value)||10;
+  var repMin = parseInt((document.getElementById('lcRepeatMin')||{}).value,10)||3;
+  var waFailed = convos.filter(function(c){return (c.labels||'').indexOf('whatsapp_templated_failed')>=0;}).length;
+  var slowCount = convos.filter(function(c){return c.frtS!=null && c.frtS>slowMin*60;}).length;
+  var times = convos.map(function(c){return c.createdAt;}).sort();
+  var firstAt = times.length?times[0]:null, lastAt = times.length?times[times.length-1]:null;
+
+  // Unassigned breakdown (same reason rules as the Summary sheet)
+  function unassignedReason(c){
+    if(c.resolutionType==='ai') return 'Handled by AI agent';
+    if((c.labels||'').indexOf('whatsapp_templated_failed')>=0) return 'Failed WhatsApp template';
+    if(c.totalMessages===0) return 'Empty – no messages';
+    return 'Real chat, no agent recorded';
+  }
+  var unassigned = convos.filter(function(c){return !c.agent;});
+  var reasonDefs = [
+    ['Handled by AI agent','AI bot answered and closed the chat itself – no human agent needed.'],
+    ['Failed WhatsApp template','Outbound WhatsApp template not delivered – system record, 0 messages.'],
+    ['Empty – no messages','Session opened then auto-closed with nothing said (includes test accounts).'],
+    ['Real chat, no agent recorded','Agents replied but no name captured – check in the system.']
+  ];
+  var channelNames = channelRows.map(function(r){return r.name;});
+  var unassignedRows = reasonDefs.map(function(d){
+    var list = unassigned.filter(function(c){return unassignedReason(c)===d[0];});
+    var perChan = {};
+    channelNames.forEach(function(n){ perChan[n]=list.filter(function(c){return (c.channel||'(none)')===n;}).length; });
+    return {reason:d[0], meaning:d[1], count:list.length, perChan:perChan, pct: unassigned.length?(list.length/unassigned.length*100):0};
+  });
+
+  // Channel x agent cross-tab
+  var crossTab = channelRows.map(function(ch){
+    var list = byChannel[ch.name];
+    var m = {};
+    list.forEach(function(c){ var k=c.agent||'(Unassigned)'; (m[k]=m[k]||[]).push(c); });
+    var rows = Object.keys(m).map(function(k){
+      var st = groupStats(m[k]);
+      st.name=k; st.share = list.length?(st.count/list.length*100):0;
+      return st;
+    }).sort(function(a,b){return b.count-a.count;});
+    return {channel:ch.name, total:list.length, rows:rows};
+  });
+
+  var openList = convos.filter(function(c){return c.status==='open';}).sort(function(a,b){return b.createdAt.localeCompare(a.createdAt);});
+
+  var byCust = {};
+  convos.forEach(function(c){ if(!c.customerId) return; var e=byCust[c.customerId]||(byCust[c.customerId]={id:c.customerId,name:c.customerName,count:0}); e.count++; });
+  var repeatList = Object.keys(byCust).map(function(k){return byCust[k];}).filter(function(e){return e.count>=repMin;}).sort(function(a,b){return b.count-a.count;});
+
+  return {
+    total:total, open:open, closed:closed, empty:empty, aiOnly:aiOnly,
+    custMsgTotal:custMsgTotal, agMsgTotal:agMsgTotal, aiMsgTotal:aiMsgTotal,
+    medFRT:medFRT, medAHT:medAHT,
+    channelRows:channelRows, agentRows:agentRows, hourRows:hourRows,
+    waFailed:waFailed, slowCount:slowCount, firstAt:firstAt, lastAt:lastAt,
+    unassignedTotal:unassigned.length, unassignedRows:unassignedRows, channelNames:channelNames,
+    crossTab:crossTab, openList:openList, repeatList:repeatList, repMin:repMin
+  };
+}
+
+function lcEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function lcFmtDT(iso){
+  if(!iso) return '—';
+  var d=new Date(iso); if(isNaN(d)) return '—';
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+var lcAgSortCol=1, lcAgSortDir=-1;
+function sortLCAgentTable(col){
+  if(lcAgSortCol===col) lcAgSortDir*=-1; else { lcAgSortCol=col; lcAgSortDir=-1; }
+  renderLivechat();
+}
+
+function renderLivechat(){
+  var sel=document.getElementById('lcDaySel');
+  var day=sel?sel.value:'';
+  var periodEl=document.getElementById('lcPeriod');
+
+  var ids=['lcKpiTotal','lcKpiOpen','lcKpiOpenPct','lcKpiClosed','lcKpiEmpty','lcKpiFRT','lcKpiAHT','lcKpiAI','lcKpiWA','lcKpiSlow','lcKpiCustMsg','lcKpiAgMsg','lcKpiAiMsg','lcKpiFirst','lcKpiLast'];
+  if(!day || !livechatData[day]){
+    ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
+    ['lcUnassignedTable','lcOpenTable','lcRepeatTable'].forEach(function(id){ var t=document.getElementById(id); if(t) t.innerHTML=''; });
+    var cw=document.getElementById('lcCrossWrap'); if(cw) cw.innerHTML='';
+    ['lcChannelBody','lcAgentBody','lcHourBody'].forEach(function(id){
+      var tb=document.getElementById(id);
+      if(tb) tb.innerHTML='<tr><td colspan="11" style="padding:24px;text-align:center;color:var(--text3);">No Livechat data imported yet. Use "Import Livechat Report" above.</td></tr>';
+    });
+    if(periodEl) periodEl.textContent='';
+    return;
+  }
+
+  if(periodEl) periodEl.textContent='Day: '+day;
+
+  var s=computeLivechatSummary(day);
+  document.getElementById('lcKpiTotal').textContent=s.total.toLocaleString();
+  document.getElementById('lcKpiOpen').textContent=s.open.toLocaleString();
+  document.getElementById('lcKpiOpenPct').textContent=(s.total?(s.open/s.total*100).toFixed(1):'0.0')+'% of total';
+  document.getElementById('lcKpiClosed').textContent=s.closed.toLocaleString();
+  document.getElementById('lcKpiEmpty').textContent=s.empty.toLocaleString();
+  document.getElementById('lcKpiFRT').textContent=fmtLCDuration(s.medFRT);
+  document.getElementById('lcKpiAHT').textContent=fmtLCDuration(s.medAHT);
+  document.getElementById('lcKpiAI').textContent=s.aiOnly.toLocaleString();
+  document.getElementById('lcKpiWA').textContent=s.waFailed.toLocaleString();
+  document.getElementById('lcKpiSlow').textContent=s.slowCount.toLocaleString();
+  document.getElementById('lcKpiCustMsg').textContent=s.custMsgTotal.toLocaleString();
+  document.getElementById('lcKpiAgMsg').textContent=s.agMsgTotal.toLocaleString();
+  document.getElementById('lcKpiAiMsg').textContent=s.aiMsgTotal.toLocaleString();
+  document.getElementById('lcKpiFirst').textContent=lcFmtDT(s.firstAt);
+  document.getElementById('lcKpiLast').textContent=lcFmtDT(s.lastAt);
+
+  // By Channel
+  var cb=document.getElementById('lcChannelBody');
+  cb.innerHTML='';
+  s.channelRows.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.style.borderBottom='1px solid var(--border)';
+    tr.innerHTML='<td style="padding:7px 10px;color:var(--text);font-weight:600;">'+r.name+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text);">'+r.count+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#fb923c;">'+r.open+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#4ade80;">'+r.human+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#60a5fa;">'+r.collab+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#2dd4bf;">'+r.ai+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#f87171;">'+r.unresolved+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.empty+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medFRT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medAHT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td>';
+    cb.appendChild(tr);
+  });
+  if(!s.channelRows.length) cb.innerHTML='<tr><td colspan="11" style="padding:18px;text-align:center;color:var(--text3);">No conversations match the current filters.</td></tr>';
+
+  // By Agent (sortable)
+  var labels=['Agent','Conversations','Open','Human','Collab','AI','Unresolved','Median FRT','Median AHT','Share'];
+  [0,1,2,3,4,5,6,7,8,9].forEach(function(i){
+    var th=document.getElementById('lcath'+i);
+    if(!th) return;
+    th.textContent = labels[i]+(lcAgSortCol===i?(lcAgSortDir===1?' ↑':' ↓'):' ⇅');
+  });
+  var sortedAgents=s.agentRows.slice().sort(function(a,b){
+    if(lcAgSortCol===0) return lcAgSortDir*(a.name<b.name?-1:a.name>b.name?1:0);
+    var keys=['name','count','open','human','collab','ai','unresolved','medFRT','medAHT','share'];
+    var av=a[keys[lcAgSortCol]], bv=b[keys[lcAgSortCol]];
+    if(av==null) av=-1; if(bv==null) bv=-1;
+    return lcAgSortDir*(av-bv);
+  });
+  var ab=document.getElementById('lcAgentBody');
+  ab.innerHTML='';
+  sortedAgents.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.style.borderBottom='1px solid var(--border)';
+    tr.innerHTML='<td style="padding:7px 10px;color:var(--text);font-weight:600;">'+r.name+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text);">'+r.count+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#fb923c;">'+r.open+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#4ade80;">'+r.human+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#60a5fa;">'+r.collab+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#2dd4bf;">'+r.ai+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:#f87171;">'+r.unresolved+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medFRT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medAHT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td>';
+    ab.appendChild(tr);
+  });
+  if(!sortedAgents.length) ab.innerHTML='<tr><td colspan="10" style="padding:18px;text-align:center;color:var(--text3);">No conversations match the current filters.</td></tr>';
+
+  // Volume by Hour
+  var hb=document.getElementById('lcHourBody');
+  hb.innerHTML='';
+  var maxHourCount=Math.max.apply(null, s.hourRows.map(function(r){return r.count;}).concat([1]));
+  s.hourRows.forEach(function(r){
+    if(!r.count) return; // skip empty hours to keep the table compact
+    var tr=document.createElement('tr');
+    tr.style.borderBottom='1px solid var(--border)';
+    var barPct=(r.count/maxHourCount*100).toFixed(0);
+    tr.innerHTML='<td style="padding:7px 10px;color:var(--text);font-weight:600;">'+String(r.hour).padStart(2,'0')+':00</td>'+
+      '<td style="padding:7px 10px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;background:var(--bg);border-radius:4px;height:14px;overflow:hidden;max-width:220px;"><div style="height:100%;width:'+barPct+'%;background:#3b82f6;border-radius:4px;"></div></div><span style="color:var(--text);min-width:28px;">'+r.count+'</span></div></td>'+
+      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td>';
+    hb.appendChild(tr);
+  });
+  if(!s.hourRows.some(function(r){return r.count>0;})) hb.innerHTML='<tr><td colspan="3" style="padding:18px;text-align:center;color:var(--text3);">No conversations match the current filters.</td></tr>';
+
+  var TH='padding:7px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);', TD='padding:7px 10px;', BR='border-bottom:1px solid var(--border);';
+  function thc(t,al){ return '<th style="'+TH+'text-align:'+(al||'right')+';">'+t+'</th>'; }
+  function empty(cols){ return '<tr><td colspan="'+cols+'" style="padding:16px;text-align:center;color:var(--text3);">None</td></tr>'; }
+
+  // Unassigned breakdown
+  var ut=document.getElementById('lcUnassignedTable');
+  var uh='<thead><tr style="border-bottom:2px solid var(--border2);">'+thc('Reason','left')+thc('Conversations');
+  s.channelNames.forEach(function(n){ uh+=thc(lcEsc(n)); });
+  uh+=thc('% of unassigned')+thc('What it means','left')+'</tr></thead><tbody>';
+  s.unassignedRows.forEach(function(r){
+    uh+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text);font-weight:600;">'+lcEsc(r.reason)+'</td><td style="'+TD+'text-align:right;color:var(--text);">'+r.count+'</td>';
+    s.channelNames.forEach(function(n){ uh+='<td style="'+TD+'text-align:right;color:var(--text3);">'+r.perChan[n]+'</td>'; });
+    uh+='<td style="'+TD+'text-align:right;color:var(--text3);">'+r.pct.toFixed(1)+'%</td><td style="'+TD+'color:var(--text3);">'+lcEsc(r.meaning)+'</td></tr>';
+  });
+  uh+='<tr style="border-top:2px solid var(--border2);"><td style="'+TD+'color:var(--text);font-weight:700;">Total</td><td style="'+TD+'text-align:right;color:var(--text);font-weight:700;">'+s.unassignedTotal+'</td>';
+  s.channelNames.forEach(function(n){ var t=0; s.unassignedRows.forEach(function(r){t+=r.perChan[n];}); uh+='<td style="'+TD+'text-align:right;color:var(--text);font-weight:700;">'+t+'</td>'; });
+  uh+='<td></td><td></td></tr></tbody>';
+  ut.innerHTML=uh;
+  var agentUnassigned=0; s.agentRows.forEach(function(r){ if(r.name==='(Unassigned)') agentUnassigned=r.count; });
+  var rsum=0; s.unassignedRows.forEach(function(r){rsum+=r.count;});
+  var note=document.getElementById('lcUnassignedNote');
+  var ties=(rsum===agentUnassigned);
+  note.style.color=ties?'#4ade80':'#f87171';
+  note.textContent=ties?'✓ Ties to the (Unassigned) row in the agent table':'⚠ Does not tie to the (Unassigned) row in the agent table';
+
+  // Channel x agent cross-tab
+  var cw=document.getElementById('lcCrossWrap');
+  var ch='';
+  s.crossTab.forEach(function(ct){
+    ch+='<div style="flex:1;min-width:360px;"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">'+lcEsc(ct.channel)+' — '+ct.total+' conversations</div><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="border-bottom:2px solid var(--border2);">'+thc('Agent','left')+thc('Conv.')+thc('Open')+thc('Share')+thc('Med FRT')+thc('Med AHT')+'</tr></thead><tbody>';
+    ct.rows.forEach(function(r){
+      ch+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text);">'+lcEsc(r.name)+'</td><td style="'+TD+'text-align:right;color:var(--text);">'+r.count+'</td><td style="'+TD+'text-align:right;color:#fb923c;">'+r.open+'</td><td style="'+TD+'text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td><td style="'+TD+'text-align:right;color:var(--text3);">'+fmtLCDuration(r.medFRT)+'</td><td style="'+TD+'text-align:right;color:var(--text3);">'+fmtLCDuration(r.medAHT)+'</td></tr>';
+    });
+    ch+='</tbody></table></div>';
+  });
+  cw.innerHTML=ch||'<div style="color:var(--text3);">None</div>';
+
+  // Open conversations
+  var ot=document.getElementById('lcOpenTable');
+  var oh='<thead><tr style="border-bottom:2px solid var(--border2);">'+thc('Display ID','left')+thc('Channel','left')+thc('Customer','left')+thc('Agent','left')+thc('Created')+'</tr></thead><tbody>';
+  s.openList.forEach(function(c){
+    oh+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text);">'+lcEsc(c.displayId)+'</td><td style="'+TD+'color:var(--text3);">'+lcEsc(c.channel)+'</td><td style="'+TD+'color:var(--text);">'+lcEsc(c.customerName)+'</td><td style="'+TD+'color:var(--text3);">'+lcEsc(c.agent||'(Unassigned)')+'</td><td style="'+TD+'text-align:right;color:var(--text3);">'+lcFmtDT(c.createdAt)+'</td></tr>';
+  });
+  ot.innerHTML=oh+(s.openList.length?'':empty(5))+'</tbody>';
+
+  // Repeat customers
+  var rt=document.getElementById('lcRepeatTable');
+  var rh='<thead><tr style="border-bottom:2px solid var(--border2);">'+thc('Customer','left')+thc('Customer ID','left')+thc('Contacts')+'</tr></thead><tbody>';
+  s.repeatList.forEach(function(e){
+    rh+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text);">'+lcEsc(e.name)+'</td><td style="'+TD+'color:var(--text3);">'+lcEsc(e.id)+'</td><td style="'+TD+'text-align:right;color:var(--text);font-weight:600;">'+e.count+'</td></tr>';
+  });
+  rt.innerHTML=rh+(s.repeatList.length?'':empty(3))+'</tbody>';
+}
+
 restoreLayout();
 loadIncidents();
 loadRemarks();
@@ -7187,6 +8203,313 @@ checkSession();
     </div>
   </div>
 </div><!-- end #content-casedetail -->
+
+<div class="tab-content" id="content-attendance">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);"><i class="ti ti-clock-hour-4" style="color:#3b82f6;margin-right:8px;"></i>Attendance — Login / Logout</div>
+      <div id="attPeriod" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <button onclick="switchAttView('day')" id="attViewBtnDay" class="fpreset active" style="cursor:pointer;">Daily Summary</button>
+    <button onclick="switchAttView('agent')" id="attViewBtnAgent" class="fpreset" style="cursor:pointer;">Agent History (multiple dates)</button>
+  </div>
+
+  <div id="attDayView">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Day</label>
+    <select id="attDaySel" onchange="renderAttendance()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+      <option value="">No data yet</option>
+    </select>
+    <input type="text" id="attSearch" onkeyup="renderAttendance()" placeholder="Search staff..." style="padding:5px 10px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;width:180px;">
+    <button onclick="document.getElementById('attFileInput').click()" style="padding:8px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-import"></i> Import Login History</button>
+    <input type="file" id="attFileInput" accept=".xls,.xlsx,.csv" style="display:none;" onchange="handleAttendanceImport(this)">
+    <div id="attImportStatus" style="font-size:11px;color:var(--text3);"></div>
+  </div>
+
+  <!-- KPI Row -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Staff Logged In Today</div>
+      <div style="font-size:28px;font-weight:700;color:#3b82f6;" id="attKpiStaff">—</div>
+    </div>
+    <div style="background:#0d2218;border:1px solid #166534;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#86efac;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-circle-check"></i> Currently Logged In</div>
+      <div style="font-size:28px;font-weight:700;color:#4ade80;" id="attKpiLive">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Total Sessions</div>
+      <div style="font-size:28px;font-weight:700;color:#a78bfa;" id="attKpiSessions">—</div>
+    </div>
+    <div style="background:#2e1a0d;border:1px solid #92400e;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#fde68a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-clock-pause"></i> Total Away Time</div>
+      <div style="font-size:28px;font-weight:700;color:#fb923c;" id="attKpiGap">—</div>
+    </div>
+    <div style="background:#2e0d0d;border:1px solid #7f1d1d;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#fca5a5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-alert-triangle"></i> Left Before Required Logout</div>
+      <div style="font-size:28px;font-weight:700;color:#f87171;" id="attKpiShortfall">—</div>
+    </div>
+  </div>
+
+  <!-- Attendance table -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-users" style="margin-right:5px;"></i>Per-Staff Summary <span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:8px;">(click a row for session-by-session detail)</span></div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">Shift is auto-assigned from first login time (8AM–5PM / 9AM–6PM / 10AM–7PM / 11AM–8PM, all 9h). Logging in late pushes the required logout back by the same amount — e.g. login 8:05AM → must stay until 5:05PM. "Away Time" is the gap between sessions during the day (breaks).</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--border2);">
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Staff Name</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Shift</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">First Login</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Last Session Ends</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Required Logout</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Coverage</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;">Total Logged In</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Away Time</th>
+          <th style="padding:7px 10px;text-align:center;font-size:10px;text-transform:uppercase;color:var(--text3);">Status</th>
+        </tr></thead>
+        <tbody id="attBody"></tbody>
+      </table>
+    </div>
+  </div>
+  </div><!-- end #attDayView -->
+
+  <div id="attAgentView" style="display:none;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+      <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Staff</label>
+      <select id="attAgentSel" onchange="renderAttendanceAgentView()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;min-width:240px;">
+        <option value="">No data yet</option>
+      </select>
+      <button onclick="document.getElementById('attFileInput2').click()" style="padding:8px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-import"></i> Import Login History</button>
+      <input type="file" id="attFileInput2" accept=".xls,.xlsx,.csv" style="display:none;" onchange="handleAttendanceImport(this)">
+    </div>
+
+    <!-- KPI Row -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Days On Record</div>
+        <div style="font-size:28px;font-weight:700;color:#3b82f6;" id="attAgKpiDays">—</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Total Sessions</div>
+        <div style="font-size:28px;font-weight:700;color:#a78bfa;" id="attAgKpiSessions">—</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Total Logged In</div>
+        <div style="font-size:28px;font-weight:700;color:#60a5fa;" id="attAgKpiTotal">—</div>
+      </div>
+      <div style="background:#2e1a0d;border:1px solid #92400e;border-radius:10px;padding:14px 16px;">
+        <div style="font-size:10px;color:#fde68a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-clock-pause"></i> Total Away Time</div>
+        <div style="font-size:28px;font-weight:700;color:#fb923c;" id="attAgKpiGap">—</div>
+      </div>
+      <div style="background:#2e0d0d;border:1px solid #7f1d1d;border-radius:10px;padding:14px 16px;">
+        <div style="font-size:10px;color:#fca5a5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-alert-triangle"></i> Days Left Early</div>
+        <div style="font-size:28px;font-weight:700;color:#f87171;" id="attAgKpiShortfall">—</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-calendar" style="margin-right:5px;"></i>Day-By-Day History <span id="attAgentNameLabel" style="font-size:10px;color:var(--text3);font-weight:400;margin-left:8px;"></span></div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="border-bottom:2px solid var(--border2);">
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Date</th>
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Shift</th>
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">First Login</th>
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Last Session Ends</th>
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Required Logout</th>
+            <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Coverage</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Sessions</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;">Total Logged In</th>
+            <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Away Time</th>
+            <th style="padding:7px 10px;text-align:center;font-size:10px;text-transform:uppercase;color:var(--text3);">Status</th>
+          </tr></thead>
+          <tbody id="attAgentBody"></tbody>
+          <tfoot><tr style="border-top:2px solid var(--border2);background:var(--bg3);">
+            <td colspan="6" style="padding:7px 10px;font-weight:700;color:#3b82f6;">Total</td>
+            <td id="attAgFootSessions" style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text);"></td>
+            <td id="attAgFootTotal" style="padding:7px 10px;text-align:right;font-weight:700;color:#60a5fa;"></td>
+            <td id="attAgFootGap" style="padding:7px 10px;text-align:right;font-weight:700;color:#fb923c;"></td>
+            <td></td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div><!-- end #attAgentView -->
+</div><!-- end #content-attendance -->
+
+<div class="tab-content" id="content-livechat">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);"><i class="ti ti-message-circle" style="color:#3b82f6;margin-right:8px;"></i>Livechat Dashboard</div>
+      <div id="lcPeriod" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Day</label>
+    <select id="lcDaySel" onchange="buildLivechatChannelFilter();renderLivechat();" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+      <option value="">No data yet</option>
+    </select>
+    <select id="lcChannelFilter" onchange="renderLivechat()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+      <option value="">All Channels</option>
+    </select>
+    <input type="text" id="lcSearch" onkeyup="renderLivechat()" placeholder="Search agent..." style="padding:5px 10px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;width:180px;">
+    <button onclick="document.getElementById('lcFileInput').click()" style="padding:8px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><i class="ti ti-database-import"></i> Import Livechat Report</button>
+    <input type="file" id="lcFileInput" accept=".xls,.xlsx,.csv" style="display:none;" onchange="handleLivechatImport(this)">
+    <div id="lcImportStatus" style="font-size:11px;color:var(--text3);"></div>
+  </div>
+
+  <!-- KPI Row -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Total Conversations</div>
+      <div style="font-size:28px;font-weight:700;color:#3b82f6;" id="lcKpiTotal">—</div>
+    </div>
+    <div style="background:#2e1a0d;border:1px solid #92400e;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#fde68a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Open</div>
+      <div style="font-size:28px;font-weight:700;color:#fb923c;" id="lcKpiOpen">—</div>
+      <div style="font-size:10px;color:#fde68a;margin-top:2px;" id="lcKpiOpenPct">—</div>
+    </div>
+    <div style="background:#0d2218;border:1px solid #166534;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#86efac;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Closed / Resolved</div>
+      <div style="font-size:28px;font-weight:700;color:#4ade80;" id="lcKpiClosed">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Empty Conversations</div>
+      <div style="font-size:28px;font-weight:700;color:var(--text2);" id="lcKpiEmpty">—</div>
+    </div>
+    <div style="background:#0d1e2e;border:1px solid #1e3a5f;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#93c5fd;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Median First Response</div>
+      <div style="font-size:28px;font-weight:700;color:#60a5fa;" id="lcKpiFRT">—</div>
+    </div>
+    <div style="background:#1e1030;border:1px solid #581c87;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:#d8b4fe;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Median Handling Time</div>
+      <div style="font-size:28px;font-weight:700;color:#c084fc;" id="lcKpiAHT">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Resolved By AI Only</div>
+      <div style="font-size:28px;font-weight:700;color:#2dd4bf;" id="lcKpiAI">—</div>
+    </div>
+  </div>
+
+  <!-- Key metrics (second row) + thresholds -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">WhatsApp Template Failed</div>
+      <div style="font-size:20px;font-weight:700;color:#f87171;" id="lcKpiWA">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Slow First Responses</div>
+      <div style="font-size:20px;font-weight:700;color:#fb923c;" id="lcKpiSlow">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Customer Messages</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text);" id="lcKpiCustMsg">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Agent Messages</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text);" id="lcKpiAgMsg">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">AI Agent Messages</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text);" id="lcKpiAiMsg">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">First Conversation</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text);" id="lcKpiFirst">—</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Last Conversation</div>
+      <div style="font-size:20px;font-weight:700;color:var(--text);" id="lcKpiLast">—</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:11px;color:var(--text3);">
+    <label>Slow first response threshold (min)
+      <input type="number" id="lcSlowMin" value="10" min="1" onchange="renderLivechat()" style="width:60px;margin-left:6px;padding:4px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);">
+    </label>
+    <label>Repeat customer threshold (contacts)
+      <input type="number" id="lcRepeatMin" value="3" min="2" onchange="renderLivechat()" style="width:60px;margin-left:6px;padding:4px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);">
+    </label>
+  </div>
+
+  <!-- By Channel -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-route" style="margin-right:5px;"></i>By Channel</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--border2);">
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Channel</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Conversations</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Open</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#4ade80;">Human</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;">Collab</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#2dd4bf;">AI</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#f87171;">Unresolved</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Empty</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Median FRT</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Median AHT</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Share</th>
+        </tr></thead>
+        <tbody id="lcChannelBody"></tbody>
+      </table>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;">Empty = chats with 0 messages. The export labels these "human", but they are counted under Empty only, not Human.</div>
+  </div>
+
+  <!-- By Agent -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-users" style="margin-right:5px;"></i>By Agent <span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:8px;">(click column to sort)</span></div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--border2);">
+          <th onclick="sortLCAgentTable(0)" id="lcath0" style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);cursor:pointer;">Agent</th>
+          <th onclick="sortLCAgentTable(1)" id="lcath1" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);cursor:pointer;">Conversations</th>
+          <th onclick="sortLCAgentTable(2)" id="lcath2" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;cursor:pointer;">Open</th>
+          <th onclick="sortLCAgentTable(3)" id="lcath3" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#4ade80;cursor:pointer;">Human</th>
+          <th onclick="sortLCAgentTable(4)" id="lcath4" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#60a5fa;cursor:pointer;">Collab</th>
+          <th onclick="sortLCAgentTable(5)" id="lcath5" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#2dd4bf;cursor:pointer;">AI</th>
+          <th onclick="sortLCAgentTable(6)" id="lcath6" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#f87171;cursor:pointer;">Unresolved</th>
+          <th onclick="sortLCAgentTable(7)" id="lcath7" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);cursor:pointer;">Median FRT</th>
+          <th onclick="sortLCAgentTable(8)" id="lcath8" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);cursor:pointer;">Median AHT</th>
+          <th onclick="sortLCAgentTable(9)" id="lcath9" style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);cursor:pointer;">Share</th>
+        </tr></thead>
+        <tbody id="lcAgentBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Volume by Hour -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-clock" style="margin-right:5px;"></i>Volume By Hour</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid var(--border2);">
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Hour</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Conversations</th>
+          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Share</th>
+        </tr></thead>
+        <tbody id="lcHourBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-user-off" style="margin-right:5px;"></i>Unassigned Conversations — Breakdown</div>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="lcUnassignedTable"></table><div id="lcUnassignedNote" style="font-size:11px;margin-top:8px;"></div></div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-layout-columns" style="margin-right:5px;"></i>By Channel × Agent</div>
+    <div style="overflow-x:auto;"><div id="lcCrossWrap" style="display:flex;gap:16px;flex-wrap:wrap;"></div></div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-door" style="margin-right:5px;"></i>Open Conversations</div>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="lcOpenTable"></table></div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-repeat" style="margin-right:5px;"></i>Repeat Customers</div>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="lcRepeatTable"></table></div>
+  </div>
+</div><!-- end #content-livechat -->
 
 <!-- Issue SLA Import Preview Modal -->
 <div id="slaImportPreviewBackdrop" onclick="closeSLAImportPreview()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;"></div>
