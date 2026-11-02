@@ -878,7 +878,7 @@ ON CONFLICT (id) DO NOTHING;</code></div>
         <span id="agentFilterLabel" style="font-size:11px;color:var(--text3);margin-left:4px;"></span>
       </div>
       <div class="agents-grid" id="agentsGrid"></div>
-      <div id="agentTableWrap"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-table" style="margin-right:5px;"></i>Agent Detail <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:8px;">(click column to sort)</span></div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="agentDetailTable"><thead><tr style="border-bottom:2px solid #1e2d40;"><th onclick="sortAgentTable(0)" id="ath0" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;cursor:pointer;">Staff Name</th><th onclick="sortAgentTable(1)" id="ath1" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound</th><th onclick="sortAgentTable(2)" id="ath2" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound</th><th onclick="sortAgentTable(3)" id="ath3" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound Talk</th><th onclick="sortAgentTable(4)" id="ath4" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound Talk</th><th onclick="sortAgentTable(5)" id="ath5" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Avg Talk</th></tr></thead><tbody id="agentDetailBody"></tbody><tfoot><tr style="border-top:2px solid #2d3748;background:#1a2133;"><td style="padding:7px 10px;font-weight:700;color:#60a5fa;">Grand Total</td><td id="agentFootIn" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOut" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOutTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td></td></tr></tfoot></table></div></div>
+      <div id="agentTableWrap"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-table" style="margin-right:5px;"></i>Agent Detail <span style="font-size:10px;color:#64748b;font-weight:400;margin-left:8px;">(click column to sort)</span></div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;" id="agentDetailTable"><thead><tr style="border-bottom:2px solid #1e2d40;"><th onclick="sortAgentTable(0)" id="ath0" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;cursor:pointer;">Staff Name</th><th onclick="sortAgentTable(1)" id="ath1" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound</th><th onclick="sortAgentTable(2)" id="ath2" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound</th><th onclick="sortAgentTable(3)" id="ath3" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Attempt Outbound</th><th onclick="sortAgentTable(4)" id="ath4" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound Talk</th><th onclick="sortAgentTable(5)" id="ath5" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Outbound Ringing</th><th onclick="sortAgentTable(6)" id="ath6" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Inbound Talk</th><th onclick="sortAgentTable(7)" id="ath7" style="padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;cursor:pointer;">Avg Talk</th></tr></thead><tbody id="agentDetailBody"></tbody><tfoot><tr style="border-top:2px solid #2d3748;background:#1a2133;"><td style="padding:7px 10px;font-weight:700;color:#60a5fa;">Grand Total</td><td id="agentFootIn" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOut" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootAttempt" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOutTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootOutRing" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td id="agentFootTalk" style="padding:7px 10px;font-weight:700;color:#e8ecf0;text-align:right;"></td><td></td></tr></tfoot></table></div></div>
       <div id="agentShowMoreWrap" style="text-align:center;padding:6px 0 10px;position:relative;z-index:2;"></div>
     </div>
     <div class="dp-resize-grip" title="Drag to resize"><i class="ti ti-grip-horizontal" style="font-size:10px;"></i></div>
@@ -1526,10 +1526,12 @@ function agg(dates){
       r.hourly[h].wait+=isNaN(hv.wait)?0:(hv.wait||0);
     });
     v.agents.forEach(a=>{
-      if(!r.agents[a.name]) r.agents[a.name]={inbound:0,outbound:0,talk:0,outTalk:0};
+      if(!r.agents[a.name]) r.agents[a.name]={inbound:0,outbound:0,talk:0,outTalk:0,outRing:0,outAttempt:0};
       r.agents[a.name].inbound+=a.inbound; r.agents[a.name].outbound+=a.outbound;
       r.agents[a.name].talk+=a.aht_s*a.inbound;
       r.agents[a.name].outTalk+=a.outbound_talk_s||0;
+      r.agents[a.name].outRing+=a.outbound_ring_s||0;
+      r.agents[a.name].outAttempt+=a.outbound_attempt||0;
     });
   });
   r.avgTalk = r.calls>0?Math.round(r.talk/r.calls):0;
@@ -2840,7 +2842,9 @@ function renderAgents(a){
       outbound: st.outbound,
       totalTalk: st.inbound>0 ? st.talk : 0,
       aht: st.inbound>0 ? Math.round(st.talk/st.inbound) : 0,
-      outboundTalk: st.outTalk||0
+      outboundTalk: st.outTalk||0,
+      outboundRing: st.outRing||0,
+      outboundAttempt: st.outAttempt||0
     };
   });
   renderAgentTable(agentTableData);
@@ -3146,7 +3150,7 @@ function parseWorkbook(wb){
 
   const daily={};
   const ensure=d=>{if(!daily[d])daily[d]={iq:[],agents:{},dropped:{}};return daily[d];};
-  const ensA=(v,n)=>{if(!v.agents[n])v.agents[n]={inbound:0,outbound:0,talk:0,outTalk:0};return v.agents[n];};
+  const ensA=(v,n)=>{if(!v.agents[n])v.agents[n]={inbound:0,outbound:0,talk:0,outTalk:0,outRing:0,outAttempt:0,calls:[]};return v.agents[n];};
 
   // DEBUG: collect all unique Direction+Status combinations seen in file
   var _debugStats = {};
@@ -3228,9 +3232,19 @@ function parseWorkbook(wb){
         }
       }
     }
-    if(dir==='Outbound'&&/^CC[\s-]/.test(frF)&&st==='Answered'){
+    if(dir==='Outbound'&&/^CC[\s-]/.test(frF)){
       var outAgent=ensA(v,cleanName(frF.trim()).replace(/^CC-/,'CC '));
-      outAgent.outbound++; outAgent.outTalk+=talkS;
+      // Ringing time counts for every outbound call, answered or not.
+      outAgent.outRing+=ringS;
+      // Remember when each outbound call happened (seconds since midnight) so
+      // Attendance can tell which ones fell inside an agent's away time.
+      var tm=String(r[ix.date]||'').match(/(\d{1,2}):(\d{2}):(\d{2})/);
+      if(tm) outAgent.calls.push({s:(+tm[1])*3600+(+tm[2])*60+(+tm[3]), r:ringS||0, k:(st==='Answered'?talkS:0)||0});
+      if(st==='Answered'){
+        outAgent.outbound++; outAgent.outTalk+=talkS;
+      } else if(st==='Unanswered'){
+        outAgent.outAttempt++; // unanswered outbound = an attempt that never connected
+      }
     }
   }
 
@@ -3270,7 +3284,7 @@ function parseWorkbook(wb){
       total_wait_s:twait,
       hourly,
       agents:Object.entries(v.agents).sort((a,b)=>b[1].inbound-a[1].inbound).map(([name,av])=>({
-        name:cleanName(name),inbound:av.inbound,outbound:av.outbound,aht_s:av.inbound>0?Math.round(av.talk/av.inbound):0,outbound_talk_s:av.outTalk||0
+        name:cleanName(name),inbound:av.inbound,outbound:av.outbound,aht_s:av.inbound>0?Math.round(av.talk/av.inbound):0,outbound_talk_s:av.outTalk||0,outbound_ring_s:av.outRing||0,outbound_attempt:av.outAttempt||0,outbound_calls:av.calls||[]
       })),
       dropped:v.dropped,
       drop30:v.drop30||{}
@@ -3317,8 +3331,8 @@ function sortAgentTable(col){
 function renderAgentTable(entries){
   if(!entries) return;
   window._lastAgentData = entries;
-  var labels=['Staff Name','Inbound','Outbound','Outbound Talk','Inbound Talk','Avg Talk'];
-  [0,1,2,3,4,5].forEach(function(i){
+  var labels=['Staff Name','Inbound','Outbound','Attempt Outbound','Outbound Talk','Outbound Ringing','Inbound Talk','Avg Talk'];
+  [0,1,2,3,4,5,6,7].forEach(function(i){
     var th=document.getElementById('ath'+i);
     if(!th) return;
     th.textContent = labels[i]+(agSortCol===i?(agSortDir===1?' ↑':' ↓'):' ⇅');
@@ -3327,7 +3341,7 @@ function renderAgentTable(entries){
 
   var sorted=entries.slice().sort(function(a,b){
     if(agSortCol===0) return agSortDir*(a.name<b.name?-1:a.name>b.name?1:0);
-    var keys=['name','inbound','outbound','outboundTalk','totalTalk','aht'];
+    var keys=['name','inbound','outbound','outboundAttempt','outboundTalk','outboundRing','totalTalk','aht'];
     return agSortDir*(a[keys[agSortCol]]-b[keys[agSortCol]]);
   });
 
@@ -3367,6 +3381,16 @@ function renderAgentTable(entries){
     tdO.textContent=row.outbound;
     tdO.style.cssText='padding:6px 10px;text-align:right;color:'+(row.outbound>0?'#34d399':'#374151')+';font-weight:'+(row.outbound>0?'600':'400')+';';
 
+    // Attempt Outbound (unanswered)
+    var tdAtt=document.createElement('td');
+    tdAtt.textContent=row.outboundAttempt>0?row.outboundAttempt:'0';
+    tdAtt.style.cssText='padding:6px 10px;text-align:right;color:'+(row.outboundAttempt>0?'#fb923c':'#374151')+';font-weight:'+(row.outboundAttempt>0?'600':'400')+';';
+
+    // Outbound Ringing (answered + unanswered)
+    var tdOR=document.createElement('td');
+    tdOR.textContent=row.outboundRing>0?fmtTT(row.outboundRing):'-';
+    tdOR.style.cssText='padding:6px 10px;text-align:right;color:'+(row.outboundRing>0?'#fbbf24':'#374151')+';';
+
     // Outbound Talk
     var tdOT=document.createElement('td');
     tdOT.textContent=row.outboundTalk>0?fmtTT(row.outboundTalk):'-';
@@ -3382,7 +3406,7 @@ function renderAgentTable(entries){
     tdA.textContent=fmtTT(row.aht);
     tdA.style.cssText='padding:6px 10px;text-align:right;color:#2dd4bf;';
 
-    [tdN,tdI,tdO,tdOT,tdT,tdA].forEach(function(td){tr.appendChild(td);});
+    [tdN,tdI,tdO,tdAtt,tdOT,tdOR,tdT,tdA].forEach(function(td){tr.appendChild(td);});
     tbody.appendChild(tr);
   });
 
@@ -3391,6 +3415,10 @@ function renderAgentTable(entries){
   var totOut=entries.reduce(function(s,r){return s+r.outbound;},0);
   var totOutTalk=entries.reduce(function(s,r){return s+(r.outboundTalk||0);},0);
   var totTalk=entries.reduce(function(s,r){return s+r.totalTalk;},0);
+  var totAtt=entries.reduce(function(s,r){return s+(r.outboundAttempt||0);},0);
+  var totOutRing=entries.reduce(function(s,r){return s+(r.outboundRing||0);},0);
+  var fat=document.getElementById('agentFootAttempt'); if(fat) fat.textContent=totAtt.toLocaleString();
+  var forg=document.getElementById('agentFootOutRing'); if(forg) forg.textContent=fmtTT(totOutRing);
   var fi=document.getElementById('agentFootIn');   if(fi) fi.textContent=totIn.toLocaleString();
   var fo=document.getElementById('agentFootOut');  if(fo) fo.textContent=totOut.toLocaleString();
   var fot=document.getElementById('agentFootOutTalk'); if(fot) fot.textContent=fmtTT(totOutTalk);
@@ -7199,7 +7227,36 @@ function computeAttendanceSummary(day){
         if(gapS>0) gaps.push({from:prevEnd,to:curStart,seconds:gapS});
       }
     }
-    var totalGapS=gaps.reduce(function(a,g){return a+g.seconds;},0);
+    var rawGapS=gaps.reduce(function(a,g){return a+g.seconds;},0);
+    // Outbound calls (ringing + talking, answered or not) made DURING a gap
+    // aren't really "away" — the agent was working. For each gap, take off the
+    // part of any outbound call that overlaps it. Calls made while logged in
+    // don't reduce anything. Matched to the agent by extension.
+    var outTalkS=0, outRingS=0, haveCallTimes=false;
+    var callDay=(typeof allData!=='undefined' && allData[day]) ? allData[day] : null;
+    var calls=[];
+    if(callDay && callDay.agents && byStaff[key].ext){
+      callDay.agents.forEach(function(a){
+        var m=String(a.name||'').match(/\((\d+)\)\s*$/);
+        if(m && m[1]===String(byStaff[key].ext) && Array.isArray(a.outbound_calls)){ haveCallTimes=true; calls=calls.concat(a.outbound_calls); }
+      });
+    }
+    function ovl(a1,a2,b1,b2){ return Math.max(0, Math.min(a2,b2)-Math.max(a1,b1)); }
+    gaps.forEach(function(g){
+      var g1=isoTimeSec(g.from), g2=isoTimeSec(g.to);
+      var tk=0, rg=0;
+      if(g1!=null && g2!=null && g2>g1){
+        calls.forEach(function(c){
+          rg+=ovl(c.s, c.s+c.r, g1, g2);
+          tk+=ovl(c.s+c.r, c.s+c.r+c.k, g1, g2);
+        });
+      }
+      var ded=Math.min(g.seconds, tk+rg);
+      g.outTalkS=tk; g.outRingS=rg; g.deductS=ded; g.awayS=g.seconds-ded;
+      outTalkS+=tk; outRingS+=rg;
+    });
+    var deductS=gaps.reduce(function(a,g){return a+g.deductS;},0);
+    var totalGapS=rawGapS-deductS;
     var firstLogin=ss[0].loginAt;
     var lastEnd=ss[ss.length-1].logoutAt;
     var live = isToday && lastEnd && lastEnd===maxLogout;
@@ -7224,7 +7281,7 @@ function computeAttendanceSummary(day){
       }
     }
 
-    out.push({ext:byStaff[key].ext,name:byStaff[key].name,sessions:ss,sessionCount:ss.length,firstLogin:firstLogin,lastEnd:lastEnd,totalS:totalS,gaps:gaps,totalGapS:totalGapS,live:live,shift:shift,coverage:coverage});
+    out.push({ext:byStaff[key].ext,name:byStaff[key].name,sessions:ss,sessionCount:ss.length,firstLogin:firstLogin,lastEnd:lastEnd,totalS:totalS,gaps:gaps,totalGapS:totalGapS,rawGapS:rawGapS,outTalkS:outTalkS,outRingS:outRingS,deductS:deductS,haveCallTimes:haveCallTimes,live:live,shift:shift,coverage:coverage});
   });
   out.sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
   return out;
@@ -7323,10 +7380,13 @@ function renderAttendance(){
     s.sessions.forEach(function(sess,i){
       html+='<tr><td style="padding:3px 8px;color:var(--text2);">#'+(i+1)+'</td><td style="padding:3px 8px;color:var(--text2);">'+fmtAttTime(sess.loginAt)+' → '+fmtAttTime(sess.logoutAt)+'</td><td style="padding:3px 8px;text-align:right;color:#60a5fa;">'+fmtHMS(sess.durationS)+'</td></tr>';
       if(s.gaps[i]){
-        html+='<tr><td></td><td style="padding:3px 8px;color:#fb923c;font-style:italic;">gap: '+fmtAttTime(s.gaps[i].from)+' → '+fmtAttTime(s.gaps[i].to)+'</td><td style="padding:3px 8px;text-align:right;color:#fb923c;">'+fmtHMS(s.gaps[i].seconds)+'</td></tr>';
+        html+='<tr><td></td><td style="padding:3px 8px;color:#fb923c;font-style:italic;">gap: '+fmtAttTime(s.gaps[i].from)+' → '+fmtAttTime(s.gaps[i].to)+(s.gaps[i].deductS>0?' <span style="color:var(--text3);">(− outbound '+fmtHMS(s.gaps[i].deductS)+' during this gap)</span>':'')+'</td><td style="padding:3px 8px;text-align:right;color:#fb923c;">'+fmtHMS(s.gaps[i].awayS)+'</td></tr>';
       }
     });
     html+='</table>';
+    if(s.rawGapS>0){
+      html+='<div style="font-size:11px;color:var(--text3);">Away time = gaps between sessions '+fmtHMS(s.rawGapS)+' − outbound talk during gaps '+fmtHMS(s.outTalkS)+' − outbound ringing during gaps '+fmtHMS(s.outRingS)+' = <b style="color:#fb923c;">'+fmtHMS(s.totalGapS)+'</b>'+(s.haveCallTimes?'':' <span style="color:#fbbf24;">(no call timings for this day — import the call report again to deduct outbound calls)</span>')+'</div>';
+    }
     detTd.innerHTML=html;
     detTr.appendChild(detTd);
     tbody.appendChild(detTr);
@@ -7375,6 +7435,17 @@ function lcMedian(arr){
   var mid=Math.floor(vals.length/2);
   return vals.length%2 ? vals[mid] : (vals[mid-1]+vals[mid])/2;
 }
+// Excel stores "Created at" as a serial number (days + fraction of day, no timezone).
+// Read it straight from the serial instead of letting the library build a Date —
+// that route shifts times by a few seconds, which can push a chat across an hour boundary.
+function lcParseCreated(v){
+  if(v instanceof Date) return v;
+  if(typeof v==='number'){
+    var u=new Date(Math.round((v-25569)*86400)*1000); // UTC fields = the wall-clock time in the sheet
+    return new Date(u.getUTCFullYear(),u.getUTCMonth(),u.getUTCDate(),u.getUTCHours(),u.getUTCMinutes(),u.getUTCSeconds());
+  }
+  return new Date(v);
+}
 function lcDayFromDate(dt){
   if(!dt || isNaN(dt)) return '';
   return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
@@ -7389,10 +7460,8 @@ function handleLivechatImport(input){
   var reader=new FileReader();
   reader.onload=function(e){
     try{
-      // cellDates:true converts Excel date/datetime cells into JS Date
-      // objects directly — avoids re-deriving the Excel serial-number math
-      // by hand (and any timezone drift from it) for the "Created at" column.
-      var wb = isCSV ? XLSX.read(e.target.result,{type:'binary',raw:true}) : XLSX.read(e.target.result,{type:'array',cellDates:true});
+      // "Created at" is read as the raw Excel serial number (see lcParseCreated).
+      var wb = isCSV ? XLSX.read(e.target.result,{type:'binary',raw:true}) : XLSX.read(e.target.result,{type:'array'});
       var sheetName = wb.SheetNames.indexOf('Data')>=0 ? 'Data' : wb.SheetNames[0];
       var ws=wb.Sheets[sheetName];
       var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
@@ -7410,7 +7479,7 @@ function handleLivechatImport(input){
         var r=rows[i];
         if(!r || !r[iId]) continue;
         var createdRaw=r[iCreated];
-        var createdDt = createdRaw instanceof Date ? createdRaw : (typeof createdRaw==='number' ? new Date(Date.UTC(1899,11,30)+createdRaw*86400000) : new Date(createdRaw));
+        var createdDt = lcParseCreated(createdRaw);
         if(isNaN(createdDt)){ skippedNoDate++; continue; }
         var day=lcDayFromDate(createdDt);
         if(!day){ skippedNoDate++; continue; }
@@ -7523,8 +7592,9 @@ function buildLivechatDayFilter(){
   var days=Object.keys(livechatData).sort().reverse();
   sel.innerHTML='';
   if(!days.length){ sel.innerHTML='<option value="">No data yet</option>'; return; }
+  if(days.length>1){ var oa=document.createElement('option'); oa.value=LC_ALL; oa.textContent='All days ('+days.length+')'; sel.appendChild(oa); }
   days.forEach(function(d){ var o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o); });
-  if(cur && days.indexOf(cur)>=0) sel.value=cur; else sel.value=days[0];
+  if(cur && (days.indexOf(cur)>=0 || (cur===LC_ALL && days.length>1))) sel.value=cur; else sel.value=days[0];
 }
 
 function buildLivechatChannelFilter(){
@@ -7533,7 +7603,7 @@ function buildLivechatChannelFilter(){
   var cur=sel.value;
   var day=document.getElementById('lcDaySel')?document.getElementById('lcDaySel').value:'';
   var chans={};
-  (livechatData[day]||[]).forEach(function(c){ if(c.channel) chans[c.channel]=true; });
+  lcGetConvos(day).forEach(function(c){ if(c.channel) chans[c.channel]=true; });
   // If no day selected yet, gather channels across all days so the filter
   // isn't empty before a day is picked.
   if(!day){ Object.keys(livechatData).forEach(function(d){ (livechatData[d]||[]).forEach(function(c){ if(c.channel) chans[c.channel]=true; }); }); }
@@ -7544,14 +7614,7 @@ function buildLivechatChannelFilter(){
 }
 
 function computeLivechatSummary(day){
-  var all=livechatData[day]||[];
-  var chan=document.getElementById('lcChannelFilter')?document.getElementById('lcChannelFilter').value:'';
-  var search=document.getElementById('lcSearch')?document.getElementById('lcSearch').value.trim().toLowerCase():'';
-  var convos=all.filter(function(c){
-    if(chan && c.channel!==chan) return false;
-    if(search && !(c.agent||'').toLowerCase().includes(search)) return false;
-    return true;
-  });
+  var convos=lcApplyFilters(lcGetConvos(day));
 
   var total=convos.length;
   var open=convos.filter(function(c){return c.status==='open';}).length;
@@ -7597,9 +7660,16 @@ function computeLivechatSummary(day){
   }).sort(function(a,b){return b.count-a.count;});
 
   var byHour={};
-  convos.forEach(function(c){ var h=c.hour; byHour[h]=(byHour[h]||0)+1; });
+  convos.forEach(function(c){ var h=c.hour; (byHour[h]=byHour[h]||[]).push(c); });
+  var slowLimit=(parseFloat((document.getElementById('lcSlowMin')||{}).value)||10)*60;
   var hourRows=[];
-  for(var h=0;h<24;h++){ hourRows.push({hour:h, count:byHour[h]||0, share: total?((byHour[h]||0)/total*100):0}); }
+  for(var h=0;h<24;h++){
+    var hl=byHour[h]||[];
+    var hs=groupStats(hl);
+    hs.hour=h; hs.share= total?(hl.length/total*100):0;
+    hs.slow=hl.filter(function(c){return c.frtS!=null && c.frtS>slowLimit;}).length;
+    hourRows.push(hs);
+  }
 
   var slowMin = parseFloat((document.getElementById('lcSlowMin')||{}).value)||10;
   var repMin = parseInt((document.getElementById('lcRepeatMin')||{}).value,10)||3;
@@ -7643,6 +7713,10 @@ function computeLivechatSummary(day){
     return {channel:ch.name, total:list.length, rows:rows};
   });
 
+  var hourChan = {};
+  channelNames.forEach(function(n){ hourChan[n]=[]; for(var hh=0;hh<24;hh++) hourChan[n].push(0); });
+  convos.forEach(function(c){ var n=c.channel||'(none)'; if(hourChan[n] && c.hour>=0 && c.hour<24) hourChan[n][c.hour]++; });
+
   var openList = convos.filter(function(c){return c.status==='open';}).sort(function(a,b){return b.createdAt.localeCompare(a.createdAt);});
 
   var byCust = {};
@@ -7656,11 +7730,139 @@ function computeLivechatSummary(day){
     channelRows:channelRows, agentRows:agentRows, hourRows:hourRows,
     waFailed:waFailed, slowCount:slowCount, firstAt:firstAt, lastAt:lastAt,
     unassignedTotal:unassigned.length, unassignedRows:unassignedRows, channelNames:channelNames,
-    crossTab:crossTab, openList:openList, repeatList:repeatList, repMin:repMin
+    crossTab:crossTab, hourChan:hourChan, openList:openList, repeatList:repeatList, repMin:repMin
   };
 }
 
-function lcEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function lcEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+var LC_ALL='__all__';
+function lcGetConvos(day){
+  if(day===LC_ALL){ var out=[]; Object.keys(livechatData).sort().forEach(function(d){ out=out.concat(livechatData[d]||[]); }); return out; }
+  return livechatData[day]||[];
+}
+function lcApplyFilters(list){
+  var chan=document.getElementById('lcChannelFilter')?document.getElementById('lcChannelFilter').value:'';
+  var search=document.getElementById('lcSearch')?document.getElementById('lcSearch').value.trim().toLowerCase():'';
+  return list.filter(function(c){
+    if(chan && c.channel!==chan) return false;
+    if(search && !(c.agent||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+// Green when a median is within target, red when over it (targets are in minutes, set above the tables).
+function lcTone(sec, kind){
+  if(sec==null || isNaN(sec)) return 'var(--text3)';
+  var el=document.getElementById(kind==='frt'?'lcFrtTarget':'lcAhtTarget');
+  var t=(parseFloat(el&&el.value)||(kind==='frt'?5:15))*60;
+  return sec>t ? '#f87171' : '#4ade80';
+}
+function computeLivechatTrend(){
+  var slowMin=parseFloat((document.getElementById('lcSlowMin')||{}).value)||10;
+  return Object.keys(livechatData).sort().map(function(d){
+    var list=lcApplyFilters(livechatData[d]||[]);
+    var n=list.length;
+    return {
+      day:d, count:n,
+      open:list.filter(function(c){return c.status==='open';}).length,
+      openPct:n?list.filter(function(c){return c.status==='open';}).length/n*100:0,
+      empty:list.filter(function(c){return c.totalMessages===0;}).length,
+      ai:list.filter(function(c){return c.resolutionType==='ai';}).length,
+      slow:list.filter(function(c){return c.frtS!=null && c.frtS>slowMin*60;}).length,
+      medFRT:lcMedian(list.map(function(c){return c.frtS;})),
+      medAHT:lcMedian(list.map(function(c){return c.ahtS;}))
+    };
+  });
+}
+var lcDrillAgent=null;
+function renderLivechatHourChart(s){
+  var cv=document.getElementById('lcHourChart');
+  if(!cv || typeof Chart==='undefined' || typeof charts==='undefined') return;
+  if(charts.lcHour){ charts.lcHour.destroy(); charts.lcHour=null; }
+  var active=s.hourRows.filter(function(r){return r.count>0;}).map(function(r){return r.hour;});
+  if(!active.length) return;
+  var lo=Math.min.apply(null,active), hi=Math.max.apply(null,active), hours=[];
+  for(var h=lo;h<=hi;h++) hours.push(h);
+  var colors=['#3b82f6','#2dd4bf','#a78bfa','#fb923c'];
+  var inline={id:'lcHourInline',afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx;
+    chart.data.datasets.forEach(function(ds,di){
+      chart.getDatasetMeta(di).data.forEach(function(el,i){
+        var v=ds.data[i]; if(!v || el.base-el.y<14) return;
+        ctx.save();ctx.font='bold 11px Segoe UI,sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(String(v),el.x,(el.y+el.base)/2);ctx.restore();
+      });
+    });
+  }};
+  charts.lcHour=new Chart(cv,{
+    type:'bar',plugins:[inline],
+    data:{labels:hours.map(function(h){return String(h).padStart(2,'0')+':00';}),
+      datasets:s.channelNames.map(function(n,i){ return {label:n,data:hours.map(function(h){return s.hourChan[n][h];}),backgroundColor:colors[i%colors.length],borderRadius:3,barPercentage:0.75,categoryPercentage:0.85}; })},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',align:'start',labels:{color:TC,font:{size:11},boxWidth:10,padding:16,usePointStyle:true,pointStyle:'circle'}},tooltip:{mode:'index',intersect:false},datalabels:{display:false}},
+      scales:{x:{stacked:true,ticks:{color:TC,font:{size:10}},grid:{color:GC}},y:{stacked:true,beginAtZero:true,ticks:{color:TC,precision:0},grid:{color:GC}}}}
+  });
+}
+function renderLivechatDailyChart(trend){
+  var cv=document.getElementById('lcDailyChart');
+  if(!cv || typeof Chart==='undefined') return;
+  if(typeof charts==='undefined') return;
+  if(charts.lcDaily){ charts.lcDaily.destroy(); charts.lcDaily=null; }
+  var _MNl=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var labels=trend.map(function(t){var p=t.day.split('-');var dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(t.day).getDay()];return dn+' '+p[2]+' '+_MNl[parseInt(p[1],10)-1];});
+  var maxV=Math.max.apply(null,trend.map(function(t){return t.count;}).concat([1]));
+  var inline={id:'lcDailyInline',afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx;
+    chart.data.datasets.forEach(function(ds,di){
+      if(di!==0) return; // label the Total line only, like the call trend
+      chart.getDatasetMeta(di).data.forEach(function(el,i){
+        ctx.save();ctx.font='bold 11px Segoe UI,sans-serif';ctx.fillStyle='#e5e7eb';ctx.textAlign='center';ctx.textBaseline='bottom';
+        ctx.fillText(String(ds.data[i]),el.x,el.y-8);ctx.restore();
+      });
+    });
+  }};
+  charts.lcDaily=new Chart(cv,{
+    type:'line',plugins:[inline],
+    data:{labels:labels,datasets:[
+      {label:'Total',data:trend.map(function(t){return t.count;}),borderColor:'rgba(229,231,235,0.8)',backgroundColor:'rgba(255,255,255,.04)',fill:true,tension:.3,pointRadius:4,borderWidth:2},
+      {label:'Closed / Resolved',data:trend.map(function(t){return t.count-t.open;}),borderColor:'#34d399',fill:false,tension:.3,pointRadius:3,borderWidth:2},
+      {label:'Open',data:trend.map(function(t){return t.open;}),borderColor:'#fb923c',fill:false,tension:.3,pointRadius:3,borderWidth:1.5,borderDash:[4,3]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{title:function(items){return trend[items[0].dataIndex].day;}}},datalabels:{display:false}},
+      scales:{x:{ticks:{color:TC,font:{size:10},autoSkip:true,maxTicksLimit:31},grid:{color:GC}},y:{ticks:{color:TC},grid:{color:GC},beginAtZero:true,suggestedMax:maxV*1.18}}}
+  });
+}
+function lcOpenDrill(name){
+  lcDrillAgent=name;
+  renderLivechatDrill();
+  var el=document.getElementById('lcDrillPanel');
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function lcCloseDrill(){ lcDrillAgent=null; renderLivechatDrill(); }
+function renderLivechatDrill(){
+  var panel=document.getElementById('lcDrillPanel');
+  if(!panel) return;
+  if(lcDrillAgent==null){ panel.style.display='none'; return; }
+  var sel=document.getElementById('lcDaySel');
+  var day=sel?sel.value:'';
+  var list=lcApplyFilters(lcGetConvos(day)).filter(function(c){return (c.agent||'(Unassigned)')===lcDrillAgent;});
+  list.sort(function(a,b){return b.createdAt.localeCompare(a.createdAt);});
+  var TH='padding:7px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);', TD='padding:6px 10px;', BR='border-bottom:1px solid var(--border);';
+  function th(t,al){ return '<th style="'+TH+'text-align:'+(al||'left')+';">'+t+'</th>'; }
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:var(--text);"><i class="ti ti-user-search" style="margin-right:6px;"></i>'+lcEsc(lcDrillAgent)+' — '+list.length+' conversation(s)</div><button onclick="lcCloseDrill()" style="background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text2);padding:3px 10px;font-size:11px;cursor:pointer;">Close</button></div>';
+  h+='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="border-bottom:2px solid var(--border2);">'+th('Created')+th('Display ID')+th('Channel')+th('Customer')+th('Status')+th('Resolution')+th('FRT','right')+th('AHT','right')+th('Msgs (cust/agent/AI)','right')+'</tr></thead><tbody>';
+  list.forEach(function(c){
+    var res = c.totalMessages===0 ? 'empty' : c.resolutionType;
+    h+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text3);">'+lcFmtDT(c.createdAt)+'</td><td style="'+TD+'color:var(--text);">'+lcEsc(c.displayId)+'</td><td style="'+TD+'color:var(--text3);">'+lcEsc(c.channel)+'</td><td style="'+TD+'color:var(--text);">'+lcEsc(c.customerName)+'</td><td style="'+TD+'color:'+(c.status==='open'?'#fb923c':'var(--text3)')+';">'+lcEsc(c.status)+'</td><td style="'+TD+'color:var(--text3);">'+lcEsc(res)+'</td><td style="'+TD+'text-align:right;color:'+lcTone(c.frtS,'frt')+';">'+fmtLCDuration(c.frtS)+'</td><td style="'+TD+'text-align:right;color:'+lcTone(c.ahtS,'aht')+';">'+fmtLCDuration(c.ahtS)+'</td><td style="'+TD+'text-align:right;color:var(--text3);">'+c.customerMessages+' / '+c.agentMessages+' / '+c.aiMessages+'</td></tr>';
+  });
+  if(!list.length) h+='<tr><td colspan="9" style="padding:16px;text-align:center;color:var(--text3);">No conversations for this agent with the current filters.</td></tr>';
+  panel.innerHTML=h+'</tbody></table></div>';
+  panel.style.display='block';
+}
+function lcPickDay(d){
+  var sel=document.getElementById('lcDaySel'); if(!sel) return;
+  sel.value=d; buildLivechatChannelFilter(); renderLivechat();
+}
 function lcFmtDT(iso){
   if(!iso) return '—';
   var d=new Date(iso); if(isNaN(d)) return '—';
@@ -7678,19 +7880,21 @@ function renderLivechat(){
   var periodEl=document.getElementById('lcPeriod');
 
   var ids=['lcKpiTotal','lcKpiOpen','lcKpiOpenPct','lcKpiClosed','lcKpiEmpty','lcKpiFRT','lcKpiAHT','lcKpiAI','lcKpiWA','lcKpiSlow','lcKpiCustMsg','lcKpiAgMsg','lcKpiAiMsg','lcKpiFirst','lcKpiLast'];
-  if(!day || !livechatData[day]){
+  if(!day || (day!==LC_ALL && !livechatData[day])){
     ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
     ['lcUnassignedTable','lcOpenTable','lcRepeatTable'].forEach(function(id){ var t=document.getElementById(id); if(t) t.innerHTML=''; });
     var cw=document.getElementById('lcCrossWrap'); if(cw) cw.innerHTML='';
+    var trb=document.getElementById('lcTrendBody'); if(trb) trb.innerHTML='';
+    var dp=document.getElementById('lcDrillPanel'); if(dp) dp.style.display='none';
     ['lcChannelBody','lcAgentBody','lcHourBody'].forEach(function(id){
       var tb=document.getElementById(id);
-      if(tb) tb.innerHTML='<tr><td colspan="11" style="padding:24px;text-align:center;color:var(--text3);">No Livechat data imported yet. Use "Import Livechat Report" above.</td></tr>';
+      if(tb) tb.innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:var(--text3);">No Livechat data imported yet. Use "Import Livechat Report" above.</td></tr>';
     });
     if(periodEl) periodEl.textContent='';
     return;
   }
 
-  if(periodEl) periodEl.textContent='Day: '+day;
+  if(periodEl) periodEl.textContent = day===LC_ALL ? ('All days: '+Object.keys(livechatData).sort()[0]+' to '+Object.keys(livechatData).sort().slice(-1)[0]) : ('Day: '+day);
 
   var s=computeLivechatSummary(day);
   document.getElementById('lcKpiTotal').textContent=s.total.toLocaleString();
@@ -7700,6 +7904,8 @@ function renderLivechat(){
   document.getElementById('lcKpiEmpty').textContent=s.empty.toLocaleString();
   document.getElementById('lcKpiFRT').textContent=fmtLCDuration(s.medFRT);
   document.getElementById('lcKpiAHT').textContent=fmtLCDuration(s.medAHT);
+  document.getElementById('lcKpiFRT').style.color=lcTone(s.medFRT,'frt');
+  document.getElementById('lcKpiAHT').style.color=lcTone(s.medAHT,'aht');
   document.getElementById('lcKpiAI').textContent=s.aiOnly.toLocaleString();
   document.getElementById('lcKpiWA').textContent=s.waFailed.toLocaleString();
   document.getElementById('lcKpiSlow').textContent=s.slowCount.toLocaleString();
@@ -7723,8 +7929,8 @@ function renderLivechat(){
       '<td style="padding:7px 10px;text-align:right;color:#2dd4bf;">'+r.ai+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:#f87171;">'+r.unresolved+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.empty+'</td>'+
-      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medFRT)+'</td>'+
-      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medAHT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:'+lcTone(r.medFRT,'frt')+';">'+fmtLCDuration(r.medFRT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:'+lcTone(r.medAHT,'aht')+';">'+fmtLCDuration(r.medAHT)+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td>';
     cb.appendChild(tr);
   });
@@ -7749,35 +7955,57 @@ function renderLivechat(){
   sortedAgents.forEach(function(r){
     var tr=document.createElement('tr');
     tr.style.borderBottom='1px solid var(--border)';
-    tr.innerHTML='<td style="padding:7px 10px;color:var(--text);font-weight:600;">'+r.name+'</td>'+
+    tr.innerHTML='<td data-n="'+lcEsc(r.name)+'" onclick="lcOpenDrill(this.dataset.n)" title="Click to see this agent\'s conversations" style="padding:7px 10px;color:var(--text);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:transparent;" onmouseover="this.style.textDecorationColor=\'#60a5fa\'" onmouseout="this.style.textDecorationColor=\'transparent\'">'+lcEsc(r.name)+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:var(--text);">'+r.count+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:#fb923c;">'+r.open+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:#4ade80;">'+r.human+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:#60a5fa;">'+r.collab+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:#2dd4bf;">'+r.ai+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:#f87171;">'+r.unresolved+'</td>'+
-      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medFRT)+'</td>'+
-      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+fmtLCDuration(r.medAHT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:'+lcTone(r.medFRT,'frt')+';">'+fmtLCDuration(r.medFRT)+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;color:'+lcTone(r.medAHT,'aht')+';">'+fmtLCDuration(r.medAHT)+'</td>'+
       '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td>';
     ab.appendChild(tr);
   });
   if(!sortedAgents.length) ab.innerHTML='<tr><td colspan="10" style="padding:18px;text-align:center;color:var(--text3);">No conversations match the current filters.</td></tr>';
 
-  // Volume by Hour
+  // Volume by Hour — full breakdown per hour
   var hb=document.getElementById('lcHourBody');
   hb.innerHTML='';
+  var HTH='padding:7px 10px;font-size:10px;text-transform:uppercase;';
+  function hth(t,c,al){ return '<th style="'+HTH+'color:'+(c||'var(--text3)')+';text-align:'+(al||'right')+';">'+t+'</th>'; }
+  var hh='<tr style="border-bottom:2px solid var(--border2);">'+hth('Hour',null,'left')+hth('Conversations',null,'left');
+  s.channelNames.forEach(function(n){ hh+=hth(lcEsc(n)); });
+  hh+=hth('Open','#fb923c')+hth('Human','#4ade80')+hth('Collab','#60a5fa')+hth('AI','#2dd4bf')+hth('Unresolved','#f87171')+hth('Empty')+hth('Slow FRT','#fb923c')+hth('Med FRT')+hth('Share')+'</tr>';
+  document.getElementById('lcHourHead').innerHTML=hh;
   var maxHourCount=Math.max.apply(null, s.hourRows.map(function(r){return r.count;}).concat([1]));
+  var HT='padding:7px 10px;text-align:right;';
+  function hrow(label,r,chanCounts,bold){
+    var fw=bold?'font-weight:700;':'';
+    var barPct=(r.count/maxHourCount*100).toFixed(0);
+    var h='<td style="padding:7px 10px;color:var(--text);font-weight:600;">'+label+'</td>'+
+      '<td style="padding:7px 10px;"><div style="display:flex;align-items:center;gap:8px;">'+(bold?'':'<div style="flex:1;background:var(--bg);border-radius:4px;height:14px;overflow:hidden;max-width:160px;"><div style="height:100%;width:'+barPct+'%;background:#3b82f6;border-radius:4px;"></div></div>')+'<span style="color:var(--text);min-width:28px;'+fw+'">'+r.count+'</span></div></td>';
+    chanCounts.forEach(function(v){ h+='<td style="'+HT+'color:var(--text);'+fw+'">'+v+'</td>'; });
+    h+='<td style="'+HT+'color:#fb923c;'+fw+'">'+r.open+'</td><td style="'+HT+'color:#4ade80;'+fw+'">'+r.human+'</td><td style="'+HT+'color:#60a5fa;'+fw+'">'+r.collab+'</td><td style="'+HT+'color:#2dd4bf;'+fw+'">'+r.ai+'</td><td style="'+HT+'color:#f87171;'+fw+'">'+r.unresolved+'</td><td style="'+HT+'color:var(--text3);'+fw+'">'+r.empty+'</td><td style="'+HT+'color:#fb923c;'+fw+'">'+r.slow+'</td><td style="'+HT+'color:'+lcTone(r.medFRT,'frt')+';'+fw+'">'+fmtLCDuration(r.medFRT)+'</td><td style="'+HT+'color:var(--text3);'+fw+'">'+r.share.toFixed(1)+'%</td>';
+    return h;
+  }
   s.hourRows.forEach(function(r){
     if(!r.count) return; // skip empty hours to keep the table compact
     var tr=document.createElement('tr');
     tr.style.borderBottom='1px solid var(--border)';
-    var barPct=(r.count/maxHourCount*100).toFixed(0);
-    tr.innerHTML='<td style="padding:7px 10px;color:var(--text);font-weight:600;">'+String(r.hour).padStart(2,'0')+':00</td>'+
-      '<td style="padding:7px 10px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;background:var(--bg);border-radius:4px;height:14px;overflow:hidden;max-width:220px;"><div style="height:100%;width:'+barPct+'%;background:#3b82f6;border-radius:4px;"></div></div><span style="color:var(--text);min-width:28px;">'+r.count+'</span></div></td>'+
-      '<td style="padding:7px 10px;text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td>';
+    tr.innerHTML=hrow(String(r.hour).padStart(2,'0')+':00', r, s.channelNames.map(function(n){return s.hourChan[n][r.hour];}), false);
     hb.appendChild(tr);
   });
-  if(!s.hourRows.some(function(r){return r.count>0;})) hb.innerHTML='<tr><td colspan="3" style="padding:18px;text-align:center;color:var(--text3);">No conversations match the current filters.</td></tr>';
+  if(!s.hourRows.some(function(r){return r.count>0;})){
+    hb.innerHTML='<tr><td colspan="'+(s.channelNames.length+10)+'" style="padding:18px;text-align:center;color:var(--text3);">No conversations match the current filters.</td></tr>';
+  } else {
+    var tot={count:s.total,open:s.open,human:0,collab:0,ai:0,unresolved:0,empty:s.empty,slow:0,medFRT:s.medFRT,share:100};
+    s.hourRows.forEach(function(r){ tot.human+=r.human; tot.collab+=r.collab; tot.ai+=r.ai; tot.unresolved+=r.unresolved; tot.slow+=r.slow; });
+    var trT=document.createElement('tr');
+    trT.style.borderTop='2px solid var(--border2)';
+    trT.innerHTML=hrow('Total', tot, s.channelNames.map(function(n){return s.hourChan[n].reduce(function(a,b){return a+b;},0);}), true);
+    hb.appendChild(trT);
+  }
 
   var TH='padding:7px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);', TD='padding:7px 10px;', BR='border-bottom:1px solid var(--border);';
   function thc(t,al){ return '<th style="'+TH+'text-align:'+(al||'right')+';">'+t+'</th>'; }
@@ -7810,7 +8038,7 @@ function renderLivechat(){
   s.crossTab.forEach(function(ct){
     ch+='<div style="flex:1;min-width:360px;"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">'+lcEsc(ct.channel)+' — '+ct.total+' conversations</div><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="border-bottom:2px solid var(--border2);">'+thc('Agent','left')+thc('Conv.')+thc('Open')+thc('Share')+thc('Med FRT')+thc('Med AHT')+'</tr></thead><tbody>';
     ct.rows.forEach(function(r){
-      ch+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text);">'+lcEsc(r.name)+'</td><td style="'+TD+'text-align:right;color:var(--text);">'+r.count+'</td><td style="'+TD+'text-align:right;color:#fb923c;">'+r.open+'</td><td style="'+TD+'text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td><td style="'+TD+'text-align:right;color:var(--text3);">'+fmtLCDuration(r.medFRT)+'</td><td style="'+TD+'text-align:right;color:var(--text3);">'+fmtLCDuration(r.medAHT)+'</td></tr>';
+      ch+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text);">'+lcEsc(r.name)+'</td><td style="'+TD+'text-align:right;color:var(--text);">'+r.count+'</td><td style="'+TD+'text-align:right;color:#fb923c;">'+r.open+'</td><td style="'+TD+'text-align:right;color:var(--text3);">'+r.share.toFixed(1)+'%</td><td style="'+TD+'text-align:right;color:'+lcTone(r.medFRT,'frt')+';">'+fmtLCDuration(r.medFRT)+'</td><td style="'+TD+'text-align:right;color:'+lcTone(r.medAHT,'aht')+';">'+fmtLCDuration(r.medAHT)+'</td></tr>';
     });
     ch+='</tbody></table></div>';
   });
@@ -7831,6 +8059,20 @@ function renderLivechat(){
     rh+='<tr style="'+BR+'"><td style="'+TD+'color:var(--text);">'+lcEsc(e.name)+'</td><td style="'+TD+'color:var(--text3);">'+lcEsc(e.id)+'</td><td style="'+TD+'text-align:right;color:var(--text);font-weight:600;">'+e.count+'</td></tr>';
   });
   rt.innerHTML=rh+(s.repeatList.length?'':empty(3))+'</tbody>';
+
+  // Daily trend (all imported days, current channel/agent filters)
+  var trend=computeLivechatTrend();
+  var maxT=Math.max.apply(null,trend.map(function(t){return t.count;}).concat([1]));
+  var tb2=document.getElementById('lcTrendBody');
+  var th2='';
+  trend.forEach(function(t){
+    var sel2 = (t.day===day);
+    th2+='<tr onclick="lcPickDay(\''+t.day+'\')" style="'+BR+'cursor:pointer;'+(sel2?'background:var(--bg);':'')+'"><td style="'+TD+'color:var(--text);font-weight:600;">'+t.day+'</td><td style="'+TD+'"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;background:var(--bg);border-radius:4px;height:12px;overflow:hidden;max-width:160px;"><div style="height:100%;width:'+(t.count/maxT*100).toFixed(0)+'%;background:#3b82f6;"></div></div><span style="color:var(--text);min-width:28px;">'+t.count+'</span></div></td><td style="'+TD+'text-align:right;color:#fb923c;">'+t.openPct.toFixed(1)+'%</td><td style="'+TD+'text-align:right;color:var(--text3);">'+t.empty+'</td><td style="'+TD+'text-align:right;color:#2dd4bf;">'+t.ai+'</td><td style="'+TD+'text-align:right;color:#fb923c;">'+t.slow+'</td><td style="'+TD+'text-align:right;color:'+lcTone(t.medFRT,'frt')+';">'+fmtLCDuration(t.medFRT)+'</td><td style="'+TD+'text-align:right;color:'+lcTone(t.medAHT,'aht')+';">'+fmtLCDuration(t.medAHT)+'</td></tr>';
+  });
+  tb2.innerHTML=th2||empty(8);
+  renderLivechatDailyChart(trend);
+  renderLivechatHourChart(s);
+  renderLivechatDrill();
 }
 
 restoreLayout();
@@ -8255,7 +8497,7 @@ checkSession();
   <!-- Attendance table -->
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
     <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><i class="ti ti-users" style="margin-right:5px;"></i>Per-Staff Summary <span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:8px;">(click a row for session-by-session detail)</span></div>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">Shift is auto-assigned from first login time (8AM–5PM / 9AM–6PM / 10AM–7PM / 11AM–8PM, all 9h). Logging in late pushes the required logout back by the same amount — e.g. login 8:05AM → must stay until 5:05PM. "Away Time" is the gap between sessions during the day (breaks).</div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">Shift is auto-assigned from first login time (8AM–5PM / 9AM–6PM / 10AM–7PM / 11AM–8PM, all 9h). Logging in late pushes the required logout back by the same amount — e.g. login 8:05AM → must stay until 5:05PM. "Away Time" is the gap between sessions during the day (breaks), minus any outbound talk time and ringing time that happened during that gap (from the call report; calls made while logged in are not deducted). Import the call report for the same day so it can be deducted.</div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead><tr style="border-bottom:2px solid var(--border2);">
@@ -8393,6 +8635,30 @@ checkSession();
     </div>
   </div>
 
+  <!-- Daily trend -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-chart-line" style="margin-right:5px;"></i>Daily Volume &amp; Trend <span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:8px;">(click a day to open it; choose "All days" above to combine them)</span></div>
+    <div style="position:relative;height:260px;margin-bottom:6px;"><canvas id="lcDailyChart"></canvas></div>
+    <div style="display:flex;gap:16px;margin-bottom:12px;font-size:11px;color:#64748b;">
+      <span><span style="display:inline-block;width:8px;height:8px;background:#e5e7eb;border-radius:2px;margin-right:4px;"></span>Total</span>
+      <span><span style="display:inline-block;width:8px;height:8px;background:#34d399;border-radius:2px;margin-right:4px;"></span>Closed / Resolved</span>
+      <span><span style="display:inline-block;width:8px;height:8px;background:#fb923c;border-radius:2px;margin-right:4px;"></span>Open</span>
+    </div>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="border-bottom:2px solid var(--border2);">
+        <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Day</th>
+        <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Conversations</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Open %</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Empty</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#2dd4bf;">AI</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:#fb923c;">Slow FRT</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Median FRT</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Median AHT</th>
+      </tr></thead>
+      <tbody id="lcTrendBody"></tbody>
+    </table></div>
+  </div>
+
   <!-- Key metrics (second row) + thresholds -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;">
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
@@ -8431,6 +8697,13 @@ checkSession();
     <label>Repeat customer threshold (contacts)
       <input type="number" id="lcRepeatMin" value="3" min="2" onchange="renderLivechat()" style="width:60px;margin-left:6px;padding:4px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);">
     </label>
+    <label>FRT target (min)
+      <input type="number" id="lcFrtTarget" value="5" min="0.5" step="0.5" onchange="renderLivechat()" style="width:60px;margin-left:6px;padding:4px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);">
+    </label>
+    <label>AHT target (min)
+      <input type="number" id="lcAhtTarget" value="15" min="1" step="1" onchange="renderLivechat()" style="width:60px;margin-left:6px;padding:4px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);">
+    </label>
+    <span>Median FRT / AHT show <span style="color:#4ade80;">green</span> within target, <span style="color:#f87171;">red</span> over it.</span>
   </div>
 
   <!-- By Channel -->
@@ -8479,16 +8752,15 @@ checkSession();
     </div>
   </div>
 
+  <div id="lcDrillPanel" style="display:none;background:var(--bg2);border:1px solid #3b82f6;border-radius:10px;padding:16px;margin-bottom:14px;"></div>
+
   <!-- Volume by Hour -->
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
     <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;"><i class="ti ti-clock" style="margin-right:5px;"></i>Volume By Hour</div>
+    <div style="position:relative;height:280px;margin-bottom:14px;"><canvas id="lcHourChart"></canvas></div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr style="border-bottom:2px solid var(--border2);">
-          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Hour</th>
-          <th style="padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Conversations</th>
-          <th style="padding:7px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Share</th>
-        </tr></thead>
+        <thead id="lcHourHead"></thead>
         <tbody id="lcHourBody"></tbody>
       </table>
     </div>
