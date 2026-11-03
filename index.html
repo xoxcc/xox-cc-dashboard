@@ -5698,6 +5698,10 @@ function setSLAPreset(preset){
   } else if(preset==='yesterday'){
     var yest=new Date(now); yest.setDate(now.getDate()-1);
     fr=to=fmt(yest);
+  } else if(preset==='last7'){
+    // today plus the 6 days before it = 7 days
+    var d7=new Date(now); d7.setDate(now.getDate()-6);
+    fr=fmt(d7); to=fmt(now);
   } else if(preset==='thisweek'){
     var dow=now.getDay();
     var mon=new Date(now); mon.setDate(now.getDate()-(dow===0?6:dow-1));
@@ -6477,6 +6481,10 @@ function setCDPreset(preset){
   } else if(preset==='yesterday'){
     var yest=new Date(now); yest.setDate(now.getDate()-1);
     fr=to=fmt(yest);
+  } else if(preset==='last7'){
+    // today plus the 6 days before it = 7 days
+    var d7=new Date(now); d7.setDate(now.getDate()-6);
+    fr=fmt(d7); to=fmt(now);
   } else if(preset==='thisweek'){
     var dow=now.getDay();
     var mon=new Date(now); mon.setDate(now.getDate()-(dow===0?6:dow-1));
@@ -6535,6 +6543,119 @@ function resetCDFilters(){
   document.getElementById('cdSearch').value='';
   populateCDMonths('');
   renderCaseDetail();
+}
+
+var _cdCmpMode='daily';
+function setCDCmpMode(m){
+  _cdCmpMode=m;
+  ['daily','weekly','monthly'].forEach(function(k){ var b=document.getElementById('cdcmp_'+k); if(b) b.className='fpreset'+(k===m?' active':''); });
+  renderCaseDetail();
+}
+function cdEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+var _cdCmpHi='';
+var _cdCmpChan=''; // channel filter for the Top 10 Comparison panel only
+function cdCmpSetChan(v){ _cdCmpChan=v; renderCaseDetail(); }
+function cdCmpHighlight(k,force){
+  _cdCmpHi = (!force && _cdCmpHi===k) ? '' : k;
+  renderCaseDetail();
+}
+function renderCDTopCompare(f, dfr){
+  var wrap=document.getElementById('cdCmpWrap'); if(!wrap) return;
+  // Channel buttons for this panel only (busiest first), built from the cases in the current filters.
+  var pillBox=document.getElementById('cdCmpChanPills');
+  if(pillBox){
+    var cc={}; f.forEach(function(r){ var c=r.channel||'Unspecified'; cc[c]=(cc[c]||0)+1; });
+    var chs=Object.keys(cc).sort(function(x,y){return cc[y]-cc[x];});
+    if(_cdCmpChan && !cc[_cdCmpChan]) _cdCmpChan='';
+    var icons={'call':'📞','phone':'📞','voice':'📞','whatsapp':'💬','wa':'💬','email':'✉️','chat':'💬'};
+    var ph='<button class="fpreset'+(_cdCmpChan===''?' active':'')+'" data-v="" onclick="cdCmpSetChan(this.dataset.v)">All</button>';
+    chs.forEach(function(c){ ph+='<button class="fpreset'+(_cdCmpChan===c?' active':'')+'" data-v="'+cdEsc(c)+'" onclick="cdCmpSetChan(this.dataset.v)">'+(icons[c.toLowerCase()]||'📋')+' '+cdEsc(c)+'</button>'; });
+    pillBox.innerHTML=ph;
+  }
+  if(_cdCmpChan) f=f.filter(function(r){ return (r.channel||'Unspecified')===_cdCmpChan; });
+  if(!f.length){ wrap.innerHTML='<div style="padding:18px;color:var(--text3);">No cases in the selected period.</div>'; return; }
+  function dayNum(d){ var p=d.split('-'); return Math.round(Date.UTC(+p[0],+p[1]-1,+p[2])/86400000); }
+  function dayStr(n){ var d=new Date(n*86400000); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function shortD(d){ var p=d.split('-'); return (+p[2])+' '+MN[+p[1]-1]; }
+  var minD=f.reduce(function(a,r){return r.date<a?r.date:a;}, f[0].date);
+  var start=(dfr && dfr<minD && _cdCmpMode==='weekly') ? dfr : minD;
+  var periods={}, order=[];
+  f.forEach(function(r){
+    var key,label,sub;
+    if(_cdCmpMode==='weekly'){
+      var idx=Math.floor((dayNum(r.date)-dayNum(start))/7);
+      var a0=dayNum(start)+idx*7;
+      key=String(idx); label=shortD(dayStr(a0))+' – '+shortD(dayStr(a0+6)); sub='Week '+(idx+1);
+    } else if(_cdCmpMode==='monthly'){
+      key=r.date.slice(0,7); label=MN[+key.slice(5,7)-1]+' '+key.slice(0,4); sub='Month';
+    } else {
+      key=r.date; var dn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(dayNum(r.date)*86400000).getUTCDay()];
+      label=shortD(r.date); sub=dn;
+    }
+    if(!periods[key]){ periods[key]={label:label,sub:sub,total:0,cats:{}}; order.push(key); }
+    var p=periods[key]; p.total++;
+    var ck=r.cat||r.cat1;
+    if(!p.cats[ck]) p.cats[ck]={cat1:r.cat1,cat2:r.cat2,n:0};
+    p.cats[ck].n++;
+  });
+  order.sort(function(a,b){ return _cdCmpMode==='weekly' ? (+a)-(+b) : (a<b?-1:a>b?1:0); });
+  var overall={}, info={};
+  var capped=false;
+  if(order.length>31){ order=order.slice(-31); capped=true; }
+  // Full ranking per period (not just the top 10) so a followed category can show where it sits.
+  order.forEach(function(k){
+    var p=periods[k];
+    p.ranked=Object.keys(p.cats).map(function(ck){return {ck:ck,c:p.cats[ck]};}).sort(function(a,b){return b.c.n-a.c.n || (a.ck<b.ck?-1:1);});
+    p.rank={}; p.ranked.forEach(function(e,i){ p.rank[e.ck]=i+1; overall[e.ck]=(overall[e.ck]||0)+e.c.n; info[e.ck]=e.c; });
+  });
+  // dropdown of every category in range
+  var pick=document.getElementById('cdCmpPick');
+  if(pick){
+    var allCk=Object.keys(overall).sort(function(a,b){return overall[b]-overall[a];});
+    var opts='<option value="">— choose, or click one below —</option>';
+    allCk.forEach(function(ck){ opts+='<option value="'+cdEsc(ck)+'"'+(ck===_cdCmpHi?' selected':'')+'>'+cdEsc(info[ck].cat1+(info[ck].cat2?' › '+info[ck].cat2:''))+' ('+overall[ck].toLocaleString()+')</option>'; });
+    pick.innerHTML=opts;
+  }
+  // summary strip for the followed category
+  var sum=document.getElementById('cdCmpSummary');
+  if(sum){
+    if(_cdCmpHi && info[_cdCmpHi]){
+      var ci=info[_cdCmpHi];
+      var sh='<div style="background:rgba(251,191,36,.10);border:1px solid #fbbf24;border-radius:8px;padding:10px 12px;margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">Following: '+cdEsc(ci.cat1)+(ci.cat2?' › '+cdEsc(ci.cat2):'')+'</div><div style="display:flex;gap:8px;overflow-x:auto;">';
+      order.forEach(function(k){
+        var p=periods[k], r=p.rank[_cdCmpHi], c=p.cats[_cdCmpHi];
+        var col = !r ? 'var(--text4)' : (r<=3?'#4ade80':(r<=10?'#60a5fa':'#fb923c'));
+        sh+='<div style="min-width:92px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;text-align:center;flex:0 0 auto;"><div style="font-size:10px;color:var(--text3);">'+cdEsc(p.label)+'</div>'
+          +'<div style="font-size:18px;font-weight:700;color:'+col+';">'+(r?'#'+r:'–')+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);">'+(c?c.n.toLocaleString()+' cases':'no cases')+(r>10?'<br>outside top 10':'')+'</div></div>';
+      });
+      sum.innerHTML=sh+'</div></div>';
+    } else if(_cdCmpHi){
+      sum.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">That category has no cases in the selected period.</div>';
+    } else sum.innerHTML='';
+  }
+  var h='';
+  if(capped) h+='<div style="font-size:10px;color:var(--text3);margin-bottom:6px;">Showing the latest 31 columns of the selected range.</div>';
+  h+='<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">';
+  order.forEach(function(k){
+    var p=periods[k];
+    var top=p.ranked.slice(0,10);
+    h+='<div style="min-width:210px;max-width:210px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;flex:0 0 auto;">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);">'+cdEsc(p.label)+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-bottom:8px;">'+cdEsc(p.sub)+' · '+p.total.toLocaleString()+' cases</div>';
+    top.forEach(function(e,i){
+      var on=(_cdCmpHi && _cdCmpHi===e.ck);
+      var dim=(_cdCmpHi && !on);
+      h+='<div data-k="'+cdEsc(e.ck)+'" onclick="cdCmpHighlight(this.dataset.k)" title="Click to follow this category across all columns" style="display:flex;align-items:flex-start;gap:6px;padding:4px 5px;margin:0 -5px;border-radius:5px;cursor:pointer;'+(on?'background:rgba(251,191,36,.18);outline:1px solid #fbbf24;':'')+(dim?'opacity:.35;':'')+'">'
+        +'<span style="min-width:16px;font-size:11px;color:var(--text3);">'+(i+1)+'</span>'
+        +'<span style="flex:1;line-height:1.25;"><span style="font-size:11px;color:var(--text);font-weight:600;">'+cdEsc(e.c.cat1)+'</span>'+(e.c.cat2?'<br><span style="font-size:10px;color:var(--text3);">'+cdEsc(e.c.cat2)+'</span>':'')+'</span>'
+        +'<span style="font-size:12px;font-weight:700;color:#60a5fa;">'+e.c.n.toLocaleString()+'</span></div>';
+    });
+    h+='</div>';
+  });
+  h+='</div>';
+  wrap.innerHTML=h;
 }
 
 function renderCaseDetail(){
@@ -6647,6 +6768,7 @@ function renderCaseDetail(){
         +'<td style="padding:7px 10px;text-align:right;font-weight:700;color:#60a5fa;">'+pct(t10closed,t10total)+'</td>';
     }
   }
+  renderCDTopCompare(f, dfr);
   // By Channel — rendered as extra KPI cards right beside Open/Closed/Agents
   var chMap={};
   f.forEach(function(r){
@@ -7736,7 +7858,45 @@ function computeLivechatSummary(day){
 
 function lcEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 var LC_ALL='__all__';
+var lcPreset='day'; // 'day' = use the Day dropdown; otherwise a Period button
+function lcPresetRange(p){
+  var now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  var fmt=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  if(p==='today') return {fr:fmt(now),to:fmt(now)};
+  if(p==='yesterday'){ var yd=new Date(now); yd.setDate(now.getDate()-1); return {fr:fmt(yd),to:fmt(yd)}; }
+  if(p==='thisweek'){ var dow=now.getDay(); var mon=new Date(now); mon.setDate(now.getDate()-(dow===0?6:dow-1)); var sun=new Date(mon); sun.setDate(mon.getDate()+6); return {fr:fmt(mon),to:fmt(sun)}; }
+  if(p==='thismonth') return {fr:fmt(new Date(y,m,1)),to:fmt(new Date(y,m+1,0))};
+  if(p==='lastmonth') return {fr:fmt(new Date(y,m-1,1)),to:fmt(new Date(y,m,0))};
+  if(p==='custom'){
+    var f=document.getElementById('lcDateFrom'), t=document.getElementById('lcDateTo');
+    if(f&&t&&f.value&&t.value) return {fr:f.value,to:t.value};
+    return {fr:'9999-12-31',to:'0000-01-01'}; // nothing selected yet -> empty
+  }
+  return null;
+}
+// Days (that actually have data) inside the chosen Period, or null when the Day dropdown is in charge.
+function lcPresetDays(){
+  if(lcPreset==='day') return null;
+  var r=lcPresetRange(lcPreset); if(!r) return null;
+  return Object.keys(livechatData).sort().filter(function(d){return d>=r.fr && d<=r.to;});
+}
+function lcPresetLabel(){
+  var names={today:'Today',yesterday:'Yesterday',thisweek:'This Week',thismonth:'This Month',lastmonth:'Last Month',custom:'Custom Range'};
+  var r=lcPresetRange(lcPreset), pd=lcPresetDays()||[];
+  return (names[lcPreset]||'')+(r&&r.fr<=r.to?' ('+r.fr+' to '+r.to+')':'')+' — '+pd.length+' day(s) with data';
+}
+function lcSetPreset(p){
+  lcPreset=p;
+  ['today','yesterday','thisweek','thismonth','lastmonth','custom'].forEach(function(k){
+    var b=document.getElementById('lcfp_'+k); if(b) b.className='fpreset'+(k===p?' active':'');
+  });
+  var cr=document.getElementById('lcCustomRow'); if(cr) cr.style.display=(p==='custom')?'inline-flex':'none';
+  buildLivechatChannelFilter();
+  renderLivechat();
+}
 function lcGetConvos(day){
+  var pd=lcPresetDays();
+  if(pd){ var o=[]; pd.forEach(function(d){ o=o.concat(livechatData[d]||[]); }); return o; }
   if(day===LC_ALL){ var out=[]; Object.keys(livechatData).sort().forEach(function(d){ out=out.concat(livechatData[d]||[]); }); return out; }
   return livechatData[day]||[];
 }
@@ -7861,7 +8021,7 @@ function renderLivechatDrill(){
 }
 function lcPickDay(d){
   var sel=document.getElementById('lcDaySel'); if(!sel) return;
-  sel.value=d; buildLivechatChannelFilter(); renderLivechat();
+  sel.value=d; lcSetPreset('day');
 }
 function lcFmtDT(iso){
   if(!iso) return '—';
@@ -7880,7 +8040,9 @@ function renderLivechat(){
   var periodEl=document.getElementById('lcPeriod');
 
   var ids=['lcKpiTotal','lcKpiOpen','lcKpiOpenPct','lcKpiClosed','lcKpiEmpty','lcKpiFRT','lcKpiAHT','lcKpiAI','lcKpiWA','lcKpiSlow','lcKpiCustMsg','lcKpiAgMsg','lcKpiAiMsg','lcKpiFirst','lcKpiLast'];
-  if(!day || (day!==LC_ALL && !livechatData[day])){
+  var pdays=lcPresetDays();
+  var noData = pdays ? !pdays.length : (!day || (day!==LC_ALL && !livechatData[day]));
+  if(noData){
     ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
     ['lcUnassignedTable','lcOpenTable','lcRepeatTable'].forEach(function(id){ var t=document.getElementById(id); if(t) t.innerHTML=''; });
     var cw=document.getElementById('lcCrossWrap'); if(cw) cw.innerHTML='';
@@ -7888,13 +8050,13 @@ function renderLivechat(){
     var dp=document.getElementById('lcDrillPanel'); if(dp) dp.style.display='none';
     ['lcChannelBody','lcAgentBody','lcHourBody'].forEach(function(id){
       var tb=document.getElementById(id);
-      if(tb) tb.innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:var(--text3);">No Livechat data imported yet. Use "Import Livechat Report" above.</td></tr>';
+      if(tb) tb.innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:var(--text3);">'+(pdays?'No Livechat data in this period.':'No Livechat data imported yet. Use "Import Livechat Report" above.')+'</td></tr>';
     });
-    if(periodEl) periodEl.textContent='';
+    if(periodEl) periodEl.textContent=pdays?lcPresetLabel():'';
     return;
   }
 
-  if(periodEl) periodEl.textContent = day===LC_ALL ? ('All days: '+Object.keys(livechatData).sort()[0]+' to '+Object.keys(livechatData).sort().slice(-1)[0]) : ('Day: '+day);
+  if(periodEl) periodEl.textContent = pdays ? lcPresetLabel() : day===LC_ALL ? ('All days: '+Object.keys(livechatData).sort()[0]+' to '+Object.keys(livechatData).sort().slice(-1)[0]) : ('Day: '+day);
 
   var s=computeLivechatSummary(day);
   document.getElementById('lcKpiTotal').textContent=s.total.toLocaleString();
@@ -8208,6 +8370,7 @@ checkSession();
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <button onclick="setSLAPreset('today')" class="fpreset" id="slap_today">Today</button>
       <button onclick="setSLAPreset('yesterday')" class="fpreset" id="slap_yesterday">Yesterday</button>
+      <button onclick="setSLAPreset('last7')" class="fpreset" id="slap_last7">Last 7 Days</button>
       <button onclick="setSLAPreset('thisweek')" class="fpreset" id="slap_thisweek">This Week</button>
       <button onclick="setSLAPreset('lastmonth')" class="fpreset" id="slap_lastmonth">Last Month</button>
       <button onclick="setSLAPreset('thismonth')" class="fpreset active" id="slap_thismonth">This Month</button>
@@ -8350,6 +8513,7 @@ checkSession();
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <button onclick="setCDPreset('today')" class="fpreset" id="cdp_today">Today</button>
       <button onclick="setCDPreset('yesterday')" class="fpreset" id="cdp_yesterday">Yesterday</button>
+      <button onclick="setCDPreset('last7')" class="fpreset" id="cdp_last7">Last 7 Days</button>
       <button onclick="setCDPreset('thisweek')" class="fpreset" id="cdp_thisweek">This Week</button>
       <button onclick="setCDPreset('lastmonth')" class="fpreset" id="cdp_lastmonth">Last Month</button>
       <button onclick="setCDPreset('thismonth')" class="fpreset active" id="cdp_thismonth">This Month</button>
@@ -8417,6 +8581,29 @@ checkSession();
         </tfoot>
       </table>
     </div>
+  </div>
+  <!-- Top 10 comparison across days / 7-day blocks -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-arrows-sort" style="color:#fbbf24;margin-right:6px;"></i>Top 10 Comparison</div>
+      <div style="display:flex;gap:6px;">
+        <button class="fpreset active" id="cdcmp_daily" onclick="setCDCmpMode('daily')">Day by day</button>
+        <button class="fpreset" id="cdcmp_weekly" onclick="setCDCmpMode('weekly')">Week by week</button>
+        <button class="fpreset" id="cdcmp_monthly" onclick="setCDCmpMode('monthly')">Month by month</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">The 10 most common case categories for each day, week or month, side by side, so you can see how the list changes. Numbers on the right are the number of cases. <b style="color:var(--text2);">Click a category (or pick one from the list) to highlight it and see its position in every column.</b> Use the date filters above to choose the period: Last 7 Days for day by day, or clear the dates / pick a year for month by month.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-right:4px;">Channel</span>
+      <span id="cdCmpChanPills" style="display:contents;"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <label style="font-size:11px;color:var(--text3);">Follow a category:</label>
+      <select id="cdCmpPick" onchange="cdCmpHighlight(this.value,true)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px;outline:none;max-width:360px;"><option value="">— choose, or click one below —</option></select>
+      <button class="fpreset" onclick="cdCmpHighlight('',true)" style="font-size:11px;">Clear</button>
+    </div>
+    <div id="cdCmpSummary"></div>
+    <div id="cdCmpWrap"></div>
   </div>
   <!-- Agent table -->
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;">
@@ -8588,9 +8775,23 @@ checkSession();
       <div id="lcPeriod" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
     </div>
   </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-right:4px;">Period</span>
+    <button class="fpreset" id="lcfp_today" onclick="lcSetPreset('today')">Today</button>
+    <button class="fpreset" id="lcfp_yesterday" onclick="lcSetPreset('yesterday')">Yesterday</button>
+    <button class="fpreset" id="lcfp_thisweek" onclick="lcSetPreset('thisweek')">This Week</button>
+    <button class="fpreset" id="lcfp_thismonth" onclick="lcSetPreset('thismonth')">This Month</button>
+    <button class="fpreset" id="lcfp_lastmonth" onclick="lcSetPreset('lastmonth')">Last Month</button>
+    <button class="fpreset" id="lcfp_custom" onclick="lcSetPreset('custom')"><i class="ti ti-calendar" style="font-size:11px;margin-right:3px;"></i>Custom Range</button>
+    <span id="lcCustomRow" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--text3);">
+      <input type="date" id="lcDateFrom" onchange="renderLivechat()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px;">
+      to
+      <input type="date" id="lcDateTo" onchange="renderLivechat()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px;">
+    </span>
+  </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
     <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Day</label>
-    <select id="lcDaySel" onchange="buildLivechatChannelFilter();renderLivechat();" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+    <select id="lcDaySel" onchange="lcSetPreset('day');" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
       <option value="">No data yet</option>
     </select>
     <select id="lcChannelFilter" onchange="renderLivechat()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
