@@ -6626,6 +6626,7 @@ function resetCDFilters(){
 var _cdCmpMode='daily';
 function setCDCmpMode(m){
   _cdCmpMode=m;
+  ['cdCmpScroller','cdCmpSumScroller'].forEach(function(i){var o=document.getElementById(i); if(o) o.id='';}); // new view starts from the first column
   ['daily','weekly','monthly'].forEach(function(k){ var b=document.getElementById('cdcmp_'+k); if(b) b.className='fpreset'+(k===m?' active':''); });
   renderCaseDetail();
 }
@@ -6637,8 +6638,11 @@ function cdCmpHighlight(k,force){
   _cdCmpHi = (!force && _cdCmpHi===k) ? '' : k;
   renderCaseDetail();
 }
+var _cdScrollKeep=null, _cdSumScrollKeep=null;
 function renderCDTopCompare(f, dfr){
   var wrap=document.getElementById('cdCmpWrap'); if(!wrap) return;
+  var _oldSc=document.getElementById('cdCmpScroller'); _cdScrollKeep=_oldSc?_oldSc.scrollLeft:null;
+  var _oldSs=document.getElementById('cdCmpSumScroller'); _cdSumScrollKeep=_oldSs?_oldSs.scrollLeft:null;
   // Channel buttons for this panel only (busiest first), built from the cases in the current filters.
   var pillBox=document.getElementById('cdCmpChanPills');
   if(pillBox){
@@ -6700,7 +6704,7 @@ function renderCDTopCompare(f, dfr){
   if(sum){
     if(_cdCmpHi && info[_cdCmpHi]){
       var ci=info[_cdCmpHi];
-      var sh='<div style="background:rgba(251,191,36,.10);border:1px solid #fbbf24;border-radius:8px;padding:10px 12px;margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">Following: '+cdEsc(ci.cat1)+(ci.cat2?' › '+cdEsc(ci.cat2):'')+'</div><div style="display:flex;gap:8px;overflow-x:auto;">';
+      var sh='<div style="background:rgba(251,191,36,.10);border:1px solid #fbbf24;border-radius:8px;padding:10px 12px;margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;">Following: '+cdEsc(ci.cat1)+(ci.cat2?' › '+cdEsc(ci.cat2):'')+'</div><div id="cdCmpSumScroller" style="display:flex;gap:8px;overflow-x:auto;">';
       order.forEach(function(k){
         var p=periods[k], r=p.rank[_cdCmpHi], c=p.cats[_cdCmpHi];
         var col = !r ? 'var(--text4)' : (r<=3?'#4ade80':(r<=10?'#60a5fa':'#fb923c'));
@@ -6715,7 +6719,7 @@ function renderCDTopCompare(f, dfr){
   }
   var h='';
   if(capped) h+='<div style="font-size:10px;color:var(--text3);margin-bottom:6px;">Showing the latest 31 columns of the selected range.</div>';
-  h+='<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">';
+  h+='<div id="cdCmpScroller" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">';
   order.forEach(function(k){
     var p=periods[k];
     var top=p.ranked.slice(0,10);
@@ -6734,6 +6738,11 @@ function renderCDTopCompare(f, dfr){
   });
   h+='</div>';
   wrap.innerHTML=h;
+  // Keep the horizontal scroll position so following a category doesn't jump back to the first column
+  var sc2=document.getElementById('cdCmpScroller');
+  if(sc2 && _cdScrollKeep!=null) sc2.scrollLeft=_cdScrollKeep;
+  var ss2=document.getElementById('cdCmpSumScroller');
+  if(ss2 && _cdSumScrollKeep!=null) ss2.scrollLeft=_cdSumScrollKeep;
 }
 
 function renderCaseDetail(){
