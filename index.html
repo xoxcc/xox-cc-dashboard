@@ -800,6 +800,8 @@ ON CONFLICT (id) DO NOTHING;</code></div>
     <div class="dp-body">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
         <div class="card-title" style="margin-bottom:0;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;"><i class="ti ti-chart-bar" style="margin-right:5px;"></i><span id="hourlyCardTitle">Hourly Call Volume</span></div>
+        <div id="hourlyNow" title="Current time" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#34d399;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:6px;padding:3px 10px;font-variant-numeric:tabular-nums;"><i class="ti ti-clock"></i><span id="hourlyNowText">--:--:--</span></div>
+        <div id="hourlyLast" title="Latest call time in the last imported report" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#60a5fa;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);border-radius:6px;padding:3px 10px;font-variant-numeric:tabular-nums;"><i class="ti ti-phone-check"></i><span>Last call:</span><span id="hourlyLastText">-</span></div>
         <div style="display:flex;gap:6px;align-items:center;">
           <select id="hourlyMonthFilter" onchange="renderHourlyFiltered()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;outline:none;cursor:pointer;">
             <option value="">All Months</option>
@@ -2285,6 +2287,43 @@ function renderHourlyFiltered(){
   renderHourly(agg(filtered), filtered.length);
 }
 
+// Live clock above the hourly table (also re-highlights the current hour when it changes)
+(function(){
+  var lastHr=-1;
+  function tick(){
+    var el=document.getElementById('hourlyNowText');
+    if(!el) return;
+    var d=new Date();
+    var h=d.getHours(), ap=h>=12?'PM':'AM', h12=h%12||12;
+    var p=function(n){return String(n).padStart(2,'0');};
+    el.textContent=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})+'  '+p(h12)+':'+p(d.getMinutes())+':'+p(d.getSeconds())+' '+ap;
+    if(lastHr!==-1 && lastHr!==h && typeof renderHourlyFiltered==='function'){ try{renderHourlyFiltered();}catch(e){} }
+    lastHr=h;
+    var le=document.getElementById('hourlyLastText');
+    if(le){
+      var txt='-';
+      try{
+        var ds=(typeof allDates!=='undefined'&&allDates.length)?allDates[allDates.length-1]:null;
+        var rec=ds&&allData[ds];
+        if(rec){
+          var dl=new Date(ds+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+          if(rec.last_call_s!=null){
+            var s=rec.last_call_s, lh=Math.floor(s/3600), lm=Math.floor(s%3600/60), ls=s%60;
+            txt=String(lh%12||12).padStart(2,'0')+':'+String(lm).padStart(2,'0')+':'+String(ls).padStart(2,'0')+' '+(lh>=12?'PM':'AM')+' ('+dl+')';
+          } else {
+            var hrs=Object.keys(rec.hourly||{}).map(Number).sort(function(a,b){return a-b;});
+            txt=hrs.length?('within '+fmtHour(hrs[hrs.length-1])+' hour ('+dl+') - re-import for exact time'):'-';
+          }
+        }
+      }catch(e){}
+      if(le.textContent!==txt) le.textContent=txt;
+    }
+  }
+  setInterval(tick,1000);
+  document.addEventListener('DOMContentLoaded',tick);
+  setTimeout(tick,0);
+})();
+
 function renderHourly(a, numDays){
   const isMulti = numDays && numDays > 1;
   const divisor = isMulti ? numDays : 1;
@@ -2349,6 +2388,14 @@ function renderHourly(a, numDays){
       if(bold) td.style.fontWeight='600';
       row.appendChild(td);
     });
+    if(h===new Date().getHours()){
+      row.style.background='rgba(52,211,153,.12)';
+      row.style.boxShadow='inset 3px 0 0 #34d399';
+      row.firstChild.innerHTML=''; row.firstChild.appendChild(document.createTextNode(fmtHour(h)+' '));
+      var nowTag=document.createElement('span'); nowTag.textContent='NOW';
+      nowTag.style.cssText='font-size:8px;font-weight:700;color:#34d399;border:1px solid #34d399;border-radius:3px;padding:0 3px;margin-left:2px;';
+      row.firstChild.appendChild(nowTag);
+    }
     tbody.appendChild(row);
   });
 
@@ -3196,6 +3243,9 @@ function parseWorkbook(wb){
     const talkS=parseTimeS(r[ix.talk]), ringS=parseTimeS(r[ix.ring]);
     const hour=parseHour(r[ix.time]);
     const v=ensure(ds);
+    // Track the latest call time (seconds since midnight) seen in the report for this day
+    var _lt=String(r[ix.date]||'').match(/(\d{1,2}):(\d{2}):(\d{2})/);
+    if(_lt){ var _ls=(+_lt[1])*3600+(+_lt[2])*60+(+_lt[3]); if(!(v.lastS>=_ls)) v.lastS=_ls; }
 
     // Debug: track all dir+status combos
     var key = '"'+dir+'" + "'+st+'"';
@@ -3279,6 +3329,7 @@ function parseWorkbook(wb){
     Object.values(v.agents).forEach(a=>{ttalk+=a.talk;tcalls+=a.inbound;});
     out[d]={
       total,answered,abandoned,ans30,
+      last_call_s:v.lastS!=null?v.lastS:null,
       avg_talk_s:tcalls>0?Math.round(ttalk/tcalls):0,
       avg_wait_s:answered>0?Math.round(twait/answered):0,
       total_wait_s:twait,
@@ -5482,6 +5533,7 @@ function handleSLAImport(input){
       var iMonth=headers.indexOf('Month'),iBy=headers.indexOf('Issue Created By');
       var iCat=headers.indexOf('Issue Category'),iSLA=headers.indexOf('SLA');
       var iStatus=headers.indexOf('Issue Status');
+      var iDiv=headers.indexOf('Case Division');
 
       // Convert Excel serial number to {y,m,d} - correct formula
       function excelSerialToYMD(serial){
@@ -5541,6 +5593,7 @@ function handleSLAImport(input){
           agent:agent,
           category:String(r[iCat]||'').trim(),
           status:String(r[iStatus]||'').trim(),
+          division:iDiv>=0?String(r[iDiv]||'').trim():'',
           days:days
         });
       });
@@ -5763,6 +5816,7 @@ function resetSLAFilters(){
   document.getElementById('slaDateFrom').value    = '';
   document.getElementById('slaDateTo').value      = '';
   document.getElementById('slaStatusFilter').value= '';
+  var _dv=document.getElementById('slaDivisionFilter'); if(_dv) _dv.value='';
   document.getElementById('slaSearch').value      = '';
   populateSLAMonths('');
   renderCaseSLA();
@@ -5885,15 +5939,39 @@ function renderCaseSLA(){
   var dfr=(document.getElementById('slaDateFrom')||{}).value||'';
   var dto=(document.getElementById('slaDateTo')||{}).value||'';
 
+  var dv=(document.getElementById('slaDivisionFilter')||{}).value||'';
   var f=slaData.filter(function(r){
     if(yf && !r.month.startsWith(yf)) return false;
     if(mf && r.month!==mf) return false;
     if(dfr && r.date<dfr) return false;
     if(dto && r.date>dto) return false;
     if(sf && r.status!==sf) return false;
+    if(dv && (r.division||'')!==dv) return false;
     if(q && !r.agent.toLowerCase().includes(q)) return false;
     return true;
   });
+  // "Case Division" dropdown (e.g. "Operation Department > Call"), with case counts for the
+  // current date range / status. Rebuilt each render. Rows imported before this column was
+  // saved have no division, so they only show under "All".
+  var dvSel=document.getElementById('slaDivisionFilter');
+  if(dvSel){
+    var dcnt={}, noDiv=0;
+    slaData.forEach(function(r){
+      if(yf && !r.month.startsWith(yf)) return;
+      if(mf && r.month!==mf) return;
+      if(dfr && r.date<dfr) return;
+      if(dto && r.date>dto) return;
+      if(sf && r.status!==sf) return;
+      if(r.division) dcnt[r.division]=(dcnt[r.division]||0)+1; else noDiv++;
+    });
+    var dnames=Object.keys(dcnt).sort(function(a,b){return dcnt[b]-dcnt[a];});
+    if(dv && !dcnt[dv]) dnames.push(dv);
+    var dh='<option value="">Case Division: All</option>';
+    dnames.forEach(function(n){ dh+='<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+' ('+(dcnt[n]||0).toLocaleString()+')</option>'; });
+    if(!dnames.length && noDiv) dh+='<option value="" disabled>(no division saved yet - re-import the file)</option>';
+    dvSel.innerHTML=dh;
+    dvSel.value=dv;
+  }
   window._slaCurrentFiltered = f; // for the category drilldown panel
   var total=f.length;
   var closedRows=f.filter(function(r){var s=r.status.trim();return s==='Closed'||s==='Closed > Closed';});
@@ -8388,6 +8466,9 @@ checkSession();
       <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">To</label>
       <input type="date" id="slaDateTo" onchange="onSLADateChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;outline:none;"/>
       <button onclick="resetSLAFilters()" style="padding:5px 10px;background:var(--bg4);color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;"><i class="ti ti-refresh"></i> Reset</button>
+      <select id="slaDivisionFilter" onchange="renderCaseSLA()" title="Case Division" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;max-width:280px;">
+        <option value="">Case Division: All</option>
+      </select>
       <select id="slaStatusFilter" onchange="renderCaseSLA()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
         <option value="">All Statuses</option>
       </select>
