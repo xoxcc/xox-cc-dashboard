@@ -3481,12 +3481,9 @@ function closeAgentDrilldown(){
   document.getElementById('agentDrillBox').style.display='none';
 }
 
-function openAgentDrilldown(name){
-  document.getElementById('agentDrillName').textContent = name.replace(/^CC /,'');
-
-  // Gather this agent's stats across ALL available history, not just the
-  // currently filtered range — the point is to spot patterns over time.
-  var rows = allDates.map(function(d){
+var _adName='', _adView='daily';
+function _adAllRows(name){
+  return allDates.map(function(d){
     var rec = allData[d];
     var ag = rec && Array.isArray(rec.agents) ? rec.agents.find(function(a){return a.name===name;}) : null;
     if(!ag) return null;
@@ -3494,15 +3491,54 @@ function openAgentDrilldown(name){
     if(inbound===0 && outbound===0) return null;
     return { date:d, inbound:inbound, outbound:outbound, talk:talk, aht: inbound>0?Math.round(talk/inbound):0 };
   }).filter(Boolean);
+}
+function openAgentDrilldown(name){
+  _adName=name; _adView='daily';
+  document.getElementById('agentDrillName').textContent = name.replace(/^CC /,'');
+  var all=_adAllRows(name);
+  // Month picker built from this agent's own history
+  var ms=document.getElementById('adMonth');
+  if(ms){
+    var months=[]; all.forEach(function(r){ var m=r.date.slice(0,7); if(months.indexOf(m)<0) months.push(m); });
+    months.reverse();
+    ms.innerHTML='<option value="">Custom / all</option>'+months.map(function(m){return '<option value="'+m+'">'+_MN[+m.slice(5,7)-1]+' '+m.slice(0,4)+'</option>';}).join('');
+    ms.value='';
+  }
+  // Start from the dashboard's current date filter (blank = all history)
+  var df=document.getElementById('dateFrom'), dt=document.getElementById('dateTo');
+  var fEl=document.getElementById('adFrom'), tEl=document.getElementById('adTo');
+  if(fEl) fEl.value=(df&&df.value)||''; if(tEl) tEl.value=(dt&&dt.value)||'';
+  adSetView('daily',true);
+  renderAgentDrill();
+  document.getElementById('agentDrillBackdrop').style.display='block';
+  document.getElementById('agentDrillBox').style.display='block';
+}
+function adMonthChange(){
+  var m=document.getElementById('adMonth').value;
+  var fEl=document.getElementById('adFrom'), tEl=document.getElementById('adTo');
+  if(m){
+    var y=+m.slice(0,4), mo=+m.slice(5,7), last=new Date(y,mo,0).getDate();
+    fEl.value=m+'-01'; tEl.value=m+'-'+String(last).padStart(2,'0');
+  } else { fEl.value=''; tEl.value=''; }
+  renderAgentDrill();
+}
+function adRangeChange(){ var ms=document.getElementById('adMonth'); if(ms) ms.value=''; renderAgentDrill(); }
+function adSetView(v,noRender){
+  _adView=v;
+  ['daily','monthly'].forEach(function(k){ var b=document.getElementById('adv_'+k); if(b) b.className='fpreset'+(k===v?' active':''); });
+  if(!noRender) renderAgentDrill();
+}
+function renderAgentDrill(){
+  var name=_adName;
+  var fromV=(document.getElementById('adFrom')||{}).value||'', toV=(document.getElementById('adTo')||{}).value||'';
+  var rows = _adAllRows(name).filter(function(r){ return (!fromV||r.date>=fromV) && (!toV||r.date<=toV); });
 
   var sub = document.getElementById('agentDrillSub');
   if(!rows.length){
-    sub.textContent = 'No historical data found for this agent.';
+    sub.textContent = 'No data for this agent in the selected dates.';
     document.getElementById('agentDrillStats').innerHTML='';
     document.getElementById('agentDrillTableBody').innerHTML='';
     if(charts.agentDrill){ charts.agentDrill.destroy(); charts.agentDrill=null; }
-    document.getElementById('agentDrillBackdrop').style.display='block';
-    document.getElementById('agentDrillBox').style.display='block';
     return;
   }
 
@@ -3537,27 +3573,52 @@ function openAgentDrilldown(name){
   statsHtml += statCard('AHT Trend (1st vs 2nd half)', trendIcon+' '+(ahtDelta>0?'+':'')+ahtDelta+'%', trendColor);
   document.getElementById('agentDrillStats').innerHTML = statsHtml;
 
-  // Daily table, most recent first
+  // Daily or monthly view of the same filtered rows
+  var thS='padding:6px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);';
+  var series=rows;       // what the chart plots
+  var labelsOf=function(r){ var p=r.date.split('-'); return p[2]+' '+_MN[parseInt(p[1])-1]; };
   var tbody = document.getElementById('agentDrillTableBody');
-  var sortedRows = rows.slice().reverse();
-  tbody.innerHTML = sortedRows.map(function(r){
-    return '<tr style="border-bottom:1px solid var(--border);">'
-      +'<td style="padding:5px 10px;color:var(--text2);">'+fmtDate(r.date)+'</td>'
-      +'<td style="padding:5px 10px;text-align:right;color:#60a5fa;font-weight:600;">'+r.inbound+'</td>'
-      +'<td style="padding:5px 10px;text-align:right;color:'+(r.outbound>0?'#34d399':'var(--text3)')+';">'+r.outbound+'</td>'
-      +'<td style="padding:5px 10px;text-align:right;color:#2dd4bf;">'+fmtT(r.aht)+'</td>'
-      +'</tr>';
-  }).join('');
+  if(_adView==='monthly'){
+    var mm={}, mOrder=[];
+    rows.forEach(function(r){
+      var k=r.date.slice(0,7);
+      if(!mm[k]){ mm[k]={date:k,days:0,inbound:0,outbound:0,talk:0}; mOrder.push(k); }
+      var m=mm[k]; m.days++; m.inbound+=r.inbound; m.outbound+=r.outbound; m.talk+=r.talk;
+    });
+    series=mOrder.map(function(k){ var m=mm[k]; m.aht=m.inbound>0?Math.round(m.talk/m.inbound):0; return m; });
+    labelsOf=function(m){ return _MN[parseInt(m.date.slice(5,7))-1]+' '+m.date.slice(0,4); };
+    document.getElementById('agentDrillHead').innerHTML='<tr style="border-bottom:1px solid var(--border2);"><th style="'+thS+'text-align:left;">Month</th><th style="'+thS+'">Active Days</th><th style="'+thS+'">Inbound</th><th style="'+thS+'">Outbound</th><th style="'+thS+'">Avg Talk</th></tr>';
+    tbody.innerHTML = series.slice().reverse().map(function(m){
+      return '<tr style="border-bottom:1px solid var(--border);">'
+        +'<td style="padding:5px 10px;color:var(--text2);">'+labelsOf(m)+'</td>'
+        +'<td style="padding:5px 10px;text-align:right;color:var(--text2);">'+m.days+'</td>'
+        +'<td style="padding:5px 10px;text-align:right;color:#60a5fa;font-weight:600;">'+m.inbound.toLocaleString()+'</td>'
+        +'<td style="padding:5px 10px;text-align:right;color:'+(m.outbound>0?'#34d399':'var(--text3)')+';">'+m.outbound.toLocaleString()+'</td>'
+        +'<td style="padding:5px 10px;text-align:right;color:#2dd4bf;">'+fmtT(m.aht)+'</td></tr>';
+    }).join('');
+    document.getElementById('agentDrillTblTitle').textContent='Monthly Breakdown';
+  } else {
+    document.getElementById('agentDrillHead').innerHTML='<tr style="border-bottom:1px solid var(--border2);"><th style="'+thS+'text-align:left;">Date</th><th style="'+thS+'">Inbound</th><th style="'+thS+'">Outbound</th><th style="'+thS+'">Avg Talk</th></tr>';
+    tbody.innerHTML = rows.slice().reverse().map(function(r){
+      return '<tr style="border-bottom:1px solid var(--border);">'
+        +'<td style="padding:5px 10px;color:var(--text2);">'+fmtDate(r.date)+'</td>'
+        +'<td style="padding:5px 10px;text-align:right;color:#60a5fa;font-weight:600;">'+r.inbound+'</td>'
+        +'<td style="padding:5px 10px;text-align:right;color:'+(r.outbound>0?'#34d399':'var(--text3)')+';">'+r.outbound+'</td>'
+        +'<td style="padding:5px 10px;text-align:right;color:#2dd4bf;">'+fmtT(r.aht)+'</td>'
+        +'</tr>';
+    }).join('');
+    document.getElementById('agentDrillTblTitle').textContent='Daily Breakdown';
+  }
 
   // Trend chart — inbound volume (bars) + avg talktime (line, secondary axis)
   if(charts.agentDrill){ charts.agentDrill.destroy(); charts.agentDrill=null; }
   charts.agentDrill = new Chart(document.getElementById('agentDrillChart'), {
     data:{
-      labels: rows.map(function(r){ var p=r.date.split('-'); return p[2]+' '+_MN[parseInt(p[1])-1]; }),
+      labels: series.map(labelsOf),
       datasets:[
-        { type:'bar', label:'Inbound Calls', data: rows.map(function(r){return r.inbound;}),
+        { type:'bar', label:'Inbound Calls', data: series.map(function(r){return r.inbound;}),
           backgroundColor:'#3b82f6', borderRadius:3, yAxisID:'y', order:2 },
-        { type:'line', label:'Avg Talktime', data: rows.map(function(r){return r.aht;}),
+        { type:'line', label:'Avg Talktime', data: series.map(function(r){return r.aht;}),
           borderColor:'#2dd4bf', backgroundColor:'#2dd4bf', tension:.3, yAxisID:'y1',
           pointRadius:3, pointBackgroundColor:'#2dd4bf', borderWidth:2, order:1 }
       ]
@@ -3582,8 +3643,6 @@ function openAgentDrilldown(name){
     }
   });
 
-  document.getElementById('agentDrillBackdrop').style.display='block';
-  document.getElementById('agentDrillBox').style.display='block';
 }
 
 async function resetData(){
@@ -7229,10 +7288,11 @@ function handleAttendanceImport(input){
       var days=Object.keys(daysTouched);
       if(!days.length){ if(statusEl) statusEl.textContent='No valid rows found — expected columns Day, Agent, Logged In, Logged Out.'; return; }
       days.forEach(function(d){ attendanceData[d].sort(function(a,b){return a.loginAt.localeCompare(b.loginAt);}); });
-      buildAttendanceDayFilter();
+      var latestDay=days.sort().slice(-1)[0];
+      buildAttendanceDayFilter(latestDay);
       buildAttendanceAgentFilter();
       var sel=document.getElementById('attDaySel');
-      if(sel) sel.value=days.sort().slice(-1)[0];
+      if(sel) sel.value=latestDay;
       var attAgentView=document.getElementById('attAgentView');
       if(attAgentView && attAgentView.style.display!=='none') renderAttendanceAgentView(); else renderAttendance();
       if(statusEl) statusEl.textContent='✓ '+added+' session(s) imported across '+days.length+' day(s).';
@@ -7290,15 +7350,32 @@ async function loadAttendanceFromSupabase(){
   }catch(e){ console.warn('Attendance load failed:', e.message); }
 }
 
-function buildAttendanceDayFilter(){
+function buildAttendanceDayFilter(preferDay){
   var sel=document.getElementById('attDaySel');
   if(!sel) return;
-  var cur=sel.value;
-  var days=Object.keys(attendanceData).sort().reverse();
+  var msel=document.getElementById('attMonthSel');
+  var cur=preferDay||sel.value;
+  var allDays=Object.keys(attendanceData).sort().reverse();
   sel.innerHTML='';
-  if(!days.length){ sel.innerHTML='<option value="">No data yet</option>'; return; }
+  if(!allDays.length){ sel.innerHTML='<option value="">No data yet</option>'; if(msel) msel.innerHTML='<option value="">No data yet</option>'; return; }
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var months=[]; allDays.forEach(function(d){ var m=d.slice(0,7); if(months.indexOf(m)<0) months.push(m); });
+  var curMonth = preferDay ? preferDay.slice(0,7) : (msel&&msel.value)||'';
+  if(months.indexOf(curMonth)<0) curMonth = (cur && allDays.indexOf(cur)>=0) ? cur.slice(0,7) : months[0];
+  if(msel){
+    msel.innerHTML='';
+    months.forEach(function(m){ var o=document.createElement('option'); o.value=m; o.textContent=MN[+m.slice(5,7)-1]+' '+m.slice(0,4); msel.appendChild(o); });
+    msel.value=curMonth;
+  }
+  var days=allDays.filter(function(d){return d.slice(0,7)===curMonth;});
   days.forEach(function(d){ var o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o); });
   if(cur && days.indexOf(cur)>=0) sel.value=cur; else sel.value=days[0];
+}
+function attMonthChange(){
+  // new month chosen: rebuild the day list for it (latest day selected), then redraw
+  var sel=document.getElementById('attDaySel'); if(sel) sel.value='';
+  buildAttendanceDayFilter();
+  renderAttendance();
 }
 
 function switchAttView(mode){
@@ -8737,6 +8814,10 @@ checkSession();
 
   <div id="attDayView">
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Month</label>
+    <select id="attMonthSel" onchange="attMonthChange()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+      <option value="">No data yet</option>
+    </select>
     <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Day</label>
     <select id="attDaySel" onchange="renderAttendance()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
       <option value="">No data yet</option>
@@ -9220,7 +9301,17 @@ checkSession();
     <div style="font-size:16px;font-weight:700;color:var(--text);"><i class="ti ti-user-search" style="color:#60a5fa;margin-right:8px;"></i><span id="agentDrillName">Agent</span></div>
     <button onclick="closeAgentDrilldown()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:22px;">&#x2715;</button>
   </div>
-  <div id="agentDrillSub" style="font-size:12px;color:var(--text3);margin-bottom:16px;"></div>
+  <div id="agentDrillSub" style="font-size:12px;color:var(--text3);margin-bottom:10px;"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+    <select id="adMonth" onchange="adMonthChange()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;outline:none;cursor:pointer;"><option value="">Custom / all</option></select>
+    <input type="date" id="adFrom" onchange="adRangeChange()" title="From" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px;outline:none;">
+    <span style="color:var(--text3);font-size:12px;">to</span>
+    <input type="date" id="adTo" onchange="adRangeChange()" title="To" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px;outline:none;">
+    <button onclick="document.getElementById('adMonth').value='';document.getElementById('adFrom').value='';document.getElementById('adTo').value='';renderAgentDrill()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text3);padding:5px 9px;font-size:11px;cursor:pointer;">All history</button>
+    <span style="flex:1"></span>
+    <button class="fpreset active" id="adv_daily" onclick="adSetView('daily')">Daily</button>
+    <button class="fpreset" id="adv_monthly" onclick="adSetView('monthly')">Monthly</button>
+  </div>
 
   <!-- Summary stat cards -->
   <div id="agentDrillStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px;"></div>
@@ -9234,16 +9325,10 @@ checkSession();
   </div>
 
   <!-- Daily breakdown table -->
-  <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;"><i class="ti ti-table" style="margin-right:5px;"></i>Daily Breakdown</div>
+  <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;"><i class="ti ti-table" style="margin-right:5px;"></i><span id="agentDrillTblTitle">Daily Breakdown</span></div>
   <div style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
     <table style="width:100%;border-collapse:collapse;font-size:12px;">
-      <thead style="position:sticky;top:0;background:var(--bg3);">
-        <tr style="border-bottom:1px solid var(--border2);">
-          <th style="padding:6px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:var(--text3);">Date</th>
-          <th style="padding:6px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Inbound</th>
-          <th style="padding:6px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Outbound</th>
-          <th style="padding:6px 10px;text-align:right;font-size:10px;text-transform:uppercase;color:var(--text3);">Avg Talk</th>
-        </tr>
+      <thead id="agentDrillHead" style="position:sticky;top:0;background:var(--bg3);">
       </thead>
       <tbody id="agentDrillTableBody"></tbody>
     </table>
